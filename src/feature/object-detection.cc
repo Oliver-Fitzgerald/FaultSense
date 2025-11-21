@@ -50,6 +50,7 @@ struct objectCoordinates {
 
 
 void applyCanny(cv::Mat& image, cv::Mat& returnImage);
+void applyHSV(cv::Mat& image, cv::Mat& returnImage);
 void removeNoise(cv::Mat& img);
 void itterateCols();
 void clean(pixelGroup &grp, cv::Mat &img);
@@ -58,7 +59,7 @@ std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
 
 int main(int argc, char** argv) {
 
-    
+    bool cannyObjectDetection = false; 
     
     std::vector<cv::Mat> images = readImagesFromDirectory("../data/chewinggum/Data/Images/Anomaly/");
     std::vector<cv::Mat> finalImages;
@@ -68,7 +69,11 @@ int main(int argc, char** argv) {
 
         std::cout << "Object " << i + 1 << " Detection: ";
         cv::Mat img,image = images[i];
-        applyCanny(image, img);
+        if (cannyObjectDetection)
+            applyCanny(image, img);
+        else
+            applyHSV(image, img);
+        cv::Mat tmp = img;
         std::cout << ".";
         removeNoise(img);
         objectCoordinates coordinates = getEdges(img);
@@ -76,6 +81,7 @@ int main(int argc, char** argv) {
         std::cout << ".\n";
 
         finalImages.push_back(image);
+        finalImages.push_back(tmp);
         finalImages.push_back(img);
     }
         
@@ -107,6 +113,16 @@ void applyCanny(cv::Mat& image, cv::Mat& returnImage){
     cv::Canny(temp, temp1, 215, 108);
     cv::Mat dilateKernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
     cv::dilate(temp1, returnImage, dilateKernal);
+}
+
+void applyHSV(cv::Mat& image, cv::Mat& returnImage){
+    cv::Mat temp;
+
+    cv::cvtColor(image, temp, cv::COLOR_BGR2HSV);
+    cv::Scalar lower(0, 0, 88);
+    cv::Scalar upper(22, 119, 255);
+
+    cv::inRange(temp, lower, upper, returnImage);
 }
 
 void removeNoise(cv::Mat& img) {

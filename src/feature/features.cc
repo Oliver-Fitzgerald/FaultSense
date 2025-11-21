@@ -16,6 +16,7 @@
 void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label);
 void thresholdHSV(cv::Mat& image, HSV& threshold);
 void edgeDetection(cv::Mat& image, cv::Mat& kernal);
+void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
 
 
 /*
@@ -27,6 +28,16 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
 
     cv::rectangle(image, cv::Point(minX - 10, minY - 10),cv::Point(maxX + 10, maxY + 10),cv::Scalar(0,0,255),3);
     putText(image, label, cv::Point(minX - 20, minY - 20), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0,0,255), 2);
+}
+
+/*
+ * crop
+ *
+ */
+void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage) {
+
+    cv::Rect roi(minX - 10, minY - 10, (maxX - minX) + 20, (maxY - minY) + 20);
+    returnImage = image(roi);
 }
 
 /*
