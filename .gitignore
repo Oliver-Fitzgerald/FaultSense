@@ -1,9 +1,9 @@
 # data
 data/*
 # build
-build/**
-!build/**/
-!build/**/CMakeLists.txt
+**/build/**
+!**/build/**/
+!**/build/**/CMakeLists.txt
 # Prerequisites
 *.d
 # Compiled Object files

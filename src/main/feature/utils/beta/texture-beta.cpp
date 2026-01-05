@@ -1,3 +1,8 @@
+/*
+ * texture
+ * Contains functions for analysis the texture of an image
+ */
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -14,44 +19,42 @@
 
 uint8_t computePixelLBP(cv::Mat &image, int x, int y);
 
-/*
- * texture
- * Contains functions for analysis the texture of an image
- */
 int main(int argc, char** argv) {
 
-    // Object Detection
-    cv::Mat finalImage, fault, tmp, img, image = cv::imread("../data/sample-images/chewinggum-anomoly.JPG");
-    HSV HSVThreshold{0, 22, 0, 119, 88,255};
-    thresholdHSV(image, HSVThreshold);
-    tmp = img;
-    removeNoise(image);
-    objectCoordinates coordinates = getObject(img);
-    cv::Mat tmp1;
-    crop(image, coordinates.yMin, coordinates.yMax, coordinates.xMin, coordinates.xMax, tmp1);
-    cv::cvtColor(tmp1, fault, cv::COLOR_BGR2GRAY);
+    cv::Mat rawImage = cv::imread("../../../../../data/sample-images/chewinggum-anomoly.JPG");
+    cv::Mat finalImage, LBPImage, croppedImage;
 
-    // Divide window into 16x16 Cells
-    if (fault.rows % 16 != 0 || fault.cols % 16 != 0)
+    // Object Detection
+    HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(rawImage, HSVThreshold);
+    removeNoise(rawImage);
+    objectCoordinates objectBounds = getObject(rawImage);
+    crop(rawImage, objectBounds.yMin, objectBounds.yMax, objectBounds.xMin, objectBounds.xMax, croppedImage);
+
+    // Crop Image to bounds divisible by 16
+    if (croppedImage.rows % 16 != 0 || croppedImage.cols % 16 != 0)
         std::cout << "Image Needs to be padded\n";
     else
         std::cout << "Image has valid dimensions\n";
-    cv::Mat next;
-    crop(image, coordinates.yMin + ((fault.cols % 16) / 2) + 1, coordinates.yMax - ((fault.cols % 16) / 2), coordinates.xMin + ((fault.rows % 16) / 2) + 1, coordinates.xMax - ((fault.rows % 16) / 2), next);
+    int maxX = objectBounds.xMax + (objectBounds.xMax % 16);
+    int maxY = objectBounds.yMax + (objectBounds.yMax % 16);
+    padImage(croppedImage, maxX, maxY, LBPImage); // Temporarily Always cropping to correct dimensions
+    /*
     
-    cv::Mat lbdValues = cv::Mat::zeros(next.rows / 16, next.cols / 16, CV_8U);
-    for (int x = 1; x < next.cols - 1; x++) {
-        for (int y = 1; y < next.cols - 1; y++) {
+    // Compute LBP for each 16x16 Cell
+    cv::Mat lbdValues = cv::Mat::zeros(LBPImage.rows / 16, LBPImage.cols / 16, CV_8U);
+    for (int x = 1; x < LBPImage.cols - 1; x++) {
+        for (int y = 1; y < LBPImage.cols - 1; y++) {
             uint8_t pixel = lbdValues.at<uint8_t>(x, y);
-            pixel = computePixelLBP(next, x,y);
+            pixel = computePixelLBP(LBPImage, x,y);
 
         }
     }
 
-    finalImage = next;
+    finalImage = LBPImage;
     // Show image
     cv::imshow("Image", finalImage);
     while (true) cv::pollKey();
+    */
 
 }
 

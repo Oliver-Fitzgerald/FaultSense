@@ -18,6 +18,7 @@
 
 void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label);
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
+void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage);
 std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
 
 
@@ -40,6 +41,20 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
 
     cv::Rect roi(minX - 10, minY - 10, (maxX - minX) + 20, (maxY - minY) + 20);
     returnImage = image(roi);
+}
+
+/*
+ * padImage
+ * Adds defined number of rows and cols of black pixels to the given image
+ */
+void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage) {
+
+    cv::Mat temp;
+    cv::Mat newRows = cv::Mat::zeros(cols, rows, CV_8UC1);
+    cv::vconcat(image, newRows, temp);
+
+    cv::Mat newCols = cv::Mat::zeros(rows, cols, CV_8UC1);
+    cv::hconcat(temp, newCols, returnImage);
 }
 
 

@@ -27,10 +27,11 @@ void clean(pixelGroup &grp, cv::Mat &img);
  */
 void thresholdHSV(cv::Mat& image, HSV& threshold) {
 
-    cv::cvtColor(image, image, cv::COLOR_BGR2HSV);
+    cv::Mat HSVImage;
+    cv::cvtColor(image, HSVImage, cv::COLOR_BGR2HSV);
     cv::Scalar lower(threshold.hueMin, threshold.saturationMin, threshold.valueMin);
     cv::Scalar upper(threshold.hueMax, threshold.saturationMax, threshold.valueMax);
-    cv::inRange(image, lower, upper, image);
+    cv::inRange(HSVImage, lower, upper, image);
 }
 
 /*
@@ -155,7 +156,7 @@ void clean(pixelGroup &grp, cv::Mat &img) {
             int row = grp.group[j].x;
             int col = grp.group[j].y;
             if (row >= 0 && row < img.rows && col >= 0 && col < img.cols) {
-                img.at<uchar>(row, col) = 0;
+                img.at<uchar> vec(, );
             }
         }
     grp.group = {};
