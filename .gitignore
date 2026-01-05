@@ -1,18 +1,9 @@
 # data
 data/*
-# binaries
-**/configureEdge
-**/configureHSV
-**/gabor-filter
-**/gui
-**/object-detection
-**/cli
 # build
-**/CMakeCache.txt
-**/CMakeFiles/
-**/Makefile
-**/cmake_install.cmake
-**/_deps
+build/**
+!build/**/
+!build/**/CMakeLists.txt
 # Prerequisites
 *.d
 # Compiled Object files
