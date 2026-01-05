@@ -6,7 +6,7 @@
 // Standard
 #include <iostream>
 // Fault Sense
-#include "HSV.h"
+#include "../../objects/HSV.h"
 
 
 int hueMin = 0, hueMax = 179;

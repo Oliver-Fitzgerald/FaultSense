@@ -1,6 +1,6 @@
 /*
- * features
- * This file contains functions for extracting features from images
+ * generic-utils
+ * 
  */
 
 // OpenCV
@@ -9,14 +9,16 @@
 #include <opencv2/imgproc.hpp>
 // Standard
 #include <iostream>
+#include <vector>
+#include <string>
+#include <filesystem>
 // Fault Sense
-#include "HSV.h"
+#include "../objects/HSV.h"
 #include "features.h"
 
 void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label);
-void thresholdHSV(cv::Mat& image, HSV& threshold);
-void edgeDetection(cv::Mat& image, cv::Mat& kernal);
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
+std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
 
 
 /*
@@ -40,26 +42,41 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
     returnImage = image(roi);
 }
 
-/*
- * thresholdHSV
- * Applys a given color threshold to an image to highligth regions of an image
- */
-void thresholdHSV(cv::Mat& image, HSV& threshold) {
 
-    cv::cvtColor(image, image, cv::COLOR_BGR2HSV);
-    cv::Scalar lower(threshold.hueMin, threshold.saturationMin, threshold.valueMin);
-    cv::Scalar upper(threshold.hueMax, threshold.saturationMax, threshold.valueMax);
-    cv::inRange(image, lower, upper, image);
-}
+std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory) {
 
-/*
- * edgeDetection
- * applys edget detection an image and erodes the image with a given kernal
- */
-void edgeDetection(cv::Mat& image, cv::Mat& kernal) {
+    namespace fs = std::filesystem;
+    std::vector<cv::Mat> images;
+    
+    std::cout << "Reading files ";
+    try {
+        for (const auto& entry : fs::directory_iterator(directory)) {
+            if (entry.is_regular_file()) {
 
-    cv::Canny(image, image, 100, 200);
-    cv::erode(image, image, kernal);
+                std::cout << ".";
+                std::string path = entry.path().string();
+                std::string ext = entry.path().extension().string();
+                
+                // Check for common image extensions
+                if (ext == ".JPG" || ext == ".jpeg" || ext == ".png" || 
+                    ext == ".bmp" || ext == ".tiff" || ext == ".tif") {
+                    
+                    cv::Mat img = cv::imread(path);
+                    if (!img.empty()) {
+                        images.push_back(img);
+                        std::cout << "Loaded: " << path << std::endl;
+                    } else {
+                        std::cerr << "Failed to load: " << path << std::endl;
+                    }
+                }
+            }
+        }
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << std::endl;
+    }
+    std::cout << "\n";
+    
+    return images;
 }
 
 /*
