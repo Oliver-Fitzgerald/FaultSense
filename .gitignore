@@ -4,6 +4,7 @@ data/*
 **/build/**
 !**/build/**/
 !**/build/**/CMakeLists.txt
+**/build/_deps/**
 # Prerequisites
 *.d
 # Compiled Object files
