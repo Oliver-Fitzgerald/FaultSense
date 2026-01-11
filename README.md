@@ -7,6 +7,9 @@ An image processing/analysis application. for the purposes of fault detection of
 
 ## Dependincies
 
+1. opencv2
+2. Catch2 (for testing)
+
 ## Documentation
 
 ### Project Progression
@@ -14,4 +17,3 @@ An image processing/analysis application. for the purposes of fault detection of
 Work Packages (trello board): [Fault Sense Kanban](https://trello.com/b/HMVPfusD/fault-sense)
 
 Gantt Chart: [Fault Sense Gantt Chart]()
-

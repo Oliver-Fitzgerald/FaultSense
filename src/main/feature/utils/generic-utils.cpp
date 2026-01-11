@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <stdexcept>
 // Fault Sense
 #include "../objects/HSV.h"
 #include "features.h"
@@ -27,10 +28,25 @@ std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
  * given each edge point of a fault it draws a square to contain the fault and a label
  * to tag the square with
  */
-void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label) {
+void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label = nullptr)
+{
+    cv::rectangle( image,
+        cv::Point(minX, minY),
+        cv::Point(maxX, maxY),
+        cv::Scalar(0, 0, 255), 1
+    );
 
-    cv::rectangle(image, cv::Point(minX - 10, minY - 10),cv::Point(maxX + 10, maxY + 10),cv::Scalar(0,0,255),3);
-    putText(image, label, cv::Point(minX - 20, minY - 20), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0,0,255), 2);
+    if (label && *label) {
+        putText(
+            image,
+            label,
+            cv::Point(minX - 20, minY - 20),
+            cv::FONT_HERSHEY_DUPLEX,
+            1.0,
+            cv::Scalar(0, 0, 255),
+            2
+        );
+    }
 }
 
 /*
@@ -51,15 +67,23 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
 /*
  * padImage
  * Adds defined number of rows and cols of black pixels to the given image
+ *
+ * @param image Input image to pad
+ * @param rows Number of rows to add (bottom padding)
+ * @param cols Number of columns to add (right padding)
+ * @param returnImage Output padded image
  */
 void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage) {
 
-    cv::Mat temp;
-    cv::Mat newRows = cv::Mat::zeros(cols, rows, CV_8UC1);
-    cv::vconcat(image, newRows, temp);
+    if (image.empty()) throw std::invalid_argument("Empty image cannot be padded");
+    if (rows < 0 || cols < 0) throw std::invalid_argument("Padding of 0 cannot be applied\nrows: " + std::to_string(rows) + ", cols: " + std::to_string(cols));
+    if (rows == 0 && cols == 0) ;
 
-    cv::Mat newCols = cv::Mat::zeros(rows, cols, CV_8UC1);
-    cv::hconcat(temp, newCols, returnImage);
+    cv::copyMakeBorder(image, returnImage, 
+                       0, rows,           // top, bottom
+                       0, cols,           // left, right
+                       cv::BORDER_CONSTANT, 
+                       cv::Scalar(0));    // black padding
 }
 
 

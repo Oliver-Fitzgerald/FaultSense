@@ -17,8 +17,8 @@
 
 void thresholdHSV(cv::Mat& image, HSV& threshold);
 void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold);
-void removeNoise(cv::Mat& img);
-void clean(pixelGroup &grp, cv::Mat &img);
+void removeNoise(cv::Mat& img, int maxGrpSize);
+void clean(pixelGroup &grp, cv::Mat &img, int maxGrpSize);
 
 
 /*
@@ -45,7 +45,7 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 }
 
 
-void removeNoise(cv::Mat& img) {
+void removeNoise(cv::Mat& img, int maxGrpSize) {
     using namespace std;
 
     int grpSize = 500;
@@ -58,7 +58,7 @@ void removeNoise(cv::Mat& img) {
 
     for (int x = 0; x < img.rows; x++) {
 
-        std::cout << "# Layer " << x << " / " << img.rows << ", Group Count: " << std::size(pixelGroups) << "\n";
+        //std::cout << "# Layer " << x << " / " << img.rows << ", Group Count: " << std::size(pixelGroups) << "\n";
         bool grpUsed[grpSize] = {false};
 
         for (int y = 0; y < img.cols; y++) {
@@ -113,7 +113,7 @@ void removeNoise(cv::Mat& img) {
                 lastPixel = false;
 
 
-            } else if (pixel == 255) {
+            } else if (pixel >= 255) {
                 currentGroup.group.push_back(pixelCoordinate{x,y});
 
                 if (!lastPixel) {
@@ -132,10 +132,10 @@ void removeNoise(cv::Mat& img) {
         for (int i = 0; i < size(pixelGroups); i++) {
 
             if (!grpUsed[i] || ( grpUsed[i] && pixelGroups[i].group.size() < 2000 && x + 1 == img.rows)) {
-                clean(pixelGroups[i],img);
+                clean(pixelGroups[i],img, maxGrpSize);
 
             } else if (grpUsed[i]) {
-                std::cout << "group " << i << " size: " << size(pixelGroups[i].group) << "\n";
+                //std::cout << "group " << i << " size: " << size(pixelGroups[i].group) << "\n";
                 tmp.push_back(pixelGroups[i]);
             }
         }
@@ -144,7 +144,7 @@ void removeNoise(cv::Mat& img) {
 
 }
 
-void clean(pixelGroup &grp, cv::Mat &img) {
+void clean(pixelGroup &grp, cv::Mat &img, int maxGrpSize) {
 
     if (std::size(grp.group) < 2000)
         for (int j = 0; j < size(grp.group) ; j++) {
@@ -156,7 +156,7 @@ void clean(pixelGroup &grp, cv::Mat &img) {
             int row = grp.group[j].x;
             int col = grp.group[j].y;
             if (row >= 0 && row < img.rows && col >= 0 && col < img.cols) {
-                img.at<uchar> vec(, );
+                img.at<uchar>(row, col) = 0;
             }
         }
     grp.group = {};

@@ -17,13 +17,20 @@ find_package(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # Compilation
-add_executable(gabor ../gabor-filter-beta.cc)
+add_executable(gabor ../gabor-filter-beta.cpp)
 target_link_libraries(gabor ${OpenCV_LIBS} stdc++fs)
 
-
-
-add_executable(texture ../texture-beta.cc 
-    ../../generic-utils.cc
-    ../../pre-processing-utils.cc
-    ../../../object-detection.cc)
+add_executable(texture ../texture-beta.cpp 
+    ../../generic-utils.cpp
+    ../../pre-processing-utils.cpp
+    ../../../object-detection.cpp)
 target_link_libraries(texture ${OpenCV_LIBS} stdc++fs)
+
+add_executable(shadow ../shadow-detection-removal-beta.cpp 
+    ../../generic-utils.cpp
+    ../../pre-processing-utils.cpp
+    ../../../object-detection.cpp)
+target_link_libraries(shadow ${OpenCV_LIBS} stdc++fs)
+
+add_executable(user-select ../user-select-beta.cpp)
+target_link_libraries(user-select ${OpenCV_LIBS} stdc++fs)
