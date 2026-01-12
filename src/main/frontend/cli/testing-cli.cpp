@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     cv::Mat normalRaw = croppedImage(normalArea);
     cv::Mat normal;
     illuminationInvariance(normalRaw, normal);
-    int LBPHistogramNormal[5] = {0};
+    float LBPHistogramNormal[5] = {0};
     computeLBP(normal, LBPValues, LBPHistogramNormal);
 
     // Prompt user to select anomaly region
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     cv::Mat anomolyRaw = croppedImage(anomolyArea);
     cv::Mat anomoly;
     illuminationInvariance(anomolyRaw, anomoly);
-    int LBPHistogramAnomoly[5] = {0};
+    float LBPHistogramAnomoly[5] = {0};
     computeLBP(anomoly, LBPValues, LBPHistogramAnomoly);
 
     // Split image into cells and check if each cell is closer to normal or anomaly

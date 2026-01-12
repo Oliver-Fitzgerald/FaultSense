@@ -15,9 +15,10 @@
 #include <stdexcept>
 // Fault Sense
 #include "../objects/HSV.h"
+#include "../objects/RGB.h"
 #include "features.h"
 
-void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label);
+void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label, RGB colour);
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
 void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage);
 std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
@@ -28,12 +29,12 @@ std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
  * given each edge point of a fault it draws a square to contain the fault and a label
  * to tag the square with
  */
-void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label = nullptr)
+void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label = nullptr, RGB colour  = RGB{255,0,0})
 {
     cv::rectangle( image,
         cv::Point(minX, minY),
         cv::Point(maxX, maxY),
-        cv::Scalar(0, 0, 255), 1
+        cv::Scalar(colour.blue, colour.green, colour.red), 1
     );
 
     if (label && *label) {
@@ -43,7 +44,7 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
             cv::Point(minX - 20, minY - 20),
             cv::FONT_HERSHEY_DUPLEX,
             1.0,
-            cv::Scalar(0, 0, 255),
+            cv::Scalar(colour.blue, colour.green, colour.red),
             2
         );
     }
