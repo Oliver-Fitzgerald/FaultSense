@@ -36,19 +36,17 @@ int main(int argc, char** argv) {
     crop(originalImage, objectBounds.yMin, objectBounds.yMax, objectBounds.xMin, objectBounds.xMax, croppedImage);
 
     // Prompt user to select normal region
+    cv::Mat normal; float LBPHistogramNormal[5] = {0};
     cv::Rect normalArea = cv::selectROI("Select ROI", croppedImage);
     cv::Mat normalRaw = croppedImage(normalArea);
-    cv::Mat normal;
     illuminationInvariance(normalRaw, normal);
-    float LBPHistogramNormal[5] = {0};
     computeLBP(normal, LBPValues, LBPHistogramNormal);
 
     // Prompt user to select anomaly region
+    cv::Mat anomoly; float LBPHistogramAnomoly[5] = {0};
     cv::Rect anomolyArea = cv::selectROI("Select ROI", croppedImage);
     cv::Mat anomolyRaw = croppedImage(anomolyArea);
-    cv::Mat anomoly;
     illuminationInvariance(anomolyRaw, anomoly);
-    float LBPHistogramAnomoly[5] = {0};
     computeLBP(anomoly, LBPValues, LBPHistogramAnomoly);
 
     // Split image into cells and check if each cell is closer to normal or anomaly

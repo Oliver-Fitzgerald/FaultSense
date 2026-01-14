@@ -76,50 +76,23 @@ void checkFaultLBP(float (&normalSample)[5], float (&anomolySample)[5], cv::Mat 
             // Get Cell
             cv::Rect cellDimensions = cv::Rect(col,row, cellSize, cellSize);
             cv::Mat cell; cv::Mat cellRaw = image(cellDimensions);
-            //HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(cellRaw, HSVThreshold);
             illuminationInvariance(cellRaw, cell);
 
-            
-            //cv::Mat temp;
-            //cv::bitwise_not(image, temp);
-            //removeNoise(temp, 10);
-
-            // Compute LBP Histogram
+            // Compute LBP histogram for cell
             float cellLBPHistogram[5] = {0};
             computeLBP(cell, LBPValues, cellLBPHistogram);
 
-            //if (row == ((cellSize / 2) + (cellSize * 2)) && col == ((cellSize / 2) + (cellSize * 2))) {
-                std::cout << "=======================\n";
-                std::cout << "normalValues => (" << normalSample[0] << ", " << normalSample[1] << ", " << normalSample[2] << ", " << normalSample[3] << ", " << normalSample[4] << ")" << "\n";
-                std::cout << "anomolyValues => (" << anomolySample[0] << ", " << anomolySample[1] << ", " << anomolySample[2] << ", " << anomolySample[3] << ", " << anomolySample[4] << ")" << "\n";
-                std::cout << "cellValues => (" << cellLBPHistogram[0] << ", " << cellLBPHistogram[1] << ", " << cellLBPHistogram[2] << ", " << cellLBPHistogram[3] << ", " << cellLBPHistogram[4] << ")" << "\n";
-                std::cout << "=======================\n";
-            //}
-
-            // Compare with normal and anomoly
+            // Compare with normal and anomoly samples
             float normalDistance = 0; float anomolyDistance = 0;
-            std::string normalDisStr = "("; std::string anomolyDisStr = "(";
             for (int i = 0; i < std::size(normalSample); i++) {
                 normalDistance += std::abs(cellLBPHistogram[i] - normalSample[i]);
-                normalDisStr += ", " + std::to_string(normalDistance);
-
                 anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
-                anomolyDisStr += ", " + std::to_string(anomolyDistance);
             }
 
-            // Mark normal or anomoly
+            // Mark anomoly
             if (anomolyDistance < normalDistance) {
                 RGB colour = RGB{0,0,255};
                 markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
-            }
-            if (row == ((cellSize / 2) + (cellSize * 2)) && col == ((cellSize / 2) + (cellSize * 5))) {
-                std::cout << "=======================\n";
-                std::cout << "normalDistance => " << normalDistance << "\n";
-                std::cout << "normalDistance => " << normalDisStr << "\n";
-                std::cout << "anomolyDistance => " << anomolyDistance << "\n";
-                std::cout << "anomolyDistance => " << anomolyDisStr << "\n";
-                std::cout << "=======================\n";
-
             }
         }
     }
