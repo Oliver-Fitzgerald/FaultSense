@@ -24,38 +24,6 @@ cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int a
 
 
 /*
-int main(int argc, char** argv) {
-
-    // Object detection
-    HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(rawImage, HSVThreshold);
-    removeNoise(rawImage, 2000);
-    objectCoordinates objectBounds = getObject(rawImage);
-    crop(originalImage, objectBounds.yMin, objectBounds.yMax, objectBounds.xMin, objectBounds.xMax, croppedImage);
-
-    // Prompt user to select normal region
-    cv::Rect normalArea = cv::selectROI("Select ROI", croppedImage);
-    cv::Mat normalRaw = img(normalArea);
-    cv::Mat normal;
-    illuminationInvariance(normalRaw, normal);
-    int[5] LBPHistogramNormal;
-    computeLBP(normal, LBPValues, LBPHistogramNormal);
-
-    // Prompt user to select anomaly region
-    cv::Rect anomolyArea = cv::selectROI("Select ROI", croppedImage);
-    cv::Mat anomolyRaw = img(anomolyArea);
-    cv::Mat anomoly;
-    illuminationInvariance(anomolyRaw, anomoly);
-    int[5] LBPHistogramAnomoly;
-    computeLBP(anomoly, LBPValues, LBPHistogramAnomoly);
-
-    // Split image into cells and check if each cell is closer to normal or anomaly
-    checkFaultLBP(normalSample, anomolySample,image);
-}
-*/
-
-
-
-/*
  * markFaultLBP
  */
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
