@@ -14,21 +14,21 @@
 #include <bitset>
 #include <cstdint>
 #include <cmath>
+#include <array>
 // Fault Sense
 #include "../pre-processing-utils.h"
 #include "../generic-utils.h"
 #include "../../object-detection.h"
 
-uint8_t computePixelLBP(cv::Mat &image, int x, int y);
-void computeLBP(cv::Mat &image, cv::Mat &LBPValues, float (&LBPHistogram)[5]);
-double euclideanDistance(int x1, int y1, int x2, int y2);
-cv::Mat brigthen_darker_areas(const cv::Mat& img, int threshold, int amount);
+void lbpValueDistribution(const cv::Mat &LBPValues, std::array<float, 5>& LBPHistogram);
+void lbpValues(const cv::Mat &image, cv::Mat &LBPValues);
+uint8_t pixelLBP(const cv::Mat &image, const int x, const int y);
 
+/*
 int amount = 0;
 int threshold = 0;
 int noise = 0;
 
-/*
 int main(int argc, char** argv) {
 
     cv::Mat originalImage = cv::imread("../../../../../../data/chewinggum/Data/Images/Anomaly/004.JPG");
@@ -108,57 +108,50 @@ int main(int argc, char** argv) {
 */
 
 /*
- * computeLBP
+ * lbpValueDistribution
+ */
+void lbpValueDistribution(const cv::Mat &LBPValues, std::array<float, 5>& LBPHistogram) {
+
+    // Calculate weigth of each pixel to normalize histogram from 0 - 100
+    float weigth = 100 / ((float(LBPValues.cols - 2)) * (float(LBPValues.rows - 2)));
+
+    for (int row = 1; row < LBPValues.rows - 1; row++) {
+        for (int col = 1; col < LBPValues.cols - 1; col++) {
+
+            int value = LBPValues.at<uint8_t>(row, col);
+            int index = std::clamp(value / 51, 0, 4);
+            LBPHistogram[index] += weigth;
+        }
+    }
+}
+
+/*
+ * lbpValues
  *
  * @param image The image for which Local Binary Pattern values are computed
  * @param LBPValues The image of Local Computed Binary values computed for 3x3 cells
  */
-void computeLBP(cv::Mat &image, cv::Mat &LBPValues, float (&LBPHistogram)[5]) {
-
-    // Compute for 3x3 Grid
-    /*
-    LBPValues = cv::Mat::zeros(image.rows / 3, image.cols / 3, CV_8UC1);
-    for (int x = 1; x < image.rows; x+=3) {
-        for (int y = 1; y < image.cols; y+=3) {
-            LBPValues.at<uint8_t>((x - 1)/ 3, (y - 1) / 3) = computePixelLBP(image, x, y);
-        }
-    }
-    */
+void lbpValues(const cv::Mat &image, cv::Mat &LBPValues) {
 
     //Compute for every pixel
     // Form histogram of cell values in image
     LBPValues = cv::Mat::zeros(image.rows - 2, image.cols - 2, CV_8UC1);
-    int itterations = 0;
-    float total = 0;
     float weigth = 100 / ((float(image.cols - 2)) * (float(image.rows - 2)));
-    for (int x = 1; x < image.rows - 1; x++) {
-        for (int y = 1; y < image.cols - 1; y++) {
-            itterations++;
 
-            int value =  computePixelLBP(image, x, y);
-            LBPValues.at<uint8_t>(x - 1 ,y - 1) = value;
+    for (int row = 1; row < image.rows - 1; row++) {
+        for (int col = 1; col < image.cols - 1; col++) {
 
-            int index = std::clamp(value / 51, 0, 4);
-            total += weigth;
-            LBPHistogram[index] += weigth;
+            int value =  pixelLBP(image, row, col);
+            LBPValues.at<uint8_t>(row - 1 ,col - 1) = value;
         }
     }
 
-    /*
-    std::cout << "=====================================\n";
-    std::cout << "itterations: " << itterations << "\n";
-    std::cout << "totalPixels: " << (image.cols - 2) * (image.rows - 2) << "\n";
-    std::cout << "1 percent: " << weigth << "\n";
-    std::cout << "total (100): " << total << "\n";
-    std::cout << "=====================================\n";
-    */
-    
 }
 
 /*
- * computePixelLBP
+ * pixelLBP
  */
-uint8_t computePixelLBP(cv::Mat &image, int x, int y) {
+uint8_t pixelLBP(const cv::Mat &image, const int x, const int y) {
 
     uint8_t LBDValue = 0b00000000;
     int centerValue = image.at<uchar>(x,y);
@@ -185,28 +178,4 @@ uint8_t computePixelLBP(cv::Mat &image, int x, int y) {
         LBDValue |= (1 << 7);
     
     return LBDValue;
-}
-
-double euclideanDistance(int x1, int y1, int x2, int y2) {
-    int dx = x2 - x1;
-    int dy = y2 - y1;
-    return std::sqrt(dx * dx + dy * dy);
-}
-
-cv::Mat brigthen_darker_areas(const cv::Mat& img, int threshold, int amount) {
-
-    cv::Mat returnImage = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
-
-    for (int row = 0; row < img.rows; row++) {
-        for (int col = 0; col < img.cols; col++) {
-
-            int pixel = img.at<uint8_t>(row, col);
-            if (pixel < threshold)
-                returnImage.at<uint8_t>(row,col) = pixel + amount;
-            else
-                returnImage.at<uint8_t>(row,col) = pixel;
-        }
-    }
-    return returnImage;
-
 }

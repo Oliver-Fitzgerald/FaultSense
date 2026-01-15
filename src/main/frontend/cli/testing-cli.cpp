@@ -29,26 +29,28 @@ int main(int argc, char** argv) {
     cv::Mat rawImage = originalImage;
 
     // Object detection
+    cv::Mat croppedImage;
     HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(rawImage, HSVThreshold);
     removeNoise(rawImage, 2000);
     objectCoordinates objectBounds = getObject(rawImage);
-    cv::Mat croppedImage;
     crop(originalImage, objectBounds.yMin, objectBounds.yMax, objectBounds.xMin, objectBounds.xMax, croppedImage);
 
     // Prompt user to select normal region
-    cv::Mat normal; float LBPHistogramNormal[5] = {0};
+    cv::Mat normal; std::array<float, 5> LBPHistogramNormal = {0};
     cv::Rect normalArea = cv::selectROI("Select ROI", croppedImage);
     cv::Mat normalRaw = croppedImage(normalArea);
     illuminationInvariance(normalRaw, normal);
-    computeLBP(normal, LBPValues, LBPHistogramNormal);
+    lbpValues(normal, LBPValues);
+    lbpValueDistribution(LBPValues, LBPHistogramNormal);
 
     // Prompt user to select anomaly region
-    cv::Mat anomoly; float LBPHistogramAnomoly[5] = {0};
+    cv::Mat anomoly; std::array<float, 5> LBPHistogramAnomoly = {0};
     cv::Rect anomolyArea = cv::selectROI("Select ROI", croppedImage);
     cv::Mat anomolyRaw = croppedImage(anomolyArea);
     illuminationInvariance(anomolyRaw, anomoly);
-    computeLBP(anomoly, LBPValues, LBPHistogramAnomoly);
+    lbpValues(anomoly, LBPValues);
+    lbpValueDistribution(LBPValues, LBPHistogramAnomoly);
 
     // Split image into cells and check if each cell is closer to normal or anomaly
-    checkFaultLBP(LBPHistogramNormal, LBPHistogramAnomoly, croppedImage);
+    markFaultLBP(LBPHistogramNormal, LBPHistogramAnomoly, croppedImage);
 }

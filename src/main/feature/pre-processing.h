@@ -1,7 +1,7 @@
 #ifndef PreProcessing_H
 #define PreProcessing_H
 
-void illuminationInvariance(cv::Mat &image, cv::Mat &returnImage);
-void checkFaultLBP(float (&normalSampe)[5], float (&anomolySample)[5], cv::Mat &image);
+void markFaultLBP(const std::array<float, 5>&normalSampe, const std::array<float, 5>& anomolySample, cv::Mat &image);
+void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);
 
 #endif

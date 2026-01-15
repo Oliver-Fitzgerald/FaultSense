@@ -9,15 +9,18 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-//Fault Sense
+// Fault Sense
 #include "utils/beta/texture-beta.h"
 #include "utils/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 #include "objects/RGB.h"
+// Standard
+#include <array>
 
 
-void illuminationInvariance(cv::Mat &image, cv::Mat &returnImage);
-void checkFaultLBP(float (&normalSample)[5], float (&anomolySample)[5], cv::Mat &image);
+void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
+void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);
+cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount);
 
 
 /*
@@ -50,37 +53,31 @@ int main(int argc, char** argv) {
 }
 */
 
-void illuminationInvariance(cv::Mat &image, cv::Mat &returnImage) {
-
-    // Applying illumination invariance
-    cv::Mat temp;
-    cv::cvtColor(image, temp, cv::COLOR_BGR2GRAY);
-    returnImage = brigthen_darker_areas(temp, 169, 46);
-}
 
 
-void checkFaultLBP(float (&normalSample)[5], float (&anomolySample)[5], cv::Mat &image) {
+/*
+ * markFaultLBP
+ */
+void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
     cv::Mat LBPValues;// IGNORRE THIS, to be deleted
-
-    if (sizeof(normalSample) != sizeof(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
-
     int cellSize = 60;
+
+    if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
 
     // Group Cells to from histogram
-    int count = 0;
     for (int row = cellSize / 2; row < image.rows - cellSize; row += cellSize) {
         for (int col = cellSize / 2; col < image.cols - cellSize; col += cellSize) {
-            count++;
 
-            // Get Cell
+            // Get cell
             cv::Rect cellDimensions = cv::Rect(col,row, cellSize, cellSize);
             cv::Mat cell; cv::Mat cellRaw = image(cellDimensions);
             illuminationInvariance(cellRaw, cell);
 
             // Compute LBP histogram for cell
-            float cellLBPHistogram[5] = {0};
-            computeLBP(cell, LBPValues, cellLBPHistogram);
+            std::array<float, 5> cellLBPHistogram = {0};
+            lbpValues(cellRaw, LBPValues);
+            lbpValueDistribution(LBPValues, cellLBPHistogram);
 
             // Compare with normal and anomoly samples
             float normalDistance = 0; float anomolyDistance = 0;
@@ -100,4 +97,36 @@ void checkFaultLBP(float (&normalSample)[5], float (&anomolySample)[5], cv::Mat 
     // Testing
     cv::imshow("Image", image);
     while (true) cv::pollKey();
+}
+
+/*
+ * illuminationInvariance
+ */
+void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage) {
+
+    // Applying illumination invariance
+    cv::Mat temp;
+    cv::cvtColor(image, temp, cv::COLOR_BGR2GRAY);
+    returnImage = brigthenDarkerAreas(temp, 169, 46);
+}
+
+/*
+ * brigthenDarkerAreas
+ */
+cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount) {
+
+    cv::Mat returnImage = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
+
+    for (int row = 0; row < img.rows; row++) {
+        for (int col = 0; col < img.cols; col++) {
+
+            int pixel = img.at<uint8_t>(row, col);
+            if (pixel < threshold)
+                returnImage.at<uint8_t>(row,col) = pixel + amount;
+            else
+                returnImage.at<uint8_t>(row,col) = pixel;
+        }
+    }
+    
+    return returnImage;
 }

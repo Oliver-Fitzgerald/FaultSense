@@ -1,7 +1,7 @@
 #ifndef TextureBeta_H
 #define TextureBeta_H
 
-void computeLBP(cv::Mat &image, cv::Mat &LBPValues, float (&LBPHistogram)[5]);
-cv::Mat brigthen_darker_areas(const cv::Mat& img, int threshold, int amount);
+void lbpValueDistribution(const cv::Mat &LVPValues, std::array<float, 5>& LBPHistogram);
+void lbpValues(const cv::Mat &image, cv::Mat &LBPValues);
 
 #endif
