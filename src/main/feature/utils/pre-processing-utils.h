@@ -4,3 +4,4 @@
 void thresholdHSV(cv::Mat& image, HSV& threshold);
 void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold);
 void removeNoise(cv::Mat& img, int maxGrpSize);
+void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);

@@ -19,9 +19,6 @@
 
 
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
-void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);
-cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount);
-
 
 /*
  * markFaultLBP
@@ -65,36 +62,4 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
     // Testing
     cv::imshow("Image", image);
     while (true) cv::pollKey();
-}
-
-/*
- * illuminationInvariance
- */
-void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage) {
-
-    // Applying illumination invariance
-    cv::Mat temp;
-    cv::cvtColor(image, temp, cv::COLOR_BGR2GRAY);
-    returnImage = brigthenDarkerAreas(temp, 169, 46);
-}
-
-/*
- * brigthenDarkerAreas
- */
-cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount) {
-
-    cv::Mat returnImage = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
-
-    for (int row = 0; row < img.rows; row++) {
-        for (int col = 0; col < img.cols; col++) {
-
-            int pixel = img.at<uint8_t>(row, col);
-            if (pixel < threshold)
-                returnImage.at<uint8_t>(row,col) = pixel + amount;
-            else
-                returnImage.at<uint8_t>(row,col) = pixel;
-        }
-    }
-    
-    return returnImage;
 }
