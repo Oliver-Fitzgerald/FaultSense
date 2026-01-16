@@ -48,6 +48,9 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 }
 
 
+/*
+ * removeNoise
+ */
 void removeNoise(cv::Mat& img, int maxGrpSize) {
     using namespace std;
 
