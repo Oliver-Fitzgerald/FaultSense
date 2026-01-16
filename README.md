@@ -25,6 +25,8 @@ cmake .
 make
 ```
 
+**Running**
+
 the *fault-sense-cli* executable will then be available in the current working directory.
 
 
@@ -41,6 +43,34 @@ Example command
 *Note: press 'q' to exit*
 
 ### Testing
+
+Currently the project only contains unit tests.
+
+**Building**
+
+From the project root execute the following commands in order.
+
+```bash
+cd cd src/test/build/
+```
+
+```bash
+cmake .
+```
+
+```bash
+make
+```
+
+**Running**
+
+Files should then be available with unit tests for individual files. They
+are be ran simply running the executable.
+
+example
+```bash
+./generic-utils-test
+```
 
 ## Dependincies
 
