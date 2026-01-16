@@ -5,6 +5,43 @@ An image processing/analysis application. for the purposes of fault detection of
 
 ## Building & Running the Project
 
+### GUI
+
+### CLI
+
+**Building**
+
+From the project root execute the following commands in order.
+
+```bash
+cd src/main/frontend/build/
+```
+
+```bash
+cmake .
+```
+
+```bash
+make
+```
+
+the *fault-sense-cli* executable will then be available in the current working directory.
+
+
+To view available commands execute
+```bash
+./fault-sense-cli --help
+```
+
+Example command
+```bash
+./fault-sense-cli view -i ../../../../data/sample-images/chewinggum-anomoly.JPG
+```
+
+*Note: press 'q' to exit*
+
+### Testing
+
 ## Dependincies
 
 1. opencv2
