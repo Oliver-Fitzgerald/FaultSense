@@ -26,10 +26,11 @@ int main(int argc, char** argv) {
     // View subcommand
     CLI::App* viewSubcommand = faultSense.add_subcommand("view", "View image with optional filters applied")->ignore_case();
     std::string imagePath = "";
-    std::map<std::string, bool> viewFlags = {{"objectDetection", false}};
+    std::map<std::string, bool> viewFlags = {{"objectDetection", false}, {"lbp", false}};
 
     viewSubcommand->add_option("-i, --image", imagePath, "The path to an image")->required();
     viewSubcommand->add_flag("--objectDetection", viewFlags["objectDetection"], "Applies object detection");
+    viewSubcommand->add_flag("--lbp", viewFlags["lbp"], "Applies local binary pattern to each pixel");
 
     viewSubcommand->final_callback([&imagePath, &viewFlags]() {
         view(imagePath, viewFlags);
@@ -46,6 +47,9 @@ void view(std::string imagePath, std::map<std::string, bool> flags) {
 
     if (flags["objectDetection"]) {
         objectDetection(temp, image);
+    }
+    if (flags["lbp"]) {
+        std::cout << "lbp\n";
     }
 
     cv::imshow("Image", image);

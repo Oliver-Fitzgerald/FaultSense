@@ -13,6 +13,7 @@
 #include <string>
 #include <filesystem>
 #include <stdexcept>
+#include <map>
 // Fault Sense
 #include "../objects/HSV.h"
 #include "../objects/RGB.h"
@@ -21,7 +22,7 @@
 void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label, RGB colour);
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
 void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage);
-std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory);
+std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory);
 
 
 /*
@@ -88,17 +89,15 @@ void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage) {
 }
 
 
-std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory) {
+std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory) {
 
     namespace fs = std::filesystem;
-    std::vector<cv::Mat> images;
+    std::map<std::string, cv::Mat> images;
     
-    std::cout << "Reading files ";
     try {
         for (const auto& entry : fs::directory_iterator(directory)) {
             if (entry.is_regular_file()) {
 
-                std::cout << ".";
                 std::string path = entry.path().string();
                 std::string ext = entry.path().extension().string();
                 
@@ -108,8 +107,7 @@ std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory) {
                     
                     cv::Mat img = cv::imread(path);
                     if (!img.empty()) {
-                        images.push_back(img);
-                        std::cout << "Loaded: " << path << std::endl;
+                        images.insert({path.substr(path.size() - 7), img});
                     } else {
                         std::cerr << "Failed to load: " << path << std::endl;
                     }
@@ -119,7 +117,6 @@ std::vector<cv::Mat> readImagesFromDirectory(const std::string& directory) {
     } catch (const fs::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
-    std::cout << "\n";
     
     return images;
 }
