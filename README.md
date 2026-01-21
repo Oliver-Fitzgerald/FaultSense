@@ -2,11 +2,9 @@
 An image processing/analysis application. for the purposes of fault detection of products produced in real time environments. Designed to be deployed in isolation on an embedded device.
 
 ---
-## Dataset 
+## Dataset  Overview
 
 This project is developed specifically for use on the [VisA (Visual Anomoly Dataset)](https://github.com/amazon-science/spot-diff/tree/main).
-
-### Dataset Overview
 
 | Object      | # normal samples | # anomaly samples | # anomaly classes | object type        |
 | ----------- | ---------------- | ----------------- | ----------------- | ------------------ |
@@ -97,6 +95,7 @@ Example command:
 1. opencv2
 2. Catch2 (for testing)
 
+---
 ## Further Information
 
 | Name                                                                                    | Description                                                                                                  |

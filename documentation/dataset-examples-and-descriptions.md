@@ -49,7 +49,7 @@ The following document contains a detailed breakdown of the primary dataset for 
 | -------------- | --------------- | ----------------------- |
 | 503            | 100             | 603                     |
 
-|                      |                                                                                                         |
+|    Anomaly Class     |                                              Sample Image                                               |
 | :------------------: | :-----------------------------------------------------------------------------------------------------: |
 | chunk of gum missing | ![chunk of gum missing sample image](../data/sample-anomoly-images/chewinggum/chunk-of-gum-missing.JPG) |
 |      scratches       |            ![scratches sample image](../data/sample-anomoly-images/chewinggum/scratches.JPG)            |

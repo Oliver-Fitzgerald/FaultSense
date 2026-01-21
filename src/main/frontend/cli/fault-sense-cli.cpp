@@ -14,6 +14,7 @@
 #include <map>
 // Fault Sense
 #include "../../feature/object-detection.h"
+#include "../../feature/feature-extraction.h"
 
 void view(std::string imagePath, std::map<std::string, bool> flags);
 
@@ -40,6 +41,14 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+/*
+ * view
+ * Displays an image given it's path, applying any pre-processing
+ * techniques specified
+ *
+ * @param imagePath The path to the image to be displayed
+ * @param flags A list of flags to indicate which pre-processing techniques should be applied.
+ */
 void view(std::string imagePath, std::map<std::string, bool> flags) {
 
     cv::Mat temp = cv::imread(imagePath);
@@ -48,8 +57,10 @@ void view(std::string imagePath, std::map<std::string, bool> flags) {
     if (flags["objectDetection"]) {
         objectDetection(temp, image);
     }
+
     if (flags["lbp"]) {
-        std::cout << "lbp\n";
+        temp = image;
+        lbpValues(temp, image);
     }
 
     cv::imshow("Image", image);
