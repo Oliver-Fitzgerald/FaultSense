@@ -1,3 +1,5 @@
+## Project Dataset
+
 The following document contains a detailed breakdown of the primary dataset for this project. The [Visual Anomaly Dataset (VisA)](), which can be downloaded [here]().
 
 ## Dataset Overview

@@ -30,7 +30,11 @@ This project is developed specifically for use on the [VisA (Visual Anomoly Data
 | Normal Samples         | 9,621  |
 | Anomoly Samples        | 1200   |
 | Unique Anomoly Classes |        |
+
+
 A more comprehensive breakdown and sample images from specific classes can be obtained in the following [document](dataset-examples-and-descriptions.md).
+
+
 
 ---
 ## Building & Running the Project
