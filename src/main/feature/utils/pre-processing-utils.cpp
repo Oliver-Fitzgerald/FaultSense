@@ -43,8 +43,8 @@ void thresholdHSV(cv::Mat& image, HSV& threshold) {
  */
 void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 
-    cv::Canny(image, image, threshold.lower, threshold.upper);
-    cv::erode(image, image, kernal);
+    cv::Mat temp = image;
+    cv::Canny(temp, image, threshold.lower, threshold.upper);
 }
 
 

@@ -91,8 +91,9 @@ int main(int argc, char** argv) {
         cv::Canny(exposed_img, imageCanny, cannyX, cannyY);
         cv::Mat dilateKernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateX, dilateY));
         cv::Mat erodeKernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(erodeX, erodeY));
-        cv::dilate(imageCanny, tempImage, dilateKernal);
-        cv::erode(tempImage, finalImage, erodeKernal);
+        //cv::dilate(imageCanny, tempImage, dilateKernal);
+        //cv::erode(tempImage, finalImage, erodeKernal);
+        finalImage = imageCanny;
 
         cv::imshow("HSV Image", finalImage);
         cv::imshow("Image", image);

@@ -17,8 +17,8 @@ find_package(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # Compilation
-add_executable(hsv ../configure-hsv.cc)
+add_executable(hsv ../configure-hsv.cpp)
 target_link_libraries(hsv ${OpenCV_LIBS} stdc++fs)
 
-add_executable(edge ../configure-edge.cc)
+add_executable(edge ../configure-edge.cpp)
 target_link_libraries(edge ${OpenCV_LIBS} stdc++fs)
