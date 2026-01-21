@@ -37,3 +37,5 @@ data/*
 *.app
 # debug information files
 *.dwo
+# Documentation
+.obsidian
