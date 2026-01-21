@@ -29,15 +29,15 @@ The following document contains a detailed breakdown of the primary dataset for 
 
 ## Object Samples
 
-| Normal PCB1                                                           | Normal PCB2                                                         | NORMAL PCB3                                                         |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| ![pcb1 sample](data/sample-images/pcb1-normal-sample.JPG)             | ![pcb2 sample](data/sample-images/pcb2-normal-sample.JPG)           | ![pcb3 sample](data/sample-images/pcb3-normal-sample.JPG)           |
-| **Normal PCB4**                                                       | **Normal Capsules**                                                 | **Normal Candle**                                                   |
-| ![pcb4 sample](data/sample-images/pcb4-normal-sample.JPG)             | ![capsules sample](data/sample-images/capsules-normal-sample.JPG)   | ![candle sample](data/sample-images/candle-normal-sample.JPG)       |
-| **Normal Macaroni1**                                                  | **Normal Macaroni 2**                                               | **Normal Cashew**                                                   |
-| ![macaroni1 sample](data/sample-images/macaroni1-normal-sample.JPG)   | ![macaroni2 sample](data/sample-images/macaroni2-normal-sample.JPG) | ![cashew sample](data/sample-images/cashew-normal-sample.JPG)       |
-| **Normal Chewing gum**                                                | **Normal Fryum**                                                    | **Normal Pipe Fryum**                                               |
-| ![chewinggum sample](data/sample-images/chewinggum-normal-sample.JPG) | ![fryum sample](data/sample-images/fryum-normal-sample.JPG)         | ![pipefryum sample](data/sample-images/pipefryum-normal-sample.JPG) |
+| Normal PCB1                                                              | Normal PCB2                                                            | NORMAL PCB3                                                            |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| ![pcb1 sample](../data/sample-images/pcb1-normal-sample.JPG)             | ![pcb2 sample](../data/sample-images/pcb2-normal-sample.JPG)           | ![pcb3 sample](../data/sample-images/pcb3-normal-sample.JPG)           |
+| **Normal PCB4**                                                          | **Normal Capsules**                                                    | **Normal Candle**                                                      |
+| ![pcb4 sample](../data/sample-images/pcb4-normal-sample.JPG)             | ![capsules sample](../data/sample-images/capsules-normal-sample.JPG)   | ![candle sample](../data/sample-images/candle-normal-sample.JPG)       |
+| **Normal Macaroni1**                                                     | **Normal Macaroni 2**                                                  | **Normal Cashew**                                                      |
+| ![macaroni1 sample](../data/sample-images/macaroni1-normal-sample.JPG)   | ![macaroni2 sample](../data/sample-images/macaroni2-normal-sample.JPG) | ![cashew sample](../data/sample-images/cashew-normal-sample.JPG)       |
+| **Normal Chewing gum**                                                   | **Normal Fryum**                                                       | **Normal Pipe Fryum**                                                  |
+| ![chewinggum sample](../data/sample-images/chewinggum-normal-sample.JPG) | ![fryum sample](../data/sample-images/fryum-normal-sample.JPG)         | ![pipefryum sample](../data/sample-images/pipefryum-normal-sample.JPG) |
 
 ## Object Anomaly Breakdowns
 
