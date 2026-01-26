@@ -26,3 +26,9 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 # Compilation
 add_executable(generic-utils-test ../feature/utils/generic-utils-test.cpp)
 target_link_libraries(generic-utils-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
+
+add_executable(train-test ../training/train-test.cpp
+                          ../../main/feature/utils/generic-utils.cpp
+                          ../../main/feature/feature-extraction.cpp
+                          ../../main/training/train.cpp)
+target_link_libraries(train-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)

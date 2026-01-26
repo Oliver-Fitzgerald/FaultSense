@@ -89,6 +89,9 @@ void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage) {
 }
 
 
+/*
+ * readImagesFromDirectory
+ */
 std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory) {
 
     namespace fs = std::filesystem;
