@@ -28,83 +28,84 @@
  * that calculate LBP values to ensure that they themshelves are working correctly.
  * (TODO: Insert link here to documentation or something mayber??)
  */
-TEST_CASE( "Training anomaly sample", "[trainAnomaly]" ) {
+
+
+TEST_CASE( "Training anomaly sample regression", "[trainAnomaly]" ) {
 
     std::map<std::string, std::array<float, 5>> anomaly;
     trainAnomaly(anomaly);
 
     // Regression Test Cases
-    CHECK( anomaly["chewinggum"][0] == Catch::Approx(18.2672));
-    CHECK( anomaly["chewinggum"][1] == Catch::Approx(18.9773));
-    CHECK( anomaly["chewinggum"][2] == Catch::Approx(8.42583));
-    CHECK( anomaly["chewinggum"][3] == Catch::Approx(10.0648));
-    CHECK( anomaly["chewinggum"][4] == Catch::Approx(44.3411));
+    CHECK( anomaly["chewinggum"][0] == Catch::Approx(15.8476));
+    CHECK( anomaly["chewinggum"][1] == Catch::Approx(19.2713));
+    CHECK( anomaly["chewinggum"][2] == Catch::Approx(13.0697));
+    CHECK( anomaly["chewinggum"][3] == Catch::Approx(12.0211));
+    CHECK( anomaly["chewinggum"][4] == Catch::Approx(39.7906));
 
 
-    CHECK( anomaly["candle"][0] == Catch::Approx(11.3254));
-    CHECK( anomaly["candle"][1] == Catch::Approx(22.0251));
-    CHECK( anomaly["candle"][2] == Catch::Approx(11.4596));
-    CHECK( anomaly["candle"][3] == Catch::Approx(11.5096));
-    CHECK( anomaly["candle"][4] == Catch::Approx(43.7352));
+    CHECK( anomaly["candle"][0] == Catch::Approx(14.0767));
+    CHECK( anomaly["candle"][1] == Catch::Approx(19.2643));
+    CHECK( anomaly["candle"][2] == Catch::Approx(14.1739));
+    CHECK( anomaly["candle"][3] == Catch::Approx(14.2364));
+    CHECK( anomaly["candle"][4] == Catch::Approx(38.2493));
 
+    CHECK( anomaly["capsules"][0] == Catch::Approx(34.0935));
+    CHECK( anomaly["capsules"][1] == Catch::Approx(9.09269));
+    CHECK( anomaly["capsules"][2] == Catch::Approx(8.07414));
+    CHECK( anomaly["capsules"][3] == Catch::Approx(11.4261));
+    CHECK( anomaly["capsules"][4] == Catch::Approx(37.3158));
 
-    CHECK( anomaly["capsules"][0] == Catch::Approx(31.3955));
-    CHECK( anomaly["capsules"][1] == Catch::Approx(12.8982));
-    CHECK( anomaly["capsules"][2] == Catch::Approx(11.5315));
-    CHECK( anomaly["capsules"][3] == Catch::Approx(9.50337));
-    CHECK( anomaly["capsules"][4] == Catch::Approx(34.4393));
+    CHECK( anomaly["cashew"][0] == Catch::Approx(26.3424));
+    CHECK( anomaly["cashew"][1] == Catch::Approx(15.4123));
+    CHECK( anomaly["cashew"][2] == Catch::Approx(9.50517));
+    CHECK( anomaly["cashew"][3] == Catch::Approx(9.05762));
+    CHECK( anomaly["cashew"][4] == Catch::Approx(39.7884));
 
-    CHECK( anomaly["cashew"][0] == Catch::Approx(25.1507));
-    CHECK( anomaly["cashew"][1] == Catch::Approx(15.5907));
-    CHECK( anomaly["cashew"][2] == Catch::Approx(9.69751));
-    CHECK( anomaly["cashew"][3] == Catch::Approx(9.63382));
-    CHECK( anomaly["cashew"][4] == Catch::Approx(39.7872));
+    CHECK( anomaly["fryum"][0] == Catch::Approx(11.7872));
+    CHECK( anomaly["fryum"][1] == Catch::Approx(21.5468));
+    CHECK( anomaly["fryum"][2] == Catch::Approx(11.6668));
+    CHECK( anomaly["fryum"][3] == Catch::Approx(12.3243));
+    CHECK( anomaly["fryum"][4] == Catch::Approx(42.677));
 
-    CHECK( anomaly["fryum"][0] == Catch::Approx(12.1301));
-    CHECK( anomaly["fryum"][1] == Catch::Approx(21.1009));
-    CHECK( anomaly["fryum"][2] == Catch::Approx(12.0124));
-    CHECK( anomaly["fryum"][3] == Catch::Approx(12.5329));
-    CHECK( anomaly["fryum"][4] == Catch::Approx(42.2072));
+    CHECK( anomaly["macaroni1"][0] == Catch::Approx(16.1601));
+    CHECK( anomaly["macaroni1"][1] == Catch::Approx(20.2713));
+    CHECK( anomaly["macaroni1"][2] == Catch::Approx(13.1044));
+    CHECK( anomaly["macaroni1"][3] == Catch::Approx(13.9308));
+    CHECK( anomaly["macaroni1"][4] == Catch::Approx(36.5345));
 
-    CHECK( anomaly["macaroni1"][0] == Catch::Approx(13.1679));
-    CHECK( anomaly["macaroni1"][1] == Catch::Approx(21.5428));
-    CHECK( anomaly["macaroni1"][2] == Catch::Approx(11.7432));
-    CHECK( anomaly["macaroni1"][3] == Catch::Approx(12.4018));
-    CHECK( anomaly["macaroni1"][4] == Catch::Approx(41.097));
+    CHECK( anomaly["macaroni2"][0] == Catch::Approx(10.5742));
+    CHECK( anomaly["macaroni2"][1] == Catch::Approx(22.7598));
+    CHECK( anomaly["macaroni2"][2] == Catch::Approx(10.8057));
+    CHECK( anomaly["macaroni2"][3] == Catch::Approx(10.7872));
+    CHECK( anomaly["macaroni2"][4] == Catch::Approx(45.0746));
 
-    CHECK( anomaly["macaroni2"][0] == Catch::Approx(10.2912));
-    CHECK( anomaly["macaroni2"][1] == Catch::Approx(22.932));
-    CHECK( anomaly["macaroni2"][2] == Catch::Approx(10.3448));
-    CHECK( anomaly["macaroni2"][3] == Catch::Approx(10.4284));
-    CHECK( anomaly["macaroni2"][4] == Catch::Approx(46.0952));
+    CHECK( anomaly["pcb1"][0] == Catch::Approx(24.6812));
+    CHECK( anomaly["pcb1"][1] == Catch::Approx(13.9239));
+    CHECK( anomaly["pcb1"][2] == Catch::Approx(13.3475));
+    CHECK( anomaly["pcb1"][3] == Catch::Approx(14.167));
+    CHECK( anomaly["pcb1"][4] == Catch::Approx(33.8823));
 
-    CHECK( anomaly["pcb1"][0] == Catch::Approx(36.4094));
-    CHECK( anomaly["pcb1"][1] == Catch::Approx(6.8424));
-    CHECK( anomaly["pcb1"][2] == Catch::Approx(7.72647));
-    CHECK( anomaly["pcb1"][3] == Catch::Approx(7.60491));
-    CHECK( anomaly["pcb1"][4] == Catch::Approx(41.6358));
+    CHECK( anomaly["pcb2"][0] == Catch::Approx(36.1703));
+    CHECK( anomaly["pcb2"][1] == Catch::Approx(6.26119));
+    CHECK( anomaly["pcb2"][2] == Catch::Approx(7.06122));
+    CHECK( anomaly["pcb2"][3] == Catch::Approx(7.02788));
+    CHECK( anomaly["pcb2"][4] == Catch::Approx(43.4741));
 
-    CHECK( anomaly["pcb2"][0] == Catch::Approx(35.2289));
-    CHECK( anomaly["pcb2"][1] == Catch::Approx(7.37718));
-    CHECK( anomaly["pcb2"][2] == Catch::Approx(8.94372));
-    CHECK( anomaly["pcb2"][3] == Catch::Approx(7.6638));
-    CHECK( anomaly["pcb2"][4] == Catch::Approx(40.9599));
+    CHECK( anomaly["pcb3"][0] == Catch::Approx(10.1761));
+    CHECK( anomaly["pcb3"][1] == Catch::Approx(23.1765));
+    CHECK( anomaly["pcb3"][2] == Catch::Approx(10.2964));
+    CHECK( anomaly["pcb3"][3] == Catch::Approx(10.6853));
+    CHECK( anomaly["pcb3"][4] == Catch::Approx(45.6671));
 
-    CHECK( anomaly["pcb3"][0] == Catch::Approx(13.4426));
-    CHECK( anomaly["pcb3"][1] == Catch::Approx(21.0843));
-    CHECK( anomaly["pcb3"][2] == Catch::Approx(11.2075));
-    CHECK( anomaly["pcb3"][3] == Catch::Approx(11.4511));
-    CHECK( anomaly["pcb3"][4] == Catch::Approx(42.8134));
+    CHECK( anomaly["pcb4"][0] == Catch::Approx(33.1674));
+    CHECK( anomaly["pcb4"][1] == Catch::Approx(5.95831));
+    CHECK( anomaly["pcb4"][2] == Catch::Approx(8.01386));
+    CHECK( anomaly["pcb4"][3] == Catch::Approx(5.08332));
+    CHECK( anomaly["pcb4"][4] == Catch::Approx(47.779));
 
-    CHECK( anomaly["pcb4"][0] == Catch::Approx(32.3164));
-    CHECK( anomaly["pcb4"][1] == Catch::Approx(6.74347));
-    CHECK( anomaly["pcb4"][2] == Catch::Approx(9.21298));
-    CHECK( anomaly["pcb4"][3] == Catch::Approx(6.66326));
-    CHECK( anomaly["pcb4"][4] == Catch::Approx(45.1139));
-
-    CHECK( anomaly["pipe_fryum"][0] == Catch::Approx(12.7631));
-    CHECK( anomaly["pipe_fryum"][1] == Catch::Approx(22.3707));
-    CHECK( anomaly["pipe_fryum"][2] == Catch::Approx(7.16383));
-    CHECK( anomaly["pipe_fryum"][3] == Catch::Approx(8.36278));
-    CHECK( anomaly["pipe_fryum"][4] == Catch::Approx(49.5458));
+    CHECK( anomaly["pipe_fryum"][0] == Catch::Approx(13.1748));
+    CHECK( anomaly["pipe_fryum"][1] == Catch::Approx(22.435));
+    CHECK( anomaly["pipe_fryum"][2] == Catch::Approx(6.65125));
+    CHECK( anomaly["pipe_fryum"][3] == Catch::Approx(8.02478));
+    CHECK( anomaly["pipe_fryum"][4] == Catch::Approx(49.7898));
 }

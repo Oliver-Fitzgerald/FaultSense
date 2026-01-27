@@ -23,18 +23,23 @@
 void lbpValueDistribution(const cv::Mat &LBPValues, std::array<float, 5>& LBPHistogram);
 void lbpValues(const cv::Mat &image, cv::Mat &LBPValues);
 uint8_t pixelLBP(const cv::Mat &image, const int x, const int y);
+bool checkIfCellIsNormal(cv::Mat cell);
 
 
 /*
  * lbpValueDistribution
+ *
+ * Calculate the distribution of pixel intensities accross the LBPValues Matrix
+ * @param LBPValues (cv::Mat) The matrix of cumputed LBP Values
+ * @param LBPHistogram (std::array<float, 5) The distribution of pixel intensities divided into 5 buckets
  */
 void lbpValueDistribution(const cv::Mat &LBPValues, std::array<float, 5>& LBPHistogram) {
 
     // Calculate weigth of each pixel to normalize histogram from 0 - 100
-    float weigth = 100 / ((float(LBPValues.cols - 2)) * (float(LBPValues.rows - 2)));
+    float weigth = 100 / ((float(LBPValues.cols)) * (float(LBPValues.rows)));
 
-    for (int row = 1; row < LBPValues.rows - 1; row++) {
-        for (int col = 1; col < LBPValues.cols - 1; col++) {
+    for (int row = 0; row < LBPValues.rows; row++) {
+        for (int col = 0; col < LBPValues.cols; col++) {
 
             int value = LBPValues.at<uint8_t>(row, col);
             int index = std::clamp(value / 51, 0, 4);
@@ -96,4 +101,26 @@ uint8_t pixelLBP(const cv::Mat &image, const int x, const int y) {
         LBDValue |= (1 << 7);
     
     return LBDValue;
+}
+
+/*
+ * checkIfCellIsNormal
+ * Checks if a cell contains an anomaly i.e a white cell (binary anomaly detection)
+ *
+ * @param cell (cv::Mat) the cell to be checked for an anomaly
+ * @return normal (bool) A boolean indicating wether or not the cell was normal (true)
+ *                       or contained an anomaly (false)
+ */
+bool checkIfCellIsNormal(cv::Mat cell) {
+
+    for (int row = 0; row < cell.rows; row++) { 
+        for (int col = 0; col < cell.cols; col++) {
+            
+            int pixel = cell.at<uchar>(row, col);
+            if (pixel == 255) // white
+                return false;
+        }
+    }
+
+    return true; // left off here
 }

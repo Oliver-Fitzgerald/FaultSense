@@ -52,28 +52,54 @@ void trainNormal(cv::Mat normal) {
  */
 void trainAnomaly(std::map<std::string, std::array<float, 5>> &anomaly) {
 
+    int cellSize = 60; // shoulde be divisible by 2
+
     for (int i = 0; i < 12; i++) {
         std::map<std::string, cv::Mat> images = readImagesFromDirectory(dataRoot + objectCategories[i] + anomalyPath); 
         std::array<float, 5> averageLBPDistribution = {};
         for (const auto& [imageName, image] : images) {
 
-            // Determine LBP distribution for image
+            // Get image mask
+            std::string maskName = imageName;
+            maskName.replace(imageName.size() - 3, static_cast<std::string::size_type>(3), std::basic_string("png"));
+            cv::Mat imageMask = cv::imread(dataRoot + "masks/" + objectCategories[i] + maskName);
+            //re-size image mask to match LBPValues dimensions
+
+            // Get LBP values for anomaly cells
             cv::Mat LBPValues; std::array<float, 5> LBPHistogram = {};
             lbpValues(image, LBPValues);
-            lbpValueDistribution(LBPValues, LBPHistogram);
 
-            // Add to cummulitive result of all samples
-            for (int i = 0; i < 5; i++)
-                averageLBPDistribution[i] = LBPHistogram[i];
+            int anomalyCells = 0;
+            for (int row = cellSize / 2; row + cellSize < LBPValues.rows; row += cellSize) {
+                for (int col = cellSize / 2; col + cellSize < LBPValues.cols; col += cellSize) {
+
+                    if (checkIfCellIsNormal(imageMask(cv::Range(row + 1, row + cellSize), cv::Range(col + 1, col + cellSize)))) // Note we (+ 1) as LBPValues loses a pixel on each edge as part of it's construction
+                        continue; // skip normal cells
+                    anomalyCells++;
+
+                    // Get LBP distribution of anomaly cells only
+                    cv::Mat cell = LBPValues(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+                    lbpValueDistribution(cell, LBPHistogram);
+
+                    // Add to cummulitive result of all samples
+                    for (int i = 0; i < 5; i++)
+                        averageLBPDistribution[i] = LBPHistogram[i];
+                }
+            }
+
+            // Average across all cells in the image
+            for (int i = 0; i < averageLBPDistribution.size(); i++)
+                averageLBPDistribution[i] = (averageLBPDistribution[i] / anomalyCells);
+
         }
 
-        // Average across all samples and record result
+        // Average across all images and record result
         for (int i = 0; i < averageLBPDistribution.size(); i++)
             averageLBPDistribution[i] = (averageLBPDistribution[i] / images.size()) * 100;
 
+
         std::string objectCategory = objectCategories[i];
         objectCategory.pop_back();
-        std::cout << "Average " << objectCategory << " LBP Distribution: " << averageLBPDistribution[0] << ", " << averageLBPDistribution[1] << ", " << averageLBPDistribution[2] << ", " << averageLBPDistribution[3] << ", " << averageLBPDistribution[4] << "\n\n";
         anomaly.insert({objectCategory, averageLBPDistribution});
     }
 }
