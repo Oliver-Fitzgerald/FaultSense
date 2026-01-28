@@ -122,5 +122,5 @@ bool checkIfCellIsNormal(cv::Mat cell) {
         }
     }
 
-    return true; // left off here
+    return true;
 }

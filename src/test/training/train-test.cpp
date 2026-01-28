@@ -109,3 +109,27 @@ TEST_CASE( "Training anomaly sample regression", "[trainAnomaly]" ) {
     CHECK( anomaly["pipe_fryum"][3] == Catch::Approx(8.02478));
     CHECK( anomaly["pipe_fryum"][4] == Catch::Approx(49.7898));
 }
+
+TEST_CASE( "Normal distribution is normalized", "[trainNormal]" ) {
+
+    std::map<std::string, cv::Mat> normal;
+    trainNormal(normal);
+
+    cv::Mat chewinggumNormalNorm = normal["chewinggum"];
+
+    for (int row = 0; row < chewinggumNormalNorm.rows; row++) {
+        for (int col = 0; col < chewinggumNormalNorm.cols; col++) {
+
+            float* lbpDistribution = chewinggumNormalNorm.ptr<float>(row, col);
+
+            float total = 0;
+            for (int index = 0; index < 5; index++)
+                total += lbpDistribution[index];
+
+            REQUIRE( total == Catch::Approx(100) );
+            std::cout << "Hello, World!\n";
+        }
+    }
+
+
+}
