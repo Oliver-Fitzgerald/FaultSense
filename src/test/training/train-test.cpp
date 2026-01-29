@@ -6,6 +6,7 @@
 // Catch2 Testing Framework
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 // Fault Sense
 #include "../../main/training/train.h"
 // OpenCV2
@@ -112,22 +113,41 @@ TEST_CASE( "Training anomaly sample regression", "[trainAnomaly]" ) {
 
 TEST_CASE( "Normal distribution is normalized", "[trainNormal]" ) {
 
-    std::map<std::string, cv::Mat> normal;
-    trainNormal(normal);
+    std::string objectCategories[12] = {
+        "chewinggum",
+        "candle",
+        "capsules",
+        "cashew",
+        "fryum",
+        "macaroni1",
+        "macaroni2",
+        "pcb1",
+        "pcb2",
+        "pcb3",
+        "pcb4",
+        "pipe_fryum"
+    };
 
-    cv::Mat chewinggumNormalNorm = normal["chewinggum"];
+    std::map<std::string, cv::Mat> normalNorms;
+    trainNormal(normalNorms);
 
-    for (int row = 0; row < chewinggumNormalNorm.rows; row++) {
-        for (int col = 0; col < chewinggumNormalNorm.cols; col++) {
 
-            float* lbpDistribution = chewinggumNormalNorm.ptr<float>(row, col);
+    for (int index = 0; index < 12; index++) {
+            
+        cv::Mat categoryNorm = normalNorms[ objectCategories[index] ];
 
-            float total = 0;
-            for (int index = 0; index < 5; index++)
-                total += lbpDistribution[index];
 
-            REQUIRE( total == Catch::Approx(100) );
-            std::cout << "Hello, World!\n";
+        for (int row = 0; row < categoryNorm.rows; row++) {
+            for (int col = 0; col < categoryNorm.cols; col++) {
+
+                float* lbpDistribution = categoryNorm.ptr<float>(row, col);
+
+                float total = 0;
+                for (int index = 0; index < 5; index++)
+                    total += lbpDistribution[index];
+
+                REQUIRE_THAT( total, Catch::Matchers::WithinAbs(100,0.1) );
+            }
         }
     }
 

@@ -19,6 +19,8 @@
 #include <cstdlib>
 
 void trainAnomaly(std::map<std::string, std::array<float, 5>> &anomalyNorm);
+void initNormMatrix(const std::map<std::string, cv::Mat>::iterator &itterator, int cellSize, cv::Mat &categoryNorm);
+void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOfSamples);
 void trainNormal(std::map<std::string, cv::Mat> &normalNorm);
 
 std::string dataRoot = "../../../data/";
@@ -49,121 +51,79 @@ void trainNormal(std::map<std::string, cv::Mat> &normalNorm) {
     int cellSize = 60; // shoulde be divisible by 2
 
     for (int i = 0; i < 12; i++) {
-
-        std::cout << "Training norm for normal samples of " << objectCategories[i] << " objects\n";
         std::map<std::string, cv::Mat> images = readImagesFromDirectory(dataRoot + objectCategories[i] + anomalyPath); 
 
-        std::map<std::string, cv::Mat>::iterator itterator = images.begin();
-        cv::Mat sampleImage = itterator->second;
+        cv::Mat categoryNorm;
+        initNormMatrix(images.begin(), cellSize, categoryNorm);
 
-        cv::Mat tempImage;
-        lbpValues(sampleImage, tempImage);
-        int rowMargin = tempImage.rows % cellSize;
-        int colMargin = tempImage.cols % cellSize;
-        cv::Mat categoryNorm((tempImage.rows - rowMargin) / cellSize, (tempImage.cols - colMargin) / cellSize, CV_32FC(5));
-
-        float total = 0;
         for (const auto& [imageName, image] : images) {
 
-            // Get image mask
-            std::string maskName = imageName;
-            maskName.replace(imageName.size() - 3, static_cast<std::string::size_type>(3), std::basic_string("png"));
-            cv::Mat imageMask = cv::imread(dataRoot + "masks/" + objectCategories[i] + maskName);
-
-            // Get LBP values for each pixel
+            // Compute LBP values for each pixel
             cv::Mat LBPValues;
             lbpValues(image, LBPValues);
 
-            int collIndex, rowIndex = 0; 
-            for (int row = rowMargin / 2; row < LBPValues.rows - (rowMargin / 2); row += cellSize) {
-                collIndex = 0;
-                for (int col = colMargin / 2; col < LBPValues.cols - (colMargin / 2); col += cellSize) {
+            updateCategoryNorm(categoryNorm, LBPValues, cellSize, images.size());
 
-                    // Get LBP distribution of normal cells
-                    cv::Mat cell = LBPValues(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
-                    std::array<float, 5> LBPHistogram = {};
-                    lbpValueDistribution(cell, LBPHistogram);
-
-                    // Update the cell norm average acrossed all images
-                    float total = 0;
-                    float* cellDistribution = categoryNorm.ptr<float>(rowIndex,collIndex);// Update Mat
-                    for (int j = 0; j < 5; j++) {
-
-                        /*
-                        if ((j == 0) && (collIndex <= 2) && (rowIndex == 0))
-                            std::cout << "Value( " << collIndex << "): " << LBPHistogram[j] << "\n";
-                            */
-
-                        cellDistribution[j] += LBPHistogram[j];
-                        total += LBPHistogram[j];
-                    }
-                    /*
-                    std::cout << " 100 / ((float(LBPValues.cols)) * (float(LBPValues.rows))) \n";
-                    std::cout << "(float(LBPValues.rows)): " << (float(LBPValues.rows)) << "\n";
-                    std::cout << "(float(LBPValues.cols)): " << (float(LBPValues.cols)) << "\n";
-                    std::cout << "weigth: " << 100 / ((float(LBPValues.cols)) * (float(LBPValues.rows))) << "\n";
-                    */
-                    /*
-                    if (total > 101 || total < 99 || ((rowIndex == 0) && (collIndex == 2)) ) {
-
-                        std::cout << "\n(rowIndex, collIndex): (" << rowIndex << ", " << collIndex << ")\n";
-                        for (int j = 0; j < 5; j++) {
-                            std::cout << "lBPHistogram[" << j << "]: " << LBPHistogram[j] << "\n";
-                        }
-                        for (int j = 0; j < 5; j++) {
-                            std::cout << "cellDistribution[" << j << "]: " << cellDistribution[j] << "\n";
-                        }
-                        std::cout << "total of cell: " << total << "\n";
-                    }
-                    */
-
-                    collIndex++;
-                }
-                rowIndex++;
-            }
-
-            break;
         }
-
-        for (int row = 0; row < categoryNorm.rows; row++) {
-            for (int col = 0; col < categoryNorm.cols; col++) {
-
-                /*
-                if (col == 2)
-                    std::cout << "\n";
-                    */
-
-                // left off here
-                float total = 0;
-                float* cellDistribution = categoryNorm.ptr<float>(row,col);
-                for (int j = 0; j < 5; j++) {
-                    //cellDistribution[j] = images.size() / cellDistribution[j];
-                    cellDistribution[j] = (cellDistribution[j] / images.size()) * 100;
-                    //cellDistribution[j] = images.size() / cellDistribution[j];
-                    /*
-                    if (col == 2) {
-                        std::cout << "cellDistribution[j].rawValue: " << cellDistribution[j] << "\n";
-                    }*/
-
-                    total += cellDistribution[j];
-                }
-                if (total > 101 || total < 99) 
-                //if (row == 0 && col == 2) {
-                    std::cout << "(row, col): (" << row << ", " << col << ")\n";
-                    for (int j = 0; j < 5; j++)
-                        std::cout << "cellDistribution[j]: " << cellDistribution[j] << "\n";
-                    std::cout << "total of accumulated cell: " << total << "\n";
-                }
-
-            }
-        }
-
-        //std::cout << "total: " << total << "\n";
 
         std::string objectCategory = objectCategories[i];
         objectCategory.pop_back(); // remove '/'
         normalNorm.insert({objectCategory, categoryNorm});
-        return;//return after chewinggum for testing
+    }
+}
+
+/*
+ * initNormMatrix
+ * Initalizes an objects norm matrix
+ * 
+ * @param itterator std::map<std::string, cv::Mat>::iterator
+ * @param cellSize int
+ * @param categoryNorm cv::Mat
+ */
+void initNormMatrix(const std::map<std::string, cv::Mat>::iterator &itterator, int cellSize, cv::Mat &categoryNorm) {
+
+    cv::Mat sampleImage = itterator->second; cv::Mat sampleValues;
+    lbpValues(sampleImage, sampleValues); // To remove 1 pixel margin
+
+    int rowMargin = sampleValues.rows % cellSize;
+    int colMargin = sampleValues.cols % cellSize;
+
+    categoryNorm = cv::Mat::zeros((sampleValues.rows - rowMargin) / cellSize, (sampleValues.cols - colMargin) / cellSize, CV_32FC(5));
+}
+
+/*
+ * updateCategoryNorm
+ * Updates a norm for a collection of samples with a sample
+ *
+ * @param norm (cv::Mat) The norm that will be updated
+ * @param values (cv::Mat) The sample to update the norm with
+ * @param cellSize (int) The size of elements in a sample 
+ * @param numberOfSamples (int) The number of samples that will be used to create the norm
+ */
+void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOfSamples) {
+
+    int rowMargin = values.rows % cellSize;
+    int colMargin = values.cols % cellSize;
+
+    int collIndex, rowIndex = 0; 
+    for (int row = rowMargin / 2; row < values.rows - (rowMargin / 2); row += cellSize) {
+        collIndex = 0;
+        for (int col = colMargin / 2; col < values.cols - (colMargin / 2); col += cellSize) {
+
+            // Get LBP distribution of cell
+            cv::Mat cell = values(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+            std::array<float, 5> LBPHistogram = {};
+            lbpValueDistribution(cell, LBPHistogram);
+
+            // Update the cell norm with the samples value
+            float* cellDistribution = norm.ptr<float>(rowIndex,collIndex);
+            for (int j = 0; j < 5; j++)
+                cellDistribution[j] += LBPHistogram[j] / numberOfSamples;
+
+
+            collIndex++;
+        }
+        rowIndex++;
     }
 }
 
