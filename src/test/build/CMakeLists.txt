@@ -32,3 +32,7 @@ add_executable(train-test ../training/train-test.cpp
                           ../../main/feature/feature-extraction.cpp
                           ../../main/training/train.cpp)
 target_link_libraries(train-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
+
+add_executable(training-data-tests ../general/file-operations/training-data-tests.cpp
+                          ../../main/general/file-operations/training-data.cpp)
+target_link_libraries(training-data-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
