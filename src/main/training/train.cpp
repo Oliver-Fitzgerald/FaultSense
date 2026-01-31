@@ -43,8 +43,6 @@ std::string normalPath = "Data/Images/Normal";
 
 /*
  * trainNormal
- *
- *
  */
 void trainNormal(std::map<std::string, cv::Mat> &normalNorm) {
 
@@ -57,6 +55,7 @@ void trainNormal(std::map<std::string, cv::Mat> &normalNorm) {
         initNormMatrix(images.begin(), cellSize, categoryNorm);
 
         for (const auto& [imageName, image] : images) {
+            std::cout << ".";
 
             // Compute LBP values for each pixel
             cv::Mat LBPValues;
@@ -65,10 +64,12 @@ void trainNormal(std::map<std::string, cv::Mat> &normalNorm) {
             updateCategoryNorm(categoryNorm, LBPValues, cellSize, images.size());
 
         }
+        std::cout << "\n";
 
         std::string objectCategory = objectCategories[i];
         objectCategory.pop_back(); // remove '/'
         normalNorm.insert({objectCategory, categoryNorm});
+        break;
     }
 }
 
@@ -182,5 +183,6 @@ void trainAnomaly(std::map<std::string, std::array<float, 5>> &anomalyNorm) {
         std::string objectCategory = objectCategories[i];
         objectCategory.pop_back();
         anomalyNorm.insert({objectCategory, averageLBPDistribution});
+        break;
     }
 }

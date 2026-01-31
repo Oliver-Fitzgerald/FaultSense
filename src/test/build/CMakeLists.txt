@@ -36,3 +36,14 @@ target_link_libraries(train-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} s
 add_executable(training-data-tests ../general/file-operations/training-data-tests.cpp
                           ../../main/general/file-operations/training-data.cpp)
 target_link_libraries(training-data-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
+
+add_executable(ground-truth-tests ../general/file-operations/ground-truth-tests.cpp
+                          ../../main/general/file-operations/ground-truth.cpp)
+target_link_libraries(ground-truth-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
+
+add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
+                          ../../main/training/train.cpp
+                          ../../main/feature/utils/generic-utils.cpp
+                          ../../main/feature/feature-extraction.cpp
+                          ../../main/evaluation/evaluation.cpp)
+target_link_libraries(evaluation-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
