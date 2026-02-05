@@ -7,9 +7,9 @@
 #include <map>
 #include <string>
 
-void writeDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void readDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void writeNorm(std::map<std::string, cv::Mat> &norms); 
-void readNorm(std::map<std::string, cv::Mat> &norms);
+void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
+void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
+void writeMatrixNorm(std::map<std::string, cv::Mat> &norms); 
+void readMatrixNorm(std::map<std::string, cv::Mat> &norms);
 
 #endif

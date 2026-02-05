@@ -28,11 +28,11 @@ TEST_CASE ( "Reading and writing matrixs" ) {
     std::map<std::string, cv::Mat> original = { {"test", sampleMatrix} };
 
     // Writing sample matrix to memory as a normal sample
-    writeNorm(original); 
+    writeMatrixNorm(original); 
 
     // Reading sample matrix from memory as a normal sample
     std::map<std::string, cv::Mat> read = { {"test", cv::Mat()} };
-    readNorm(read);
+    readMatrixNorm(read);
 
     // Testing that the loaded matrix is identical to the original image
     cv::Mat readMatrix = read["test"];
@@ -48,10 +48,10 @@ TEST_CASE ( "Reading and writing distributions" ) {
     std::array<float, 5> original = {0.0, 0.1, 0.2, 0.3, 0.4};
 
     std::map<std::string, std::array<float, 5>> write = {{"test", original}};
-    writeDistributions(write);
+    writeCellDistributions(write);
 
     std::map<std::string, std::array<float, 5>> read;
-    readDistributions(read);
+    readCellDistributions(read);
 
     for (int index = 0; index < 5; index++)
         REQUIRE_THAT (read["test"][index], Catch::Matchers::WithinAbs(original[index], 0.01) );

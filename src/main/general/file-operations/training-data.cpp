@@ -13,21 +13,21 @@
 #include <iostream>
 #include <fstream>
 
-void writeDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void readDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void writeNorm(std::map<std::string, cv::Mat> &norms); 
-void readNorm(std::map<std::string, cv::Mat> &norms);
+void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
+void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
+void writeMatrixNorm(std::map<std::string, cv::Mat> &norms); 
+void readMatrixNorm(std::map<std::string, cv::Mat> &norms);
 
-const std::string NORMAL_FILEPATH = "../../../data/trained-data/normal-training-samples.yml";
-const std::string ANOMALY_FILEPATH = "../../../data/trained-data/anomaly-training-samples.yml";
+const std::string NORMAL_FILEPATH = "../data/trained-data/normal-training-samples.yml";
+const std::string ANOMALY_FILEPATH = "../data/trained-data/anomaly-training-samples.yml";
 
 /*
- * writeDistributions
+ * writeCellDistributions
  * Writes a set of pixel value distribtutions for given samples to a yaml file
  *
  * @param distributions (std::map<std::string, std::array<float, 5>>) The collection of distributions to be written to a yaml
  */
-void writeDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
+void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
 
     std::ofstream file(ANOMALY_FILEPATH);
 
@@ -44,12 +44,12 @@ void writeDistributions(std::map<std::string, std::array<float, 5>> &distributio
 }
 
 /*
- * readDistributions
+ * readCellDistributions
  * Reads a set of pixel value distribtutions for given samples from a yaml file
  *
  * @param distributions (std::map<std::string, std::array<float, 5>>) The collection of distributions to be written to a yaml
  */
-void readDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
+void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
 
     std::ifstream file(ANOMALY_FILEPATH);
 
@@ -93,12 +93,12 @@ void readDistributions(std::map<std::string, std::array<float, 5>> &distribution
 }
 
 /*
- * writeNorm
+ * writeMatrixNorm
  * Writes a collection of matrixes of norm distributions to a yaml file 
  *
  * @param norms (std::map< std::string, cv::Mat>) The norm matrices to be written to yaml
  */
-void writeNorm(std::map<std::string, cv::Mat> &norms) {
+void writeMatrixNorm(std::map<std::string, cv::Mat> &norms) {
 
     cv::FileStorage fs(NORMAL_FILEPATH, cv::FileStorage::WRITE);
 
@@ -113,12 +113,12 @@ void writeNorm(std::map<std::string, cv::Mat> &norms) {
 }
 
 /*
- * readNorm
+ * readMatrixNorm
  * Reads a collection of matrixes of norm distributions from a yaml file 
  *
  * @param norms (std::map< std::string, cv::Mat>) The norm matrix categories to be populated 
  */
-void readNorm(std::map<std::string, cv::Mat> &norms) {
+void readMatrixNorm(std::map<std::string, cv::Mat> &norms) {
 
     cv::FileStorage fs(NORMAL_FILEPATH, cv::FileStorage::READ);
 

@@ -10,12 +10,13 @@ struct pixelGroup {
     std::vector<pixelCoordinate> group;
     int min;
     int max;
-    bool redundant;
 
-    void append(pixelGroup& theOtherGroup) {
+    void append(pixelGroup& theOtherGroup, bool currentRow) {
         // Does not account for the case of a fork
-        max = theOtherGroup.max;
-        min = theOtherGroup.min;
+        if (currentRow) {
+            max = theOtherGroup.max;
+            min = theOtherGroup.min;
+        }
 
         group.insert(group.end(), 
              theOtherGroup.group.begin(), 

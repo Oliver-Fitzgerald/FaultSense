@@ -13,7 +13,7 @@
 
 void readVisaLabels(const std::string objectCategory, std::map<std::string, std::array<std::string, 5>> &objectLabels);
 
-const std::string DATA_ROOT = "../../../data/";
+const std::string DATA_ROOT = "../data/";
 
 /*
  * readVisaLabels

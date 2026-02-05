@@ -17,11 +17,11 @@
 
 void thresholdHSV(cv::Mat& image, HSV& threshold);
 void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold);
-void removeNoise(cv::Mat& img, int maxGrpSize);
-void clean(pixelGroup &grp, cv::Mat &img, int maxGrpSize);
+void removeNoise(cv::Mat& img, int minGrpSize);
+void clean(pixelGroup &grp, cv::Mat &img, int minGrpSize);
 void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);
 cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount);
-
+bool mergeOverlappingGroups(pixelGroup &currentGroup, std::vector<pixelGroup> &pixelGroups, std::vector<bool> &grpUsed);
 
 
 /*
@@ -51,108 +51,95 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 /*
  * removeNoise
  */
-void removeNoise(cv::Mat& img, int maxGrpSize) {
+void removeNoise(cv::Mat& img, int minGrpSize) {
     using namespace std;
 
-    int grpSize = 500;
     bool lastPixel = false;
-    std::vector<pixelGroup> pixelGroups(grpSize);
+    std::vector<pixelGroup> pixelGroups;
+    std::vector<bool> grpUsed;
     pixelGroup currentGroup = pixelGroup{.group = {},
                                          .min = -1,
-                                         .max = -1,
-                                         .redundant = false};
+                                         .max = -1};
 
     for (int x = 0; x < img.rows; x++) {
 
-        //std::cout << "# Layer " << x << " / " << img.rows << ", Group Count: " << std::size(pixelGroups) << "\n";
-        bool grpUsed[grpSize] = {false};
 
         for (int y = 0; y < img.cols; y++) {
+
             int pixel = img.at<uchar>(x, y);
 
+            // Continue Current group
             if (pixel == 0 && lastPixel) {
 
                 currentGroup.max = y ;
+                bool existingGroup = mergeOverlappingGroups(currentGroup, pixelGroups, grpUsed); // Move to function return bool (&grpUsed)
 
-                bool existingGroup = false;
-                int lastHit = -1;
-
-                for (int k = 0; k < size(pixelGroups); k++) {
-                    int currentGroupLength = currentGroup.max - currentGroup.min;
-
-                    if ((!pixelGroups[k].redundant) && (currentGroup.min >= pixelGroups[k].min && currentGroup.min <= pixelGroups[k].max) || (currentGroup.max >= pixelGroups[k].min && currentGroup.max <= pixelGroups[k].max) || (currentGroup.min < pixelGroups[k].min && currentGroup.min + currentGroupLength >= pixelGroups[k].min) || (currentGroup.max > pixelGroups[k].max && currentGroup.max - currentGroupLength <= pixelGroups[k].max) ) {
-                        existingGroup = true;
-
-                       if (lastHit > -1) {
-
-                            pixelGroups[k].append(pixelGroups[lastHit]);
-                            grpUsed[lastHit] = false;
-                            lastHit = k;
-
-                        } else {
-
-                            pixelGroups[k].append(currentGroup);
-                            grpUsed[k] = true;
-                            lastHit = k;
-
-                        }
-
-                    } 
-
-                } 
+                // If it does not overlap with an existing group add as a new group
                 if (!existingGroup) {
 
+
                     pixelGroups.push_back(currentGroup);
-                    grpUsed[size(pixelGroups)] = true;
-                    currentGroup = pixelGroup{.group = {},
-                                              .min = -1,
-                                              .max = -1,
-                                              .redundant = false};
+                    grpUsed.push_back(true);
+                }
 
-                } else
-                    currentGroup = pixelGroup{.group = {},
-                                              .min = -1,
-                                              .max = -1,
-                                              .redundant = false};
-
-
+                currentGroup = pixelGroup{.group = {},
+                                          .min = -1,
+                                          .max = -1};
                 lastPixel = false;
 
 
-            } else if (pixel >= 255) {
+            // Start of new group
+            } else if (pixel == 255) {
+
                 currentGroup.group.push_back(pixelCoordinate{x,y});
 
                 if (!lastPixel) {
                     lastPixel = true;
                     currentGroup.min = y - 1;
                 }
-
-            } else {
-                lastPixel = false;
             }
 
+
+            /* DEBUG INFO
+            std::cout << "\n(row, col) => (" << x << ", " << y << ")\n";
+            std::cout << "(img.rows, img.cols) => (" << img.rows << ", " << img.cols << ")\n";
+            std::cout << "currentGroup.group.size() => " << currentGroup.group.size() << "\n";
+            std::cout << "pixelGroups.size(): " << pixelGroups.size() << "\n";
+            std::cout << "grpUsed.size(): " << grpUsed.size() << "\n";
+            std::cout << "pixel: " <<  pixel << "\n";
+            */
         }
 
 
-        std::vector<pixelGroup> tmp(200);
-        for (int i = 0; i < size(pixelGroups); i++) {
+        // Remove any complete groups of size < minGrpSize
+        for (int i = pixelGroups.size() - 1; i >= 0; i--) {
 
-            if (!grpUsed[i] || ( grpUsed[i] && pixelGroups[i].group.size() < 2000 && x + 1 == img.rows)) {
-                clean(pixelGroups[i],img, maxGrpSize);
+            if (!grpUsed[i] || (pixelGroups[i].group.size() < minGrpSize)) {
 
-            } else if (grpUsed[i]) {
-                //std::cout << "group " << i << " size: " << size(pixelGroups[i].group) << "\n";
-                tmp.push_back(pixelGroups[i]);
+                clean(pixelGroups[i],img, minGrpSize);
+                grpUsed.erase(grpUsed.begin() + i);
+                pixelGroups.erase(pixelGroups.begin() + i);
             }
         }
-        pixelGroups = tmp;
     }
 
+    pixelGroups.clear();
+    pixelGroups.shrink_to_fit();
+    grpUsed.clear();
+    grpUsed.shrink_to_fit();
 }
 
-void clean(pixelGroup &grp, cv::Mat &img, int maxGrpSize) {
+/*
+ * clean
+ * Sets all of the pixel co-ordinates in a group of pixels to 0 i.e removes them.
+ * From an image
+ * @param grp
+ * @param img
+ * @param minGrpSize
+ */
+void clean(pixelGroup &grp, cv::Mat &img, int minGrpSize) {
 
-    if (std::size(grp.group) < 2000)
+    if (std::size(grp.group) < minGrpSize)
         for (int j = 0; j < size(grp.group) ; j++) {
 
             /*
@@ -202,30 +189,42 @@ cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int a
 }
 
 /*
- * main
- * for testing functionality
-int main(int argc, char **argv) {
-
-    std::string testImage = "../../../data/sample-images/board-scratch.JPG";
-    cv::Mat image = cv::imread(testImage);
-    cv::Mat markFaultImg = image, thresholdHSVImg = image, edgeDetection = image;
-
-    cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(9,9));
-    markFault(markFaultImg, 400, 500, 330, 600, "Scratch");
-    cv::imshow("Mark Fault", markFaultImg);
-
-    HSV threshold{79, 179, 9, 52,10,255};
-    thresholdHSV(thresholdHSVImg, threshold);
-    cv::imshow("Mark Fault", thresholdHSVImg);
-
-    edgeDetection(cv::Mat& image, cv::Mat& kernal);
-
-    bool next = true;
-    while (next) {
-
-        int keyPressed = cv::pollKey();
-        if (keyPressed == 'q')
-            next = false;
-    }
-}
+ * mergeOverlappingGroups
  */
+bool mergeOverlappingGroups(pixelGroup &currentGroup, std::vector<pixelGroup> &pixelGroups, std::vector<bool> &grpUsed) {
+
+    int prevOveralapIndex = -1;
+    bool existingGroup = false;
+
+    // Add to any overlapping group
+    for (int k = 0; k < size(pixelGroups); k++) {
+        int currentGroupLength = currentGroup.max - currentGroup.min;
+
+        if ( // Check if the current group overlaps with an existing group
+            (currentGroup.min >= pixelGroups[k].min && currentGroup.min <= pixelGroups[k].max) || 
+            (currentGroup.max >= pixelGroups[k].min && currentGroup.max <= pixelGroups[k].max) || 
+            (currentGroup.min < pixelGroups[k].min && currentGroup.min + currentGroupLength >= pixelGroups[k].min) || 
+            (currentGroup.max > pixelGroups[k].max && currentGroup.max - currentGroupLength <= pixelGroups[k].max) 
+           ) {
+
+            existingGroup = true;
+
+            if (prevOveralapIndex > -1) {
+
+                pixelGroups[k].append(pixelGroups[prevOveralapIndex], false);
+                grpUsed[prevOveralapIndex] = false;
+                prevOveralapIndex = k;
+
+            } else {
+
+                pixelGroups[k].append(currentGroup, true);
+                grpUsed[k] = true;
+                prevOveralapIndex = k;
+
+            }
+
+        } 
+
+    }
+    return existingGroup;
+}

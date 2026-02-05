@@ -31,10 +31,10 @@
  */
 
 
-TEST_CASE( "Training anomaly sample regression", "[trainAnomaly]" ) {
+TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
 
     std::map<std::string, std::array<float, 5>> anomaly;
-    trainAnomaly(anomaly);
+    trainCell(anomaly);
 
     // Regression Test Cases
     CHECK( anomaly["chewinggum"][0] == Catch::Approx(15.8476));
@@ -111,9 +111,9 @@ TEST_CASE( "Training anomaly sample regression", "[trainAnomaly]" ) {
     CHECK( anomaly["pipe_fryum"][4] == Catch::Approx(49.7898));
 }
 
-TEST_CASE( "Normal distribution is normalized", "[trainNormal]" ) {
+TEST_CASE( "Training matrix norm distribution is normalized", "[trainMatrix]" ) {
 
-    std::string objectCategories[12] = {
+    const std::string objectCategories[12] = {
         "chewinggum",
         "candle",
         "capsules",
@@ -128,13 +128,13 @@ TEST_CASE( "Normal distribution is normalized", "[trainNormal]" ) {
         "pipe_fryum"
     };
 
-    std::map<std::string, cv::Mat> normalNorms;
-    trainNormal(normalNorms);
+    std::map<std::string, cv::Mat> normal;
+    trainMatrix(normal);
 
 
     for (int index = 0; index < 12; index++) {
             
-        cv::Mat categoryNorm = normalNorms[ objectCategories[index] ];
+        cv::Mat categoryNorm = normal[ objectCategories[index] ];
 
 
         for (int row = 0; row < categoryNorm.rows; row++) {

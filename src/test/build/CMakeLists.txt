@@ -44,6 +44,9 @@ target_link_libraries(ground-truth-tests PRIVATE Catch2::Catch2WithMain ${OpenCV
 add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
                           ../../main/training/train.cpp
                           ../../main/feature/utils/generic-utils.cpp
+                          ../../main/feature/utils/pre-processing-utils.cpp
+                          ../../main/feature/pre-processing.cpp
                           ../../main/feature/feature-extraction.cpp
+                          ../../main/feature/object-detection.cpp
                           ../../main/evaluation/evaluation.cpp)
 target_link_libraries(evaluation-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)

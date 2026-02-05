@@ -21,8 +21,7 @@
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
 
 /*
- * markFaultLBP
- */
+ * markFaultLBP */
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
     cv::Mat LBPValues;// IGNORRE THIS, to be deleted
     int cellSize = 60;
@@ -34,6 +33,7 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
     for (int row = cellSize / 2; row < image.rows - cellSize; row += cellSize) {
         for (int col = cellSize / 2; col < image.cols - cellSize; col += cellSize) {
 
+            /*
             // Get cell
             cv::Rect cellDimensions = cv::Rect(col,row, cellSize, cellSize);
             cv::Mat cell; cv::Mat cellRaw = image(cellDimensions);
@@ -43,6 +43,10 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
             std::array<float, 5> cellLBPHistogram = {0};
             lbpValues(cellRaw, LBPValues);
             lbpValueDistribution(LBPValues, cellLBPHistogram);
+            */
+            cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+            std::array<float, 5> cellLBPHistogram = {};
+            lbpValueDistribution(cell, cellLBPHistogram);
 
             // Compare with normal and anomoly samples
             float normalDistance = 0; float anomolyDistance = 0;
@@ -61,5 +65,5 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
 
     // Testing
     cv::imshow("Image", image);
-    while (true) cv::pollKey();
+    while (cv::pollKey() != 113);
 }

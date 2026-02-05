@@ -17,7 +17,9 @@
 // Fault Sense
 #include "../feature/utils/generic-utils.h"
 
-int main (int argc, char** argv) {
+void generateMasks();
+
+void generateMasks() {
 
     std::string dataSetRoot = "../data/";
     std::array<std::string, 12> categories = {
@@ -37,6 +39,7 @@ int main (int argc, char** argv) {
 
     for (int index = 0; index < 12; index++) {
         std::string path = dataSetRoot + categories[index] + "Data/Masks/Anomaly/";
+        std::cout << "HERE\n";
         std::map<std::string, cv::Mat> rawMasks = readImagesFromDirectory(path);
 
         // Generate masks
@@ -64,5 +67,4 @@ int main (int argc, char** argv) {
 
         }
     }
-    return 0;
 }

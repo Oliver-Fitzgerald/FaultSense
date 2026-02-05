@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <stdexcept>
 #include <map>
+#include <sys/resource.h>
 // Fault Sense
 #include "../objects/HSV.h"
 #include "../objects/RGB.h"
@@ -23,6 +24,7 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
 void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage);
 std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory);
+long getMemoryUsage();
 
 
 /*
@@ -53,7 +55,7 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
 
 /*
  * crop
- *
+ * THIS FUNCTION PROBABLY HAS VARRIABLE NAMES MIXED UP I.E ROWS AND COLS MAY NEED TO RENAME
  */
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage) {
 
@@ -61,8 +63,23 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
     if (maxY <= minY) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be less than maxY [" + std::to_string(maxY) + "]");
     if (minX < 0) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be greater than 0");
     if (minY < 0) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be greater than 0");
+    if (minX + (maxX - minX) > image.rows) throw std::out_of_range("maxX [" + std::to_string(maxX) + "] must be less than image.rows: " + std::to_string(image.rows));
+    if (minY + (maxY - minY) > image.cols) throw std::out_of_range("maxY [" + std::to_string(maxY) + "] must be less than image.cols: " + std::to_string(image.cols));
 
-    cv::Rect roi(minX, minY, (maxX - minX), (maxY - minY));
+    /* DEBUG INFO
+    std::cout << "\n\nimage.rows: " << image.rows << "\n";
+    std::cout << "image.cols: " << image.cols << "\n";
+    std::cout << "maxX: " << maxX << "\n";
+    std::cout << "maxY: " << maxY << "\n\n";
+
+    std::cout << "minX: " << minX << "\n";
+    std::cout << "maxX - minX: " << maxX - minX << "\n";
+    std::cout << "minY: " << minY << "\n";
+    std::cout << "maxY - minY: " << maxY - minY << "\n";
+    */
+
+
+    cv::Rect roi(minY, minX, (maxY - minY), (maxX - minX));
     returnImage = image(roi);
 }
 
@@ -125,30 +142,10 @@ std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& direct
 }
 
 /*
- * main
- * for testing functionality
-int main(int argc, char **argv) {
-
-    std::string testImage = "../../../data/sample-images/board-scratch.JPG";
-    cv::Mat image = cv::imread(testImage);
-    cv::Mat markFaultImg = image, thresholdHSVImg = image, edgeDetection = image;
-
-    cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(9,9));
-    markFault(markFaultImg, 400, 500, 330, 600, "Scratch");
-    cv::imshow("Mark Fault", markFaultImg);
-
-    HSV threshold{79, 179, 9, 52,10,255};
-    thresholdHSV(thresholdHSVImg, threshold);
-    cv::imshow("Mark Fault", thresholdHSVImg);
-
-    edgeDetection(cv::Mat& image, cv::Mat& kernal);
-
-    bool next = true;
-    while (next) {
-
-        int keyPressed = cv::pollKey();
-        if (keyPressed == 'q')
-            next = false;
-    }
-}
+ * getMemoryUsage
  */
+long getMemoryUsage() {
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+    return usage.ru_maxrss; // kB on Linux, bytes on macOS
+}
