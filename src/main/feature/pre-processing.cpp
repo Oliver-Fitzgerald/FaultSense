@@ -14,6 +14,12 @@
 #include "utils/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 #include "objects/RGB.h"
+#include "object-detection.h"
+#include "feature-extraction.h"
+#include "pre-processing.h"
+#include "../evaluation/evaluation.h"
+#include "../training/train.h"
+#include "../general/file-operations/training-data.h"
 // Standard
 #include <array>
 
@@ -44,8 +50,14 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
             lbpValues(cellRaw, LBPValues);
             lbpValueDistribution(LBPValues, cellLBPHistogram);
             */
+
             cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
             std::array<float, 5> cellLBPHistogram = {};
+
+            CannyThreshold threshold{57, 29};
+            cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+            edgeDetection(cell, kernal, threshold);
+
             lbpValueDistribution(cell, cellLBPHistogram);
 
             // Compare with normal and anomoly samples
@@ -56,14 +68,18 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
             }
 
             // Mark anomoly
+            //if (anomolyDistance < normalDistance) {
             if (anomolyDistance < normalDistance) {
+                std::cout << "hit\n";
                 RGB colour = RGB{0,0,255};
                 markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
-            }
+            } else
+                std::cout << "\nanomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
         }
     }
 
-    // Testing
+    /* Testing
     cv::imshow("Image", image);
     while (cv::pollKey() != 113);
+    */
 }

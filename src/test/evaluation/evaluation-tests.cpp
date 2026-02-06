@@ -19,7 +19,7 @@ TEST_CASE ( "Evaluation interface test" ) {
 
     std::cout << "Generating anomaly samples ...\n";
     std::map<std::string, std::array<float, 5>> anomalyNorm;
-    trainCell(anomalyNorm);
+    trainCell(anomalyNorm, false, "chewinggum");
 
     std::cout << "Evaluating samples normal dataset instances ...\n";
     evaluateNormal("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"]);

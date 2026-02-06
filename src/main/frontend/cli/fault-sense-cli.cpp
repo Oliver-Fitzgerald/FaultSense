@@ -89,7 +89,7 @@ void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int
     if (flags["objectDetection"])
         objectDetection(temp, image);
     else 
-        image = temp;
+        image = temp.clone();
 
     if (flags["lbp"]) {
         lbpValues(temp, image);
@@ -101,7 +101,6 @@ void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int
         edgeDetection(image, kernal, threshold);
 
     } else if (flags["hsv"]) {
-        image = temp;
         HSV HSVThreshold{0, 22, 0, 119, 88,255};
         thresholdHSV(image, HSVThreshold);
     } 
@@ -117,12 +116,14 @@ void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int
         trainCell(normalNorm, true, "chewinggum");
 
         std::cout << "Generate anomaly norm cell\n";
-        std::map<std::string, std::array<float, 5>> anomalyNorm; trainCell(anomalyNorm, false, "chewinggum");
+        std::map<std::string, std::array<float, 5>> anomalyNorm;
+        trainCell(anomalyNorm, false, "chewinggum");
 
-        markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], original);
-    }
-    
-    cv::imshow("Image", image);
+        markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        cv::imshow("Image", image);
+    } else
+        cv::imshow("Image", image);
+
     while (cv::pollKey() != 113);
 
 }
