@@ -100,7 +100,7 @@ void removeNoise(cv::Mat& img, int minGrpSize) {
             }
 
 
-            /* DEBUG INFO
+           /* DEBUG INFO
             std::cout << "\n(row, col) => (" << x << ", " << y << ")\n";
             std::cout << "(img.rows, img.cols) => (" << img.rows << ", " << img.cols << ")\n";
             std::cout << "currentGroup.group.size() => " << currentGroup.group.size() << "\n";

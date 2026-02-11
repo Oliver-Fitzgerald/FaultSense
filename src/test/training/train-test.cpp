@@ -49,15 +49,15 @@ TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
     };
 
     std::map<std::string, std::array<float, 5>> anomaly;
-    trainCell(anomaly, false);
+    trainCellNorms(anomaly, false);
 
     for (int index = 0; index < 12; index++) {
             
         std::array<float, 5> categoryNorm = anomaly[ objectCategories[index] ];
 
         float total = 0;
-        for (int index = 0; index < 5; index++)
-            total += categoryNorm[index];
+        for (int i = 0; i < 5; i++)
+            total += categoryNorm[i];
 
         REQUIRE_THAT( total, Catch::Matchers::WithinAbs(100,0.1) );
     }
@@ -83,7 +83,7 @@ TEST_CASE( "Training cell norm individual", "[trainCell]" ) {
     for (int index = 0; index < 12; index++) {
 
         std::map<std::string, std::array<float, 5>> anomaly;
-        trainCell(anomaly, false, objectCategories[index].c_str());
+        trainCellNorms(anomaly, false, objectCategories[index]);
 
                 
         std::array<float, 5> categoryNorm = anomaly[ objectCategories[index] ];

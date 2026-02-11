@@ -20,6 +20,7 @@
 #include "../../evaluation/evaluation.h"
 #include "../../training/train.h"
 #include "../../general/file-operations/training-data.h"
+#include "../../general/file-operations/generic-read-write.h"
 
 void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
 void evaluation(std::map<std::string, bool> flags);
@@ -48,7 +49,15 @@ int main(int argc, char** argv) {
     viewSubcommand->final_callback([&imagePath, &viewFlags, &noiseThreshold]() {
         if (imagePath == "")
             imagePath = "../data/chewinggum/Data/Images/Anomaly/000.JPG";
-        view(imagePath, viewFlags, noiseThreshold);
+
+        if (imagePath.rfind("/") == imagePath.size() - 1) {
+            std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
+
+            for (const auto& [imageName, image] : images)
+                view(imagePath + imageName, viewFlags, noiseThreshold);
+
+        } else
+            view(imagePath, viewFlags, noiseThreshold);
     });
 
     // Evaluation subcommand
@@ -80,6 +89,8 @@ int main(int argc, char** argv) {
  * @param imagePath The path to the image to be displayed
  * @param flags A list of flags to indicate which pre-processing techniques should be applied.
  */
+std::map<std::string, std::array<float, 5>> normalNorm;
+std::map<std::string, std::array<float, 5>> anomalyNorm;
 void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
 
     cv::Mat temp = cv::imread(imagePath);
@@ -112,12 +123,14 @@ void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int
 
     if (flags["markFault"]) {
         std::cout << "Generate normal norm cell\n";
-        std::map<std::string, std::array<float, 5>> normalNorm;
-        trainCell(normalNorm, true, "chewinggum");
+        //std::map<std::string, std::array<float, 5>> normalNorm;
+        if (normalNorm.size() == 0)
+            trainCellNorms(normalNorm, true, "chewinggum");
 
         std::cout << "Generate anomaly norm cell\n";
-        std::map<std::string, std::array<float, 5>> anomalyNorm;
-        trainCell(anomalyNorm, false, "chewinggum");
+        //std::map<std::string, std::array<float, 5>> anomalyNorm;
+        if (anomalyNorm.size() == 0)
+            trainCellNorms(anomalyNorm, false, "chewinggum");
 
         markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], image);
         cv::imshow("Image", image);
@@ -177,7 +190,7 @@ void train(std::map<std::string, bool> flags) {
 
     std::cout << "Generate anomaly norm cell\n";
     std::map<std::string, std::array<float, 5>> anomalyNorm;
-    trainCell(anomalyNorm, false);
+    trainCellNorms(anomalyNorm, false);
     std::cout << "Write anomaly norm to file\n";
     writeCellDistributions(anomalyNorm);
 

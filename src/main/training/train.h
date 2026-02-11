@@ -6,7 +6,7 @@
 #include <string> 
 #include <array>
 
-void trainCell(std::map<std::string, std::array<float, 5>> &cellNorm, const bool normal, const char* category = "");
+void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorm, const bool normal, const std::string& category = "");
 void trainMatrix(std::map<std::string, cv::Mat> &matrixNorm);
 
 #endif
