@@ -26,7 +26,7 @@ struct PreProcessing {
      *
      * @param image The image to which the specified pre-processing functions will be applied to
      */
-    void apply(cv::Mat &image) {
+    void apply(cv::Mat &image) const {
 
         cv::Mat originalImage = image.clone();
 

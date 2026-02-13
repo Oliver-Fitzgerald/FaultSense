@@ -54,6 +54,9 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 void removeNoise(cv::Mat& img, int minGrpSize) {
     using namespace std;
 
+    // left off here
+    // Some groups are getting skipped
+
     bool lastPixel = false;
     std::vector<pixelGroup> pixelGroups;
     std::vector<bool> grpUsed;

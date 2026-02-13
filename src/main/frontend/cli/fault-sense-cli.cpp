@@ -23,7 +23,7 @@
 #include "../../general/file-operations/generic-read-write.h"
 #include "../../objects/PreProcessing.h"
 
-void view(std::string imagePath, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault);
+void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault);
 void evaluation(std::map<std::string, bool> flags);
 void train(std::map<std::string, bool> flags);
 
@@ -73,13 +73,16 @@ int main(int argc, char** argv) {
             imagePath = "../data/chewinggum/Data/Images/Anomaly/000.JPG";
 
         if (imagePath.rfind("/") == imagePath.size() - 1) {
-            std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
+            std::vector<cv::Mat> images;
+            readImagesFromDirectory(imagePath, images);
 
-            for (const auto& [imageName, image] : images)
-                view(imagePath + imageName, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
+            for (auto& image : images)
+                view(image, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
 
-        } else
-            view(imagePath, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
+        } else {
+            cv::Mat image = cv::imread(imagePath);
+            view(image, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
+        }
     });
 
 
@@ -112,11 +115,11 @@ int main(int argc, char** argv) {
  * @param imagePath The path to the image to be displayed
  * @param flags A list of flags to indicate which pre-processing techniques should be applied.
  */
-std::map<std::string, std::array<float, 5>> normalNorm;
-std::map<std::string, std::array<float, 5>> anomalyNorm;
-void view(std::string imagePath, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault) {
-
-    cv::Mat image = cv::imread(imagePath);
+std::map<std::string, std::array<float, 5>> normalNorm = {{"chewinggum", std::array<float, 5>()}};
+std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
+std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
+bool first = true;
+void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault) {
 
     // Object Detection
     if (objectDetectionConfig.enableObjectDetection)
@@ -126,17 +129,22 @@ void view(std::string imagePath, PreProcessing &preProcessingConfig, PreProcessi
     preProcessingConfig.apply(image);
 
     if (markFault) {
+
         std::cout << "Generate normal norm cell\n";
         //std::map<std::string, std::array<float, 5>> normalNorm; // Commented out temporarily so it's not re-calculated each time
-        if (normalNorm.size() == 0)
-            trainCellNorms(normalNorm, true, "chewinggum");
+        ///trainCellNorms(normalNorm,preProcessingConfig, true);
+        if (first)
+            trainMatrix(normalMatrixNorm, preProcessingConfig, true);
+
 
         std::cout << "Generate anomaly norm cell\n";
         //std::map<std::string, std::array<float, 5>> anomalyNorm; // Commented out temporarily so it's not re-calculated each time
-        if (anomalyNorm.size() == 0)
-            trainCellNorms(anomalyNorm, false, "chewinggum");
+        if (first)
+            trainCellNorms(anomalyNorm, preProcessingConfig, false);
 
-        markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        if (first)
+            first = false;
+        markFaultLBP(normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
         cv::imshow("Image", image);
     } else
         cv::imshow("Image", image);
@@ -186,15 +194,22 @@ void evaluation(std::map<std::string, bool> flags) {
  */
 void train(std::map<std::string, bool> flags) {
 
+    PreProcessing objectDetectionConfiguration;
+    objectDetectionConfiguration.hsv = true;
+    objectDetectionConfiguration.noiseThreshold = 200;
+
+    PreProcessing preProcessingConfiguration;
+    preProcessingConfiguration.edge = true;
+
+
     std::cout << "Generate nomral norm matrix\n";
     std::map<std::string, cv::Mat> normalNorm;
-    trainMatrix(normalNorm);
+    trainMatrix(normalNorm, preProcessingConfiguration, true);
     std::cout << "Write normal norm to file\n";
-    writeMatrixNorm(normalNorm); 
 
     std::cout << "Generate anomaly norm cell\n";
-    std::map<std::string, std::array<float, 5>> anomalyNorm;
-    trainCellNorms(anomalyNorm, false);
+    std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float,5>()}};
+    trainCellNorms(anomalyNorm, preProcessingConfiguration, false);
     std::cout << "Write anomaly norm to file\n";
     writeCellDistributions(anomalyNorm);
 

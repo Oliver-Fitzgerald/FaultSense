@@ -16,6 +16,7 @@
 #include <exception>
 // Fault Sense
 #include "../feature/utils/generic-utils.h"
+#include "../general/file-operations/generic-read-write.h"
 
 void generateMasks();
 
@@ -40,7 +41,8 @@ void generateMasks() {
     for (int index = 0; index < 12; index++) {
         std::string path = dataSetRoot + categories[index] + "Data/Masks/Anomaly/";
         std::cout << "HERE\n";
-        std::map<std::string, cv::Mat> rawMasks = readImagesFromDirectory(path);
+        std::map<std::string, cv::Mat> rawMasks;
+        readImagesFromDirectory(path, rawMasks);
 
         // Generate masks
         for (auto const& [name, image] : rawMasks) {

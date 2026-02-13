@@ -32,6 +32,7 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/feature/utils/pre-processing-utils.cpp
                            ../src/main/training/train.cpp
                            ../src/main/general/file-operations/training-data.cpp
+                           ../src/main/general/file-operations/generic-read-write.cpp
                            ../src/main/evaluation/evaluation.cpp)
 target_link_libraries(fault-sense-cli PRIVATE  ${OpenCV_LIBS} CLI11::CLI11)
 

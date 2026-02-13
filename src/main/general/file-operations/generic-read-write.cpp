@@ -9,40 +9,85 @@
 #include <string>
 #include <filesystem>
 #include <map>
+#include <unordered_set>
 
-std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory);
+namespace {
+    bool isImageFile(std::filesystem::directory_entry imagePath);
+}
 
 /*
  * readImagesFromDirectory
  */
-std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory) {
+void readImagesFromDirectory(const std::string& directory, std::map<std::string, cv::Mat> &images) {
 
     namespace fs = std::filesystem;
-    std::map<std::string, cv::Mat> images;
     
     try {
         for (const auto& entry : fs::directory_iterator(directory)) {
-            if (entry.is_regular_file()) {
 
-                std::string path = entry.path().string();
-                std::string ext = entry.path().extension().string();
-                
-                // Check for common image extensions
-                if (ext == ".JPG" || ext == ".jpeg" || ext == ".png" || 
-                    ext == ".bmp" || ext == ".tiff" || ext == ".tif") {
-                    
-                    cv::Mat img = cv::imread(path);
-                    if (!img.empty()) {
-                        images.insert({path.substr(path.size() - 7), img});
-                    } else {
-                        std::cerr << "Failed to load: " << path << std::endl;
-                    }
-                }
+            if (!entry.is_regular_file()) {
+                std::cerr << "Skipping read of image [" << entry.path().string() << "] - Not regular file\n";
+                continue;
             }
+            if (!isImageFile(entry)) {
+                std::cerr << "Skipping read of image [" << entry.path().string() << "] - Invalid type\n";
+                continue;
+            }
+
+
+            std::string path = entry.path().string();
+            std::string filename = path.substr(path.size() - 7);
+
+            if (images.count(filename) > 0) {
+                std::cerr << "Skipping read of image [" << path << "] - Duplicate filename\n";
+            } else
+                images.emplace(std::move(filename), cv::imread(path));
         }
     } catch (const fs::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
+}
+
+
+/*
+ * readImagesFromDirectory
+ */
+void readImagesFromDirectory(const std::string& directory, std::vector<cv::Mat> &images) {
+
+    namespace fs = std::filesystem;
     
-    return images;
+    try {
+        for (const auto& entry : fs::directory_iterator(directory)) {
+
+            if (!entry.is_regular_file()) {
+                std::cerr << "Skipping read of image [" << entry.path().string() << "] - Not regular file\n";
+                continue;
+            }
+            if (!isImageFile(entry)) {
+                std::cerr << "Skipping read of image [" << entry.path().string() << "] - Invalid type\n";
+                continue;
+            }
+                
+            images.push_back(cv::imread(entry.path().string()));
+        }
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << std::endl;
+    }
+}    
+
+namespace {
+
+    /*
+     * isImageFile
+     * Validates wether a image file path terminates an image of a  valid image type
+     * 
+     * @param imagePath the file path pointing to the image file
+     */
+    bool isImageFile(std::filesystem::directory_entry imagePath) {
+
+        static const std::unordered_set<std::string> validExtensions = { ".JPG" };
+        std::string extension = imagePath.path().extension().string();
+        
+        return validExtensions.count(extension) > 0;
+    }
 }
