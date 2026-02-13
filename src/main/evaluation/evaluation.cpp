@@ -25,6 +25,9 @@ bool compareToNorm(cv::Mat norm, std::array<float, 5> &anomalySample, cv::Mat va
 int averageNormalCells = 0;
 int averageAnomalyCells = 0;
 
+/*
+ * evaluateNormal
+ */
 void evaluateNormal(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution) {
 
 

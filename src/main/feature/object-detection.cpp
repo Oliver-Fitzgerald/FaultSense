@@ -25,13 +25,9 @@ objectCoordinates getObject(cv::Mat &img);
  */
 void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage) {
 
-    cv::Mat image = inputImage.clone();
-
-    HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(image, HSVThreshold);
-    removeNoise(image, 200);
-
-    objectCoordinates objectBounds = getObject(image);
-    crop(inputImage, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
+    cv::Mat image = returnImage.clone();
+    objectCoordinates objectBounds = getObject(inputImage);
+    crop(image, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
 }
 
 /*

@@ -21,8 +21,9 @@
 #include "../../training/train.h"
 #include "../../general/file-operations/training-data.h"
 #include "../../general/file-operations/generic-read-write.h"
+#include "../../objects/PreProcessing.h"
 
-void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
+void view(std::string imagePath, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault);
 void evaluation(std::map<std::string, bool> flags);
 void train(std::map<std::string, bool> flags);
 
@@ -36,17 +37,38 @@ int main(int argc, char** argv) {
     CLI::App* viewSubcommand = faultSense.add_subcommand("view", "View image with optional filters applied")->ignore_case();
     std::string imagePath = "";
     unsigned int noiseThreshold = 0;
-    std::map<std::string, bool> viewFlags = { {"markFault", false}, {"objectDetection", false}, {"lbp", false}, {"edge", false}, {"hsv", false}, {"removeNoise", false}};
-
+    std::map<std::string, bool> viewFlags = { {"markFault", false}, {"lbp", false}, {"edge", false}, {"hsv", false}, {"removeNoise", false}};
     viewSubcommand->add_option("-i, --image", imagePath, "The path to an image");
     viewSubcommand->add_option("-r, --removeNoise", noiseThreshold, "removes any noise from the final image of size >= 0");
-    viewSubcommand->add_flag("-o, --objectDetection", viewFlags["objectDetection"], "Applies object detection");
     viewSubcommand->add_flag("-l, --lbp", viewFlags["lbp"], "Applies local binary pattern to each pixel");
     viewSubcommand->add_flag("-e, --edge", viewFlags["edge"], "Applies canny edge detection to image");
     viewSubcommand->add_flag("--hsv", viewFlags["hsv"], "Applies a hue, staturation and value threshold on image"); // -h already in use for --help
     viewSubcommand->add_flag("-m, --markFault", viewFlags["markFault"], "Does fault detection and marks each of the predicted faulty celss in the final image");
 
-    viewSubcommand->final_callback([&imagePath, &viewFlags, &noiseThreshold]() {
+    CLI::App* objectDetectionSubcommand = viewSubcommand->add_subcommand("objectDetection", "Applies object detection with the passed pre-processing flags applied")->ignore_case();
+    unsigned int objectNoiseThreshold = 0;
+    std::map<std::string, bool> objectDetectionFlags = { {"objectDetection", false}, {"edge", false}, {"hsv", false}, {"removeNoise", false}};
+    objectDetectionSubcommand->add_flag("-e, --edge", objectDetectionFlags["edge"], "Applies canny edge detection to image");
+    objectDetectionSubcommand->add_flag("--hsv", objectDetectionFlags["hsv"], "Applies a hue, staturation and value threshold on image"); // -h already in use for --help
+    objectDetectionSubcommand->add_option("-r, --removeNoise", objectNoiseThreshold, "removes any noise from the final image of size >= 0");
+    objectDetectionSubcommand->final_callback([&objectDetectionFlags]() {
+        objectDetectionFlags["objectDetection"] = true;
+    });
+    viewSubcommand->final_callback([&imagePath, &viewFlags, &objectDetectionFlags, &noiseThreshold, &objectNoiseThreshold]() {
+
+        // Configure PreProcessing flags
+        PreProcessing preProcessingConfiguration;
+        preProcessingConfiguration.lbp = viewFlags["lbp"];
+        preProcessingConfiguration.hsv = viewFlags["hsv"];
+        preProcessingConfiguration.edge = viewFlags["edge"];
+        preProcessingConfiguration.noiseThreshold = noiseThreshold;
+        PreProcessing objectDetectionConfiguration;
+        objectDetectionConfiguration.hsv = objectDetectionFlags["hsv"];
+        objectDetectionConfiguration.edge = objectDetectionFlags["edge"];
+        objectDetectionConfiguration.enableObjectDetection = objectDetectionFlags["objectDetection"];
+        objectDetectionConfiguration.noiseThreshold = objectNoiseThreshold;
+
+        // Configure image path
         if (imagePath == "")
             imagePath = "../data/chewinggum/Data/Images/Anomaly/000.JPG";
 
@@ -54,11 +76,12 @@ int main(int argc, char** argv) {
             std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
 
             for (const auto& [imageName, image] : images)
-                view(imagePath + imageName, viewFlags, noiseThreshold);
+                view(imagePath + imageName, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
 
         } else
-            view(imagePath, viewFlags, noiseThreshold);
+            view(imagePath, preProcessingConfiguration, objectDetectionConfiguration, viewFlags["markFault"]);
     });
+
 
     // Evaluation subcommand
     CLI::App* evaluationSubcommand = faultSense.add_subcommand("eval", "Evaluates the trained norms")->ignore_case();
@@ -91,44 +114,25 @@ int main(int argc, char** argv) {
  */
 std::map<std::string, std::array<float, 5>> normalNorm;
 std::map<std::string, std::array<float, 5>> anomalyNorm;
-void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
+void view(std::string imagePath, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault) {
 
-    cv::Mat temp = cv::imread(imagePath);
-    cv::Mat original = cv::imread(imagePath);
-    cv::Mat image;
+    cv::Mat image = cv::imread(imagePath);
 
-    if (flags["objectDetection"])
-        objectDetection(temp, image);
-    else 
-        image = temp.clone();
+    // Object Detection
+    if (objectDetectionConfig.enableObjectDetection)
+        objectDetectionConfig.apply(image);
 
-    if (flags["lbp"]) {
-        lbpValues(temp, image);
+    // Pre-Processing
+    preProcessingConfig.apply(image);
 
-    } else if (flags["edge"]) {
-
-        CannyThreshold threshold{57, 29};
-        cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-        edgeDetection(image, kernal, threshold);
-
-    } else if (flags["hsv"]) {
-        HSV HSVThreshold{0, 22, 0, 119, 88,255};
-        thresholdHSV(image, HSVThreshold);
-    } 
-
-    if (noiseThreshold > 0) {
-        removeNoise(image, noiseThreshold);
-    }
-
-
-    if (flags["markFault"]) {
+    if (markFault) {
         std::cout << "Generate normal norm cell\n";
-        //std::map<std::string, std::array<float, 5>> normalNorm;
+        //std::map<std::string, std::array<float, 5>> normalNorm; // Commented out temporarily so it's not re-calculated each time
         if (normalNorm.size() == 0)
             trainCellNorms(normalNorm, true, "chewinggum");
 
         std::cout << "Generate anomaly norm cell\n";
-        //std::map<std::string, std::array<float, 5>> anomalyNorm;
+        //std::map<std::string, std::array<float, 5>> anomalyNorm; // Commented out temporarily so it's not re-calculated each time
         if (anomalyNorm.size() == 0)
             trainCellNorms(anomalyNorm, false, "chewinggum");
 

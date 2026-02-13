@@ -22,12 +22,12 @@
 #include <cmath>
 
 void trainMatrix(std::map<std::string, cv::Mat> &matrixNorm);
-void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, const bool normal, const std::string& category);
+void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, const bool normal, const std::string& category, bool normal);
 void trainCellNorm(std::map<std::string, std::array<float, 5>> &cellNorms, std::map<std::string, cv::Mat> &images, const std::string& categoryName);
 void initNormMatrix(const std::map<std::string, cv::Mat>::iterator &itterator, int cellSize, cv::Mat &categoryNorm);
 void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOfSamples);
 
-const std::string dataRoot = "../../../data/";
+const std::string dataRoot = "../data/";
 const std::string objectCategories[12] = {
     "chewinggum/",
     "candle/",
@@ -130,30 +130,22 @@ void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOf
 }
 
 /*
- * trainCell
+ * trainCellNorms
  *
  * @param cellNorms A mapping of object type (string) to it's average anomaly distribution
  * @param normal
- * @param category
  */
-void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, const bool normal, const std::string& category = "") {
+void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, const bool normal) {
 
 
-    // Helper lambda to process images from a given path
-    auto processCategory = [&](const std::string& categoryName) {
+    for ( auto [&categoryName, &categoryNorm] : cellNorms ) {
+
+        if (categoryName == "") continue;
+
         const std::string imagePath = dataRoot + categoryName + "/" + (normal ? normalPath : anomalyPath);
         std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
-        trainCellNorm(cellNorms, images, categoryName);
-    };
-    
-    // If category specified
-    if (!category.empty()) {
-        processCategory(category);
-
-    // Else train all categories
-    } else {
-        for (const auto& category : objectCategories)
-            processCategory(category);
+        std::vector<cv::Mat> images = ;
+        trainCellNorm(categoryNorm, images);
     }
 }
 
@@ -161,10 +153,10 @@ void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, cons
 /*
  * trainCellNorm
  *
- * @param cellNorms 
- * @param images 
+ * @param cellNorm
+ * @param images
  */
-void trainCellNorm(std::map<std::string, std::array<float, 5>> &cellNorms, std::map<std::string, cv::Mat> &images, const std::string& categoryName) {
+void trainCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images) {
 
 
     std::array<float, 5> averageLBPDistribution = {0};
@@ -207,8 +199,8 @@ void trainCellNorm(std::map<std::string, std::array<float, 5>> &cellNorms, std::
 
         // Average the cummulated distribution for anomaly cells
         if (totalAnomalyCells == 0) {
-            std::cout << "totalAnomalyCells == 0\n";
-            continue; // Need to investigate why this is happening
+            std::cerr << "totalAnomalyCells == 0\n";
+            return; // Need to investigate why this is happening
         }
 
     }
@@ -225,12 +217,11 @@ void trainCellNorm(std::map<std::string, std::array<float, 5>> &cellNorms, std::
         averageLBPDistribution[k] /= images.size();
     }
     
-    // Normalize to sum to 100
+    // Normalize from 0 to 100
     float sum = 0.0f;
     for (int k = 0; k < 5; k++) {
         sum += averageLBPDistribution[k];
     }
-    
     if (sum > 0.0f) {
         for (int k = 0; k < 5; k++) {
             averageLBPDistribution[k] = (averageLBPDistribution[k] / sum) * 100.0f;
@@ -238,12 +229,4 @@ void trainCellNorm(std::map<std::string, std::array<float, 5>> &cellNorms, std::
     }
     // Record result
     cellNorms.insert({categoryName, averageLBPDistribution});
-
-
-    /*
-    for (int l = 0; l < averageLBPDistribution.size(); l++)
-        averageLBPDistribution[l] = (averageLBPDistribution[l] / images.size()) * 100;
-
-    cellNorms.insert({categoryName, averageLBPDistribution});
-    */
 }

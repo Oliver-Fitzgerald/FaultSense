@@ -27,7 +27,8 @@
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
 
 /*
- * markFaultLBP */
+ * markFaultLBP
+ */
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
     cv::Mat LBPValues;// IGNORRE THIS, to be deleted
     int cellSize = 60;
@@ -73,8 +74,8 @@ void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<flo
                 std::cout << "hit\n";
                 RGB colour = RGB{0,0,255};
                 markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
-            } else
-                std::cout << "\nanomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+            }
+            std::cout << "\nanomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
         }
     }
 
