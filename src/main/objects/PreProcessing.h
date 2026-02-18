@@ -7,6 +7,9 @@
 #include <opencv2/opencv.hpp>
 // Fault Sense
 #include "../feature/object-detection.h"
+#include "../feature/feature-extraction.h"
+#include "../feature/utils/pre-processing-utils.h"
+#include "CannyThreshold.h"
 
 /*
  * PreProcessing

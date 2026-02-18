@@ -8,6 +8,7 @@
 // Fault Sense
 #include "../../data-preperation/generate-masks.h"
 #include "../../data-preperation/synthetic-data-generation.h"
+#include "../../general/file-operations/generic-file-operations.h"
 
 void generate(std::map<const char*, bool> flags);
 
@@ -34,6 +35,13 @@ int main(int argc, char** argv) {
 void generate(std::map<const char*, bool> flags) {
 
     if (flags["all"] || flags["removeNoise"]) {
-        generateRemoveNoiseTestData();
+
+        try {
+            cv::Mat image;
+            generateRemoveNoiseTestData(image);
+            writeImage(image, "test-images/synthetic/removeNoise/000.JPG");
+        } catch (std::exception& exception) {
+            std::cerr << exception.what();
+        }
     }
 }

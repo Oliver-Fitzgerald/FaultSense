@@ -12,10 +12,10 @@
 // Fault Sense
 #include "../feature/feature-extraction.h"
 #include "../feature/utils/pre-processing-utils.h"
-#include "../feature/utils/generic-utils.h"
-#include "../feature/objects/CannyThreshold.h"
+#include "../objects/CannyThreshold.h"
 #include "../objects/PreProcessing.h"
-#include "../general/file-operations/generic-read-write.h"
+#include "../general/file-operations/generic-file-operations.h"
+#include "../general/generic-utils.h"
 // Standard
 #include <map>
 #include <array>
@@ -264,9 +264,6 @@ namespace {
      * @param preProcessingConfiguration
      */
     void generateNormalCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images, const PreProcessing &preProcessingConfiguration) {
-
-        // left off here
-        // Investigating why cellNorm is not being updated i.e resulting in [0, 0, 0, 0, 0]
 
         for (auto& image : images) {
 

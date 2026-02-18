@@ -15,8 +15,8 @@
 #include <map>
 #include <exception>
 // Fault Sense
-#include "../feature/utils/generic-utils.h"
-#include "../general/file-operations/generic-read-write.h"
+#include "../general/generic-utils.h"
+#include "../general/file-operations/generic-file-operations.h"
 
 void generateMasks();
 

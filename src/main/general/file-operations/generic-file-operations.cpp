@@ -75,6 +75,19 @@ void readImagesFromDirectory(const std::string& directory, std::vector<cv::Mat> 
     }
 }    
 
+/*
+ * writeImage
+ * Writes a single image to a path below the data directory
+ *
+ * @param image The image to be written to memory
+ * @param datDirectory the sub path/image name where image will be writen
+ */
+void writeImage(const cv::Mat &image, const std::string& dataDirectory) {
+
+    bool success = cv::imwrite("../data/" + dataDirectory, image);
+    if (!success) throw std::runtime_error("Error writing image to data directory ../data/" + dataDirectory + "\n");
+}
+
 namespace {
 
     /*

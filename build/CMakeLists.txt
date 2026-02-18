@@ -28,16 +28,18 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/feature/object-detection.cpp
                            ../src/main/feature/pre-processing.cpp
                            ../src/main/feature/feature-extraction.cpp
-                           ../src/main/feature/utils/generic-utils.cpp
+                           ../src/main/general/generic-utils.cpp
                            ../src/main/feature/utils/pre-processing-utils.cpp
                            ../src/main/training/train.cpp
                            ../src/main/general/file-operations/training-data.cpp
-                           ../src/main/general/file-operations/generic-read-write.cpp
+                           ../src/main/general/file-operations/generic-file-operations.cpp
+                           ../src/main/frontend/cli/image-viewer-ui/image-viewer.cpp
                            ../src/main/evaluation/evaluation.cpp)
 target_link_libraries(fault-sense-cli PRIVATE  ${OpenCV_LIBS} CLI11::CLI11)
 
 add_executable(data-managment-cli ../src/main/frontend/cli/data-managment-cli.cpp
-                           ../src/main/general/file-operations/generic-read-write.cpp
+                           ../src/main/general/file-operations/generic-file-operations.cpp
+                           ../src/main/general/generic-utils.cpp
                            ../src/main/data-preperation/generate-masks.cpp
                            ../src/main/data-preperation/synthetic-data-generation.cpp)
 target_link_libraries(data-managment-cli PRIVATE  ${OpenCV_LIBS} CLI11::CLI11)

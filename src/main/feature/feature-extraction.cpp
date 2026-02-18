@@ -17,7 +17,7 @@
 #include <array>
 // Fault Sense
 #include "utils/pre-processing-utils.h"
-#include "utils/generic-utils.h"
+#include "../general/generic-utils.h"
 #include "object-detection.h"
 
 void lbpValueDistribution(const cv::Mat &LBPValues, std::array<float, 5>& LBPHistogram);

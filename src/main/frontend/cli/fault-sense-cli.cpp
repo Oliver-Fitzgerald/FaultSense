@@ -20,8 +20,9 @@
 #include "../../evaluation/evaluation.h"
 #include "../../training/train.h"
 #include "../../general/file-operations/training-data.h"
-#include "../../general/file-operations/generic-read-write.h"
+#include "../../general/file-operations/generic-file-operations.h"
 #include "../../objects/PreProcessing.h"
+#include "image-viewer-ui/image-viewer.h"
 
 void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault);
 void evaluation(std::map<std::string, bool> flags);
@@ -145,12 +146,9 @@ void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &obj
         if (first)
             first = false;
         markFaultLBP(normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
-        cv::imshow("Image", image);
-    } else
-        cv::imshow("Image", image);
+    }
 
-    while (cv::pollKey() != 113);
-
+    imageViewer(image);
 }
 
 /*

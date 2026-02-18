@@ -10,16 +10,16 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 // Fault Sense
-#include "utils/beta/texture-beta.h"
-#include "utils/generic-utils.h"
-#include "utils/pre-processing-utils.h"
-#include "objects/RGB.h"
-#include "object-detection.h"
-#include "feature-extraction.h"
-#include "pre-processing.h"
 #include "../evaluation/evaluation.h"
 #include "../training/train.h"
 #include "../general/file-operations/training-data.h"
+#include "../general/generic-utils.h"
+#include "../objects/RGB.h"
+#include "utils/beta/texture-beta.h"
+#include "utils/pre-processing-utils.h"
+#include "object-detection.h"
+#include "feature-extraction.h"
+#include "pre-processing.h"
 // Standard
 #include <array>
 

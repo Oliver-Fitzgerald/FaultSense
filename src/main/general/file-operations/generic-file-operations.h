@@ -10,5 +10,6 @@
 
 void readImagesFromDirectory(const std::string& directory, std::map<std::string, cv::Mat> &images);
 void readImagesFromDirectory(const std::string& directory, std::vector<cv::Mat> &images);
+void writeImage(const cv::Mat &image, const std::string& dataDirectory);
 
 #endif

@@ -1,6 +1,7 @@
 /*
  * generic-utils
- * 
+ * Contains functions that have generalt utility throughout the project but
+ * cannot be directly categorized into a specific module. 
  */
 
 // OpenCV
@@ -20,11 +21,10 @@
 #include "../objects/RGB.h"
 #include "features.h"
 
-void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label, RGB colour);
-void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
-void padImage(cv::Mat& image, int rows, int cols, cv::Mat& returnImage);
-std::map<std::string, cv::Mat> readImagesFromDirectory(const std::string& directory);
-long getMemoryUsage();
+namespace keys {
+    const int POSITIVE = 43;
+    const int NEGATIVE = 95;
+}
 
 
 /*
@@ -148,4 +148,27 @@ long getMemoryUsage() {
     struct rusage usage;
     getrusage(RUSAGE_SELF, &usage);
     return usage.ru_maxrss; // kB on Linux, bytes on macOS
+}
+
+
+/*
+ * zoom
+ * Zooms in or out on an image
+ *
+ * @parm key the key pressed 
+ * @param image the image to be zoomed in or out of
+ * @param retult the image zoomed in or out
+ */
+double zoomFactor = 1.0;
+int zoom(int key, cv::Mat &image, cv::Mat &result) {
+
+    if (key == keys::POSITIVE) {
+        zoomFactor *= 1.5;
+    } else if (key == keys::NEGATIVE) {
+        zoomFactor *= 0.5;
+    } else 
+        return key;
+
+    cv::resize(image, result, cv::Size(), zoomFactor, zoomFactor, cv::INTER_NEAREST);
+    return key;
 }

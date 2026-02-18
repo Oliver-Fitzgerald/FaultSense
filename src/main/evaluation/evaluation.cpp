@@ -11,7 +11,7 @@
 #include <array>
 #include <string>
 // Fault Sense
-#include "../feature/utils/generic-utils.h"
+#include "../general/generic-utils.h"
 #include "../feature/feature-extraction.h"
 #include "../feature/pre-processing.h"
 #include "../feature/object-detection.h"

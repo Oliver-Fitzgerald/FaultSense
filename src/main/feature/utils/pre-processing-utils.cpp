@@ -10,9 +10,9 @@
 // Standard
 #include <iostream>
 // Fault Sense
-#include "../objects/HSV.h"
-#include "../objects/CannyThreshold.h"
-#include "../objects/PixelCoordinates.h"
+#include "../../objects/HSV.h"
+#include "../../objects/CannyThreshold.h"
+#include "../../objects/PixelCoordinates.h"
 #include "features.h"
 
 void thresholdHSV(cv::Mat& image, HSV& threshold);
@@ -50,8 +50,11 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 
 /*
  * removeNoise
+ * removes groups of pixels in an image below the thresholded (minGrpSize) 
+ * @param image
+ * @param minGrpSize
  */
-void removeNoise(cv::Mat& img, int minGrpSize) {
+void removeNoise(cv::Mat& image, int minGrpSize) {
     using namespace std;
 
     // left off here
@@ -64,12 +67,12 @@ void removeNoise(cv::Mat& img, int minGrpSize) {
                                          .min = -1,
                                          .max = -1};
 
-    for (int x = 0; x < img.rows; x++) {
+    for (int x = 0; x < image.rows; x++) {
 
 
-        for (int y = 0; y < img.cols; y++) {
+        for (int y = 0; y < image.cols; y++) {
 
-            int pixel = img.at<uchar>(x, y);
+            int pixel = image.at<uchar>(x, y);
 
             // Continue Current group
             if (pixel == 0 && lastPixel) {
@@ -105,7 +108,7 @@ void removeNoise(cv::Mat& img, int minGrpSize) {
 
            /* DEBUG INFO
             std::cout << "\n(row, col) => (" << x << ", " << y << ")\n";
-            std::cout << "(img.rows, img.cols) => (" << img.rows << ", " << img.cols << ")\n";
+            std::cout << "(image.rows, image.cols) => (" << image.rows << ", " << image.cols << ")\n";
             std::cout << "currentGroup.group.size() => " << currentGroup.group.size() << "\n";
             std::cout << "pixelGroups.size(): " << pixelGroups.size() << "\n";
             std::cout << "grpUsed.size(): " << grpUsed.size() << "\n";
@@ -119,7 +122,7 @@ void removeNoise(cv::Mat& img, int minGrpSize) {
 
             if (!grpUsed[i] || (pixelGroups[i].group.size() < minGrpSize)) {
 
-                clean(pixelGroups[i],img, minGrpSize);
+                clean(pixelGroups[i],image, minGrpSize);
                 grpUsed.erase(grpUsed.begin() + i);
                 pixelGroups.erase(pixelGroups.begin() + i);
             }

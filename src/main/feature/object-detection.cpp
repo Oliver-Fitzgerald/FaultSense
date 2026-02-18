@@ -13,8 +13,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 // Fault Sense
-#include "objects/PixelCoordinates.h"
-#include "utils/generic-utils.h"
+#include "../objects/PixelCoordinates.h"
+#include "../general/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 
 void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage);
