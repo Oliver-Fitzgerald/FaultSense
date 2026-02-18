@@ -56,3 +56,8 @@ add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
                           ../../main/feature/object-detection.cpp
                           ../../main/evaluation/evaluation.cpp)
 target_link_libraries(evaluation-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
+
+add_executable(pre-processing-utils-tests ../feature/utils/pre-processing-utils-tests.cpp
+                          ../../main/frontend/cli/image-viewer-ui/image-viewer.cpp
+                          ../../main/feature/utils/pre-processing-utils.cpp)
+target_link_libraries(pre-processing-utils-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
