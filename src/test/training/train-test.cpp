@@ -9,6 +9,8 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 // Fault Sense
 #include "../../main/training/train.h"
+#include "../../main/objects/PreProcessing.h"
+#include "../../main/general/file-operations/generic-file-operations.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -48,8 +50,11 @@ TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
         "pipe_fryum"
     };
 
+    PreProcessing preProcessingConfiguration;
+    preProcessingConfiguration.edge = true;
+
     std::map<std::string, std::array<float, 5>> anomaly;
-    trainCellNorms(anomaly, false);
+    trainCellNorms(anomaly, preProcessingConfiguration, false);
 
     for (int index = 0; index < 12; index++) {
             
@@ -83,7 +88,10 @@ TEST_CASE( "Training cell norm individual", "[trainCell]" ) {
     for (int index = 0; index < 12; index++) {
 
         std::map<std::string, std::array<float, 5>> anomaly;
-        trainCellNorms(anomaly, false, objectCategories[index]);
+        PreProcessing preProcessingConfiguration;
+        preProcessingConfiguration.edge = true;
+
+        trainCellNorms(anomaly, preProcessingConfiguration, false);
 
                 
         std::array<float, 5> categoryNorm = anomaly[ objectCategories[index] ];
@@ -114,7 +122,9 @@ TEST_CASE( "Training matrix norm distribution is normalized", "[trainMatrix]" ) 
     };
 
     std::map<std::string, cv::Mat> normal;
-    trainMatrix(normal);
+    PreProcessing preProcessingConfiguration;
+    preProcessingConfiguration.edge = true;
+    trainMatrix(normal, preProcessingConfiguration, true);
 
 
     for (int index = 0; index < 12; index++) {

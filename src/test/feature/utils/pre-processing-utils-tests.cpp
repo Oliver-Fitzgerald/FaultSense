@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
 #include "../../../main/feature/utils/pre-processing-utils.cpp"
+#include "../../../main/frontend/cli/image-viewer-ui/image-viewer.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -14,8 +15,14 @@
 
 TEST_CASE ("removeNoise test") {
 
+    // Image 000.JPG
+    // WWWW
+    // WBBW
+    // WBBW
+    // WWWW
     int maxGrpSize = 0;
-    cv::Mat image = cv::imread("../../../data/synthetic/testing-data/remove-noise-1.JPG");
+    cv::Mat image = cv::imread("../../../data/test-image/synthetic/removeNoise/000.JPG");
 
-    removeNoise(image, maxGrpSize);
+    removeNoise(image, 2);
+    imageViewer(image);
 }

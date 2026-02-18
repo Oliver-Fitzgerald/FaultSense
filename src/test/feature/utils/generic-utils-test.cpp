@@ -6,7 +6,7 @@
 // Catch2 Testing Framework
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
-#include "../../../main/feature/utils/generic-utils.cpp"
+#include "../../../main/general/generic-utils.cpp"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
