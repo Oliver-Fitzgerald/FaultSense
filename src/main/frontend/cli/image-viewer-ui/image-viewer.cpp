@@ -42,7 +42,7 @@ void imageViewer(cv::Mat &image) {
         if (!zoom(key, image, returnImage)) continue; // continue if invalid key
 
 
-        cv::Mat canvas(device::WINDOWHEIGHT, device::WINDOWWIDTH, CV_8UC3, cv::Scalar(128));
+        cv::Mat canvas(device::WINDOWHEIGHT, device::WINDOWWIDTH, returnImage.type(), cv::Scalar(128));
         int x = (device::WINDOWWIDTH - returnImage.cols) / 2;
         int y = (device::WINDOWHEIGHT - returnImage.rows) / 2;
 

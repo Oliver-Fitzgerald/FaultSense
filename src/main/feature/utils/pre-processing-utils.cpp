@@ -51,7 +51,7 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
  * removeNoise
  * removes groups of pixels in an image below the thresholded (minGrpSize) 
  * @param image
- * @param minGrpSize
+ * @param minGrpSize Groups smaller than minGrpSize are removed
  */
 void removeNoise(cv::Mat& image, int minGrpSize) {
     using namespace std;
@@ -70,6 +70,8 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
 
 
         for (int y = 0; y < image.cols; y++) {
+
+
 
             int pixel = image.at<uchar>(x, y);
 
@@ -93,6 +95,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
                 lastPixel = false;
 
 
+
             // Start of new group
             } else if (pixel == 255) {
 
@@ -113,18 +116,27 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
             std::cout << "grpUsed.size(): " << grpUsed.size() << "\n";
             std::cout << "pixel: " <<  pixel << "\n";
             */
-        }
 
+        }
 
         // Remove any complete groups of size < minGrpSize
         for (int i = pixelGroups.size() - 1; i >= 0; i--) {
 
-            if (!grpUsed[i] || (pixelGroups[i].group.size() < minGrpSize)) {
+            if (!grpUsed[i] || !grpUsed[i] && (pixelGroups[i].group.size() < minGrpSize)) {
 
-                clean(pixelGroups[i],image, minGrpSize);
+                clean(pixelGroups[i],image, minGrpSize - 2);
                 grpUsed.erase(grpUsed.begin() + i);
                 pixelGroups.erase(pixelGroups.begin() + i);
             }
+        }
+    }
+
+    for (int i = pixelGroups.size() - 1; i >= 0; i--) {
+        if (pixelGroups[i].group.size() < minGrpSize) {
+
+            clean(pixelGroups[i],image, minGrpSize);
+            grpUsed.erase(grpUsed.begin() + i);
+            pixelGroups.erase(pixelGroups.begin() + i);
         }
     }
 
@@ -177,7 +189,7 @@ namespace {
         bool existingGroup = false;
 
         // Add to any overlapping group
-        for (int k = 0; k < size(pixelGroups); k++) {
+        for (int k = 0; k < std::size(pixelGroups); k++) {
             int currentGroupLength = currentGroup.max - currentGroup.min;
 
             if ( // Check if the current group overlaps with an existing group

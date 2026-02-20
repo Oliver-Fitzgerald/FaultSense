@@ -12,7 +12,7 @@ struct pixelGroup {
     int max;
 
     void append(pixelGroup& theOtherGroup, bool currentRow) {
-        // Does not account for the case of a fork
+        // Does not account for the case of a fork // left off here
         if (currentRow) {
             max = theOtherGroup.max;
             min = theOtherGroup.min;

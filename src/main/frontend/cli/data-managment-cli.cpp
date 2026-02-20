@@ -37,9 +37,13 @@ void generate(std::map<const char*, bool> flags) {
     if (flags["all"] || flags["removeNoise"]) {
 
         try {
-            cv::Mat image;
-            generateRemoveNoiseTestData(image);
-            writeImage(image, "test-images/synthetic/removeNoise/000.JPG");
+            std::array<cv::Mat, 4> images;
+            generateRemoveNoiseTestData(images);
+
+            // left off here
+            for (int index = 0; index < images.size(); index++)
+                writeImage(images[index], "test-images/synthetic/removeNoise/00" + std::to_string(index) + ".png");
+
         } catch (std::exception& exception) {
             std::cerr << exception.what();
         }
