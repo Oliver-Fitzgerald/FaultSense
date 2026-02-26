@@ -126,8 +126,6 @@ void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &obj
     if (objectDetectionConfig.enableObjectDetection)
         objectDetectionConfig.apply(image);
 
-    // Pre-Processing
-    preProcessingConfig.apply(image);
 
     if (markFault) {
 
@@ -146,7 +144,8 @@ void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &obj
         if (first)
             first = false;
         markFaultLBP(normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
-    }
+    } else
+        preProcessingConfig.apply(image); // Pre-Processing
 
     imageViewer(image);
 }

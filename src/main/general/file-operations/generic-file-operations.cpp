@@ -31,7 +31,7 @@ void readImagesFromDirectory(const std::string& directory, std::map<std::string,
             }
             if (!isImageFile(entry)) {
                 std::cerr << "Skipping read of image [" << entry.path().string() << "] - Invalid type\n";
-                continue;
+                //continue;
             }
 
 
@@ -65,7 +65,7 @@ void readImagesFromDirectory(const std::string& directory, std::vector<cv::Mat> 
             }
             if (!isImageFile(entry)) {
                 std::cerr << "Skipping read of image [" << entry.path().string() << "] - Invalid type\n";
-                continue;
+                //continue;
             }
                 
             images.push_back(cv::imread(entry.path().string()));

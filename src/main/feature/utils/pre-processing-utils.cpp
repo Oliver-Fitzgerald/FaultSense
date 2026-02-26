@@ -11,16 +11,11 @@
 #include <iostream>
 // Fault Sense
 #include "features.h"
+#include "../../general/generic-utils.h"
 #include "../../objects/HSV.h"
 #include "../../objects/CannyThreshold.h"
 #include "../../objects/PixelCoordinates.h"
-
-namespace {
-
-    void clean(pixelGroup &grp, cv::Mat &img, int minGrpSize);
-    cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount);
-    bool mergeOverlappingGroups(pixelGroup &currentGroup, std::vector<pixelGroup> &pixelGroups, std::vector<bool> &grpUsed);
-}
+#include "pre-processing-utils_internal.h"
 
 
 /*
@@ -56,42 +51,33 @@ void edgeDetection(cv::Mat& image, cv::Mat& kernal, CannyThreshold& threshold) {
 void removeNoise(cv::Mat& image, int minGrpSize) {
     using namespace std;
 
-    // left off here
-    // Some groups are getting skipped
-
     bool lastPixel = false;
     std::vector<pixelGroup> pixelGroups;
     std::vector<bool> grpUsed;
     pixelGroup currentGroup = pixelGroup{.group = {},
-                                         .min = -1,
-                                         .max = -1};
-
+                                          .bounds = {{-1, -1, -1}}};
     for (int x = 0; x < image.rows; x++) {
 
 
         for (int y = 0; y < image.cols; y++) {
-
-
 
             int pixel = image.at<uchar>(x, y);
 
             // Continue Current group
             if (pixel == 0 && lastPixel) {
 
-                currentGroup.max = y ;
-                bool existingGroup = mergeOverlappingGroups(currentGroup, pixelGroups, grpUsed); // Move to function return bool (&grpUsed)
+                currentGroup.bounds[0].max = y - 1;
+                bool existingGroup = internal::mergeOverlappingGroups(currentGroup, pixelGroups, grpUsed, x); // Move to function return bool (&grpUsed)
 
                 // If it does not overlap with an existing group add as a new group
                 if (!existingGroup) {
-
 
                     pixelGroups.push_back(currentGroup);
                     grpUsed.push_back(true);
                 }
 
                 currentGroup = pixelGroup{.group = {},
-                                          .min = -1,
-                                          .max = -1};
+                                          .bounds = {{-1, -1, -1}}};
                 lastPixel = false;
 
 
@@ -103,7 +89,8 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
 
                 if (!lastPixel) {
                     lastPixel = true;
-                    currentGroup.min = y - 1;
+                    currentGroup.bounds[0].min = y;
+                    currentGroup.row = x;
                 }
             }
 
@@ -117,6 +104,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
             std::cout << "pixel: " <<  pixel << "\n";
             */
 
+            //std::cout << "memory usage end row(" << x << "): " << getMemoryUsage() << "\n";
         }
 
         // Remove any complete groups of size < minGrpSize
@@ -124,7 +112,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
 
             if (!grpUsed[i] || !grpUsed[i] && (pixelGroups[i].group.size() < minGrpSize)) {
 
-                clean(pixelGroups[i],image, minGrpSize - 2);
+                internal::clean(pixelGroups[i],image, minGrpSize);
                 grpUsed.erase(grpUsed.begin() + i);
                 pixelGroups.erase(pixelGroups.begin() + i);
             }
@@ -134,7 +122,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
     for (int i = pixelGroups.size() - 1; i >= 0; i--) {
         if (pixelGroups[i].group.size() < minGrpSize) {
 
-            clean(pixelGroups[i],image, minGrpSize);
+            internal::clean(pixelGroups[i],image, minGrpSize);
             grpUsed.erase(grpUsed.begin() + i);
             pixelGroups.erase(pixelGroups.begin() + i);
         }
@@ -154,10 +142,10 @@ void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage) {
     // Applying illumination invariance
     cv::Mat temp;
     cv::cvtColor(image, temp, cv::COLOR_BGR2GRAY);
-    returnImage = brigthenDarkerAreas(temp, 169, 46);
+    returnImage = internal::brigthenDarkerAreas(temp, 169, 46);
 }
 
-namespace {
+namespace internal {
 
     /*
      * brigthenDarkerAreas
@@ -183,40 +171,52 @@ namespace {
     /*
      * mergeOverlappingGroups
      */
-    bool mergeOverlappingGroups(pixelGroup &currentGroup, std::vector<pixelGroup> &pixelGroups, std::vector<bool> &grpUsed) {
+    bool mergeOverlappingGroups(pixelGroup &currentGroup, std::vector<pixelGroup> &pixelGroups, std::vector<bool> &grpUsed, int row) {
 
         int prevOveralapIndex = -1;
         bool existingGroup = false;
 
         // Add to any overlapping group
         for (int k = 0; k < std::size(pixelGroups); k++) {
-            int currentGroupLength = currentGroup.max - currentGroup.min;
 
-            if ( // Check if the current group overlaps with an existing group
-                (currentGroup.min >= pixelGroups[k].min && currentGroup.min <= pixelGroups[k].max) || 
-                (currentGroup.max >= pixelGroups[k].min && currentGroup.max <= pixelGroups[k].max) || 
-                (currentGroup.min < pixelGroups[k].min && currentGroup.min + currentGroupLength >= pixelGroups[k].min) || 
-                (currentGroup.max > pixelGroups[k].max && currentGroup.max - currentGroupLength <= pixelGroups[k].max) 
-               ) {
+            //std::cout << "Memory usage before group " << k << ": " << getMemoryUsage() << "\n";
+            // std::cout << "pixelGrpup[" << k << "] bounds size: " <<  pixelGroups[k].bounds.size() << "\n";
+            // std::cout << "currentGroup[" << k << "] bounds size: " <<  currentGroup.bounds.size() << "\n";
+            //
+            // std::cout << "pixelGrpup[" << k << "] group size: " <<  pixelGroups[k].group.size() << "\n";
+            // for each sub-group (min, max)
+            for (int index = 0; index < currentGroup.bounds.size(); index++) {
+            for (int pixelGroupIndex = 0; pixelGroupIndex < pixelGroups[k].bounds.size(); pixelGroupIndex++) {
 
-                existingGroup = true;
+                int currentGroupLength = currentGroup.bounds[index].max - currentGroup.bounds[index].min;
 
-                if (prevOveralapIndex > -1) {
+                if ( // Check if the current group overlaps with an existing group
+                    (currentGroup.bounds[index].min >= pixelGroups[k].bounds[pixelGroupIndex].min && currentGroup.bounds[index].min <= pixelGroups[k].bounds[pixelGroupIndex].max) || 
+                    (currentGroup.bounds[index].max >= pixelGroups[k].bounds[pixelGroupIndex].min && currentGroup.bounds[index].max <= pixelGroups[k].bounds[pixelGroupIndex].max) || 
+                    (currentGroup.bounds[index].min < pixelGroups[k].bounds[pixelGroupIndex].min && currentGroup.bounds[index].min + currentGroupLength >= pixelGroups[k].bounds[pixelGroupIndex].min) || 
+                    (currentGroup.bounds[index].max > pixelGroups[k].bounds[pixelGroupIndex].max && currentGroup.bounds[index].max - currentGroupLength <= pixelGroups[k].bounds[pixelGroupIndex].max) 
+                   ) {
 
-                    pixelGroups[k].append(pixelGroups[prevOveralapIndex], false);
-                    grpUsed[prevOveralapIndex] = false;
-                    prevOveralapIndex = k;
+                    existingGroup = true;
 
-                } else {
+                    if (prevOveralapIndex > -1) {
 
-                    pixelGroups[k].append(currentGroup, true);
-                    grpUsed[k] = true;
-                    prevOveralapIndex = k;
+                        pixelGroups[k].append(pixelGroups[prevOveralapIndex], row);
+                        grpUsed[prevOveralapIndex] = false;
+                        prevOveralapIndex = k;
 
-                }
+                    } else {
 
-            } 
+                        pixelGroups[k].append(currentGroup, row);
+                        grpUsed[k] = true;
+                        prevOveralapIndex = k;
 
+                    }
+                } 
+
+            }
+            }
+            // std::cout << "Memory usage after group " << k << ": " << getMemoryUsage() << "\n";
         }
         return existingGroup;
     }

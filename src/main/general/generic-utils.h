@@ -1,7 +1,14 @@
 #ifndef METHODS_H
 #define METHODS_H
 
+// OpenCV2
+#include <opencv2/opencv.hpp>
+// Fault Sense
 #include "../objects/RGB.h"
+// Standard
+#include <string>
+#include <map>
+
 
 void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const char* label, RGB colour);
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage);
