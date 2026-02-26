@@ -6,7 +6,9 @@
 // Standard
 #include <array>
 #include <string>
+// Fault Sense
+#include "../objects/PreProcessingPipeline.h"
 
-void evaluateNormal(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution);
+void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution, PreProcessingPipeline &preProcessingPipeline);
 
 #endif

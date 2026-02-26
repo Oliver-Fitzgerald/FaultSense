@@ -8,9 +8,9 @@
 #include <string> 
 #include <array>
 // Fault Sense
-#include "../objects/PreProcessing.h"
+#include "../objects/PreProcessingPipeline.h"
 
-void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, PreProcessing &preProcessingConfiguration, const bool normal);
-void trainMatrix(std::map<std::string, cv::Mat> &matrixNorm, PreProcessing &preProcessingConfiguration, const bool normal);
+void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, PreProcessingPipeline &preProcessingConfiguration, const bool normal);
+void trainMatrix(std::map<std::string, cv::Mat> &matrixNorm, PreProcessingPipeline &preProcessingConfiguration, const bool normal);
 
 #endif

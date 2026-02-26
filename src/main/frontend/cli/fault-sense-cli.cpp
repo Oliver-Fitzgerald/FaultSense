@@ -22,6 +22,7 @@
 #include "../../general/file-operations/training-data.h"
 #include "../../general/file-operations/generic-file-operations.h"
 #include "../../objects/PreProcessing.h"
+#include "../../objects/PreProcessingPipeline.h"
 #include "image-viewer-ui/image-viewer.h"
 
 void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault);
@@ -120,12 +121,14 @@ std::map<std::string, std::array<float, 5>> normalNorm = {{"chewinggum", std::ar
 std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
 std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
 bool first = true;
-void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &objectDetectionConfig, bool markFault) {
+void view(cv::Mat &image, PreProcessing &preProcessingConfiguration, PreProcessing &objectDetectionConfig, bool markFault) {
 
+    PreProcessingPipeline preProcessingPipeline;
     // Object Detection
     if (objectDetectionConfig.enableObjectDetection)
-        objectDetectionConfig.apply(image);
+        preProcessingPipeline.steps.push_back(objectDetectionConfig);
 
+    preProcessingPipeline.steps.push_back(preProcessingConfiguration);
 
     if (markFault) {
 
@@ -133,19 +136,19 @@ void view(cv::Mat &image, PreProcessing &preProcessingConfig, PreProcessing &obj
         //std::map<std::string, std::array<float, 5>> normalNorm; // Commented out temporarily so it's not re-calculated each time
         ///trainCellNorms(normalNorm,preProcessingConfig, true);
         if (first)
-            trainMatrix(normalMatrixNorm, preProcessingConfig, true);
+            trainMatrix(normalMatrixNorm, preProcessingPipeline, true);
 
 
         std::cout << "Generate anomaly norm cell\n";
         //std::map<std::string, std::array<float, 5>> anomalyNorm; // Commented out temporarily so it's not re-calculated each time
         if (first)
-            trainCellNorms(anomalyNorm, preProcessingConfig, false);
+            trainCellNorms(anomalyNorm, preProcessingPipeline, false);
 
         if (first)
             first = false;
         markFaultLBP(normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
     } else
-        preProcessingConfig.apply(image); // Pre-Processing
+        preProcessingPipeline.apply(image); // Pre-Processing
 
     imageViewer(image);
 }
@@ -177,9 +180,22 @@ void evaluation(std::map<std::string, bool> flags) {
     std::map<std::string, std::array<float, 5>> anomalyNorm;
     readCellDistributions(anomalyNorm);
 
+
+    // Configure Pre-processing
+    PreProcessing objectDetectionConfiguration;
+    objectDetectionConfiguration.hsv = true;
+    objectDetectionConfiguration.noiseThreshold = 1000;
+
+    PreProcessing preProcessingConfiguration;
+    preProcessingConfiguration.edge = true;
+
+    PreProcessingPipeline preProcessingPipeline;
+    preProcessingPipeline.steps = {objectDetectionConfiguration, preProcessingConfiguration};
+
+
     if (flags["chewinggum"]) {
         std::cout << "Evaluating chewing gum instances ...\n";
-        evaluateNormal("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"]);
+        evaluateObjectCategory("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"], preProcessingPipeline);
     } else {
         std::cout << "Warning: No object type selected\n";
     }
@@ -193,20 +209,24 @@ void train(std::map<std::string, bool> flags) {
 
     PreProcessing objectDetectionConfiguration;
     objectDetectionConfiguration.hsv = true;
-    objectDetectionConfiguration.noiseThreshold = 200;
+    objectDetectionConfiguration.noiseThreshold = 1000;
 
     PreProcessing preProcessingConfiguration;
     preProcessingConfiguration.edge = true;
 
+    PreProcessingPipeline preProcessingPipeline;
+    preProcessingPipeline.steps = {objectDetectionConfiguration, preProcessingConfiguration};
+
 
     std::cout << "Generate nomral norm matrix\n";
-    std::map<std::string, cv::Mat> normalNorm;
-    trainMatrix(normalNorm, preProcessingConfiguration, true);
+    std::map<std::string, cv::Mat> normalNorm = {{"chewinggum", cv::Mat()}};
+    trainMatrix(normalNorm, preProcessingPipeline, true);
     std::cout << "Write normal norm to file\n";
+    writeMatrixNorm(normalNorm); 
 
     std::cout << "Generate anomaly norm cell\n";
     std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float,5>()}};
-    trainCellNorms(anomalyNorm, preProcessingConfiguration, false);
+    trainCellNorms(anomalyNorm, preProcessingPipeline, false);
     std::cout << "Write anomaly norm to file\n";
     writeCellDistributions(anomalyNorm);
 
