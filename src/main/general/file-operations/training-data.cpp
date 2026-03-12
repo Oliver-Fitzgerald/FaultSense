@@ -65,13 +65,11 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
         if (line.empty() || line[0] == '#') continue;
 
         if (index == 5) {
-            
-            if (category != "")
-                distributions.insert( {category, distribution} );
 
             line.erase(0, line.find_first_not_of(" \t"));
             line.erase(line.find(":"));
             category = line;
+            std::cout << "category: " << category << "\n";
             index = 0;
 
         } else {
@@ -82,7 +80,19 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
             try {
                 float value = std::stof(line);
                 distribution[index] = value;
+                std::cout << "distribution[" << index << "] = " << value << "\n";
                 index++;
+
+                if (index == 5) {
+                    distributions[category] = distribution;
+                    std::cout << "insertion\n";
+                }
+                std::cout << "index: " << index << "\n";
+                std::cout << "category: " << category << "\n";
+                if (index == 5)
+                for (int z = 0; z < 5; z++) {
+                    std::cout << "here: " << distributions["chewinggum"][z] << "\n";
+                }
             } catch (std::exception &exception) {
                 std::cout << "exception: " << exception.what() << "\n";
             }

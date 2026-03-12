@@ -16,14 +16,19 @@ TEST_CASE ( "Evaluation interface test" ) {
 
     std::cout << "Generating normal samples ...\n";
     std::map<std::string, cv::Mat> normal;
+
+
     PreProcessing preProcessingConfiguration;
     preProcessingConfiguration.edge = true;
-    trainMatrix(normal, preProcessingConfiguration, true);
+    PreProcessingPipeline preProcessingPipeline;
+    preProcessingPipeline.steps.push_back(preProcessingConfiguration);
+
+    trainMatrix(normal, preProcessingPipeline, true);
 
     std::cout << "Generating anomaly samples ...\n";
     std::map<std::string, std::array<float, 5>> anomaly;
-    trainCellNorms(anomaly, preProcessingConfiguration, false);
+    trainCellNorms(anomaly, preProcessingPipeline, false);
 
     std::cout << "Evaluating samples normal dataset instances ...\n";
-    evaluateNormal("chewinggum", normal["chewinggum"], anomaly["chewinggum"]);
+    evaluateObjectCategory("chewinggum", normal["chewinggum"], anomaly["chewinggum"], preProcessingPipeline);
 }

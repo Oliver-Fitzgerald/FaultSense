@@ -11,12 +11,12 @@
 #include <array>
 #include <string>
 // Fault Sense
-#include "evaluation_internal.h"
-#include "../general/generic-utils.h"
-#include "../feature/feature-extraction.h"
-#include "../feature/pre-processing.h"
-#include "../feature/object-detection.h"
+#include "evaluation-utils.h"
 #include "../objects/PreProcessingPipeline.h"
+#include "../objects/RGB.h"
+#include "../general/file-operations/generic-file-operations.h"
+#include "../general/generic-utils.h"
+#include "../../global-variables.h"
 
 
 /*
@@ -30,13 +30,15 @@
  */
 void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNorm, std::array<float, 5> &anomalyDistributionNorm, PreProcessingPipeline &preProcessingPipeline) {
 
+    EvaluationMetrics evaluationMetrics;
+
     std::string type[2] = {"Normal", "Anomaly"};
     for (int i = 0; i < 2; i++) {
 
-        internal::averageNormalCells = 0; internal::averageAnomalyCells = 0;
         int normalCount = 0; int anomalyCount = 0;
 
-        std::map<std::string, cv::Mat> images = readImagesFromDirectory("../data/chewinggum/Data/Images/" + type[i] + "/"); 
+        std::map<std::string, cv::Mat> images;
+        readImagesFromDirectory("../data/chewinggum/Data/Images/" + type[i] + "/", images); 
 
         std::cout << "\n";
         for (auto& [imageName, image] : images) {
@@ -45,7 +47,7 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
 
             preProcessingPipeline.apply(image);
 
-            if ( internal::evaluateImage(image, normalMatrixNorm, anomalyDistributionNorm) )
+            if ( evaluate_utils::evaluateImage(image, normalMatrixNorm, anomalyDistributionNorm, evaluationMetrics) )
                 normalCount++;
             else 
                 anomalyCount++;
@@ -53,94 +55,147 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
         }
 
         std::cout << "you have called evaluationNormal" << "\n";
-        std::cout << "Normal Predictions: (" << normalCount << "/" << images.size() << ") - avg normalCells(" << internal::averageNormalCells / images.size() << ")\n";
-        std::cout << "Anomaly Predictions: (" << anomalyCount << "/" << images.size() << ") - avg anomalyCells(" << internal::averageAnomalyCells / images.size() << ")\n";
+        std::cout << "Normal Predictions: (" << normalCount << "/" << images.size() << ") - avg normalCells(" << evaluationMetrics.averageNormalCells / images.size() << ")\n";
+        std::cout << "Anomaly Predictions: (" << anomalyCount << "/" << images.size() << ") - avg anomalyCells(" << evaluationMetrics.averageAnomalyCells / images.size() << ")\n";
+        std::cout << " Avg Normal Distance: (" << evaluationMetrics.averageNormalDistance / images.size() << ")\n";
+        std::cout << "Avg Anomaly Distance: (" << evaluationMetrics.averageAnomalyDistance / images.size() << ")\n";
     }
 }
 
+void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
 
-namespace internal {
+/*
+ * markFaultLBP
+ */
+void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
 
-    /*
-     * initMatrix
-     * Initalizes a norm matrix to hold the distributions for each cell in an image of
-     * dimensions sampleImage
-     * @param sampleImage The iterator to an image whos dimensions are used to construct the norm matrix
-     * @param categoryNorm The matrix norm initalized to reflect sampleImages dimensions
-     */
-    void initMatrix(const std::map<std::string, cv::Mat>::iterator &iterator, cv::Mat &categoryNorm) {
-        initMatrix(iterator->second, categoryNorm);
-    }
+    if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
+    if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
 
-    /*
-     * initMatrix
-     * Initalizes a norm matrix to hold the distributions for each cell in an image of
-     * dimensions sampleImage
-     * @param sampleImage The image dimensions used to construct the norm matrix
-     * @param categoryNorm The matrix norm initalized to reflect sampleImages dimensions
-     */
-    void initMatrix(const cv::Mat &sampleImage, cv::Mat &categoryNorm) {
+    // Group Cells to from histogram
+    for (int row = global::cellSize / 2; row < image.rows - global::cellSize; row += global::cellSize) {
+        for (int col = global::cellSize / 2; col < image.cols - global::cellSize; col += global::cellSize) {
 
-        int rowMargin = sampleImage.rows % internal::cellSize;
-        int colMargin = sampleImage.cols % internal::cellSize;
+            cv::Mat cell = image(cv::Range(row, row + global::cellSize), cv::Range(col, col + global::cellSize));
+            std::array<float, 5> cellLBPHistogram = {};
 
-        categoryNorm = cv::Mat::zeros((sampleImage.rows - rowMargin) / internal::cellSize, (sampleImage.cols - colMargin) / internal::cellSize, CV_32FC(5));
-    }
+            CannyThreshold threshold{57, 29};
+            cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+            edgeDetection(cell, kernal, threshold);
 
-    /*
-     * evaluateImage
-     * Determines wether an image is closer to given normal sample or a given anomally sample.
-     * It is determined by a majority vote over each cell in the image.
-     */
-    bool evaluateImage(cv::Mat &image, cv::Mat &normalMatrix, std::array<float, 5> &anomalySample) {
+            lbpValueDistribution(cell, cellLBPHistogram);
 
-        int rowMargin = image.rows % internal::cellSize;
-        int colMargin = image.cols % internal::cellSize;
-
-            int normalCellCount = 0;
-            int anomalyCellCount = 0;
-
-            int collIndex, rowIndex = 0; 
-            for (int row = rowMargin / 2; row + internal::cellSize < image.rows - (rowMargin / 2); row += cellSize) {
-                collIndex = 0;
-                for (int col = colMargin / 2; col  + internal::cellSize < image.cols - (colMargin / 2); col += cellSize) {
-
-
-                    // Get LBP distribution of cell
-                    cv::Mat cell = image(cv::Range(row, row + internal::cellSize), cv::Range(col, col + cellSize));
-                    std::array<float, 5> cellLBPHistogram = {};
-                    lbpValueDistribution(cell, cellLBPHistogram);
-
-                    // Get Normal & Anomaly Distance
-                    float* normalSample = normalMatrix.ptr<float>(rowIndex,collIndex);
-
-                    float normalDistance = 0, anomalyDistance = 0;
-                    for (int i = 0; i < 5; i++) {
-                        normalDistance += std::abs(cellLBPHistogram[i] - normalSample[i]);
-                        anomalyDistance += std::abs(cellLBPHistogram[i] - anomalySample[i]);
-                    }
-
-                    // Classify Cell
-                    if (normalDistance <= anomalyDistance) {
-                        normalCellCount++;
-                        internal::averageNormalCells++;
-
-                    } else {
-                        anomalyCellCount++; 
-                        internal::averageAnomalyCells++;
-                    }
-                    cell.release();
-
-                    collIndex++;
-                }
-                rowIndex++;
+            // Compare with normal and anomoly samples
+            float normalDistance = 0; float anomolyDistance = 0;
+            for (int i = 0; i < std::size(normalSample); i++) {
+                normalDistance += std::abs(cellLBPHistogram[i] - normalSample[i]);
+                //std::cout << "- normalSample[" << i << "]: " << normalSample[i] << "\n";
+                //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
+                anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
             }
-            std::cout << " normalCellCount(" << normalCellCount << "), anomalyCellCount(" << anomalyCellCount << ")\n";
 
-
-            if (normalCellCount > anomalyCellCount)
-                return true;
-            return false;
+            // Mark anomoly
+            if (anomolyDistance < normalDistance) {
+                //std::cout << "\nanomaly\n";
+                RGB colour = RGB{0,0,255};
+                markFault(image, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
+            } else;
+                //std::cout << "\nnormal\n";
+            //std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
         }
+    }
 
+    /* Testing
+    cv::imshow("Image", image);
+    while (cv::pollKey() != 113);
+    */
+}
+
+/*
+ * markFaultLBP
+ */
+void markFaultLBP(PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
+
+    //if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
+    if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
+
+    cv::Mat returnImage = image.clone();
+
+    // Apply objectDetection if relevant
+    if (preProcessingPipeline.steps[0].enableObjectDetection) {
+        preProcessingPipeline.steps[0].enableObjectDetection = false;
+        preProcessingPipeline.steps[0].apply(image);
+        ObjectCoordinates objectBounds = getObject(image);
+        image = returnImage.clone();
+        preProcessingPipeline.steps[1].apply(image);
+    }
+
+    // Itterate over image cells
+    int collIndex, rowIndex = 0; 
+    for (int row = (global::cellSize / 2) + objectBounds.xMin + global::cellSize; row < (image.rows - global::cellSize) - (image.rows - objectBounds.xMax) - global::cellSize; row += global::cellSize) {
+        collIndex = 0;
+        for (int col = (global::cellSize / 2) + objectBounds.yMin + global::cellSize; col < (image.cols - global::cellSize) - (image.cols - objectBounds.yMax) - global::cellSize; col += global::cellSize) {
+
+            cv::Mat cell = image(cv::Range(row, row + global::cellSize), cv::Range(col, col + global::cellSize));
+            std::array<float, 5> cellLBPHistogram = {};
+
+            // Feature Extraction
+            cellFeatures.extractFeatures(cell);
+
+            int whitePixelCount = evaluate_utils::countWhitePixels(cell);
+            lbpValueDistribution(cell, cellLBPHistogram);
+
+            //Cell evaluation
+            float* normal = normalSample.ptr<float>(rowIndex,collIndex);
+            float normalDistance = 0; float anomolyDistance = 0;
+            for (int i = 0; i < 5; i++) {
+                normalDistance += std::abs(cellLBPHistogram[i] - normal[i]);
+                anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
+                //std::cout << "- normalSample[" << i << "]: " << normal[i] << "\n";
+                //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
+            }
+
+            // Mark anomoly
+            //if (anomolyDistance < normalDistance) {
+            if (whitePixelCount > 100) {
+                //std::cout << "\nanomaly\n";
+                RGB colour = RGB{0,0,255};
+                markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
+            } else
+                //std::cout << "\nnormal\n";
+            //imageViewer(cell);
+            std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+            collIndex++;
+        }
+        rowIndex++;
+    }
+
+    image = returnImage.clone();
+
+    /* Testing
+    cv::imshow("Image", image);
+    while (cv::pollKey() != 113);
+    */
+}
+
+/*
+ * checkIfCellIsNormal
+ * Checks if a cell contains an anomaly i.e a white cell (binary anomaly detection)
+ *
+ * @param cell (cv::Mat) the cell to be checked for an anomaly
+ * @return normal (bool) A boolean indicating wether or not the cell was normal (true)
+ *                       or contained an anomaly (false)
+ */
+bool checkIfCellIsNormal(cv::Mat cell) {
+
+    for (int row = 0; row < cell.rows; row++) { 
+        for (int col = 0; col < cell.cols; col++) {
+            
+            int pixel = cell.at<uchar>(row, col);
+            if (pixel == 255) // white
+                return false;
+        }
+    }
+
+    return true;
 }

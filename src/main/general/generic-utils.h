@@ -1,5 +1,5 @@
-#ifndef METHODS_H
-#define METHODS_H
+#ifndef generic_utils_H
+#define generic_utils_H
 
 // OpenCV2
 #include <opencv2/opencv.hpp>

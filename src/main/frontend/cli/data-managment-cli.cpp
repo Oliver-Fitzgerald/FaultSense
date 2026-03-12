@@ -41,7 +41,6 @@ void generate(std::map<const char*, bool> flags) {
             std::array<cv::Mat, 4> images;
             generateRemoveNoiseTestData(images);
 
-            // left off here
             for (int index = 0; index < images.size(); index++)
                 writeImage(images[index], "test-images/synthetic/removeNoise/00" + std::to_string(index) + ".png");
 
@@ -50,10 +49,9 @@ void generate(std::map<const char*, bool> flags) {
         }
     } else if (flags["mergeOverlap"]) {
         try {
-            std::array<cv::Mat, 5> images;
-            generateRemoveNoiseTestData(images);
+            std::array<cv::Mat, 6> images;
+            generateMergeOverlapTestData(images);
 
-            // left off here
             for (int index = 0; index < images.size(); index++)
                 writeImage(images[index], "test-images/synthetic/mergeOverlap/00" + std::to_string(index) + ".png");
 

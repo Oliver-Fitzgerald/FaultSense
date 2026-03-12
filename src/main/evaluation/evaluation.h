@@ -10,5 +10,8 @@
 #include "../objects/PreProcessingPipeline.h"
 
 void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution, PreProcessingPipeline &preProcessingPipeline);
+void markFaultLBP(const std::array<float, 5>&normalSampe, const std::array<float, 5>& anomolySample, cv::Mat &image);
+void markFaultLBP(PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
+bool checkIfCellIsNormal(cv::Mat cell);
 
 #endif

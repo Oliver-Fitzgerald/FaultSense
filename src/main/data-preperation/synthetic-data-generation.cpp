@@ -143,7 +143,7 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 4> &testImages) {
  * Genereates synthetic images used for the testing of mergeOverlappingGroups function
  * from pre-processing-utils.cpp
  */
-void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
+void generateMergeOverlapTestData(std::array<cv::Mat, 6> &testImages) {
 
     cv::Mat testImage;
 
@@ -152,11 +152,11 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
     // WBBW          | WBBWW         | WWBBW
     // WBBW          | WWBBW         | WBBWW
     // WWWW          | WWWWW         | WWWWW
-    // Image 003.png | Image 004.png
-    // WWWWW         | WWWWW
-    // WWBWW         | WBBBW
-    // WBBBW         | WWBWW
-    // WWWWW         | WWWWW
+    // Image 003.png | Image 004.png | Image 005.png
+    // WWWWW         | WWWWW         | WWWW
+    // WWBWW         | WBBBW         | WBWW
+    // WBBBW         | WWBWW         | WWBW
+    // WWWWW         | WWWWW         | WWWW
 
 
     // Image 000.png
@@ -173,10 +173,6 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
     }
 
     // Image 001.png
-    // WWWWW        
-    // WBBWW        
-    // WWBBW        
-    // WWWWW        
     testImages[1] = cv::Mat(4,5, CV_8UC1);
     testImage = testImages[1];
     for (int row = 0; row < testImage.rows; row++) {
@@ -205,10 +201,6 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
     }
 
     // Image 002.png
-    // WWWWW
-    // WWBBW
-    // WBBWW
-    // WWWWW
     testImages[2] = cv::Mat(4,5, CV_8UC1);
     testImage = testImages[2];
     for (int row = 0; row < testImage.rows; row++) {
@@ -237,10 +229,6 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
     }
 
     // Image 003.png
-    // WWWWW
-    // WWBWW
-    // WBBBW
-    // WWWWW
     testImages[3] = cv::Mat(4, 5, CV_8UC1);
     testImage = testImages[3];
     for (int row = 0; row < testImage.rows; row++) {
@@ -266,10 +254,6 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
     }
 
     // Image 004.png
-    // WWWWW
-    // WBBBW
-    // WWBWW
-    // WWWWW
     testImages[4] = cv::Mat(4, 5, CV_8UC1);
     testImage = testImages[4];
     for (int row = 0; row < testImage.rows; row++) {
@@ -290,6 +274,24 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
             else if (row == 1) {
                 testImage.at<uchar>(row, col) = 255;
             }
+
+        }
+    }
+
+    // Image 005.png
+    testImages[5] = cv::Mat(4, 4, CV_8UC1);
+    testImage = testImages[5];
+    for (int row = 0; row < testImage.rows; row++) {
+        for (int col = 0; col < testImage.cols; col++) {
+
+            // Edges White
+            if (row == 0 || row == 3 || col == 0 || col == 3)
+                testImage.at<uchar>(row, col) = 0;
+
+            else if (row == 1 && col == 1)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 2)
+                testImage.at<uchar>(row, col) = 255;
 
         }
     }

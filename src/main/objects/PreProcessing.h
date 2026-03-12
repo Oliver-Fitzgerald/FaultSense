@@ -1,14 +1,14 @@
-#ifndef pre_processing_object_H
-#define pre_processing_object_H
+#ifndef PreProcessing_H
+#define PreProcessing_H
 
 // Standard
 #include <exception>
 // OpenCV2
 #include <opencv2/opencv.hpp>
 // Fault Sense
-#include "../feature/object-detection.h"
+#include "../pre-processing/object-detection.h"
+#include "../pre-processing/pre-processing.h"
 #include "../feature/feature-extraction.h"
-#include "../feature/utils/pre-processing-utils.h"
 #include "CannyThreshold.h"
 
 /*

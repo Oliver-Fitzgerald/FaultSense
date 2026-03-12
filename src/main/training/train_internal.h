@@ -3,6 +3,11 @@
 
 // Fault Sense
 #include "../objects/PreProcessingPipeline.h"
+//Standard
+#include <array>
+#include <map>
+//OpenCV2
+#include <opencv2/opencv.hpp>
 
 namespace internal {
 

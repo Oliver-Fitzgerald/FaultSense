@@ -4,7 +4,7 @@
 // Standard
 #include <vector>
 
-struct pixelCoordinate {
+struct PixelCoordinate {
     int x;
     int y;
 };
@@ -14,13 +14,13 @@ struct Bounds {
     int row;
 };
 
-struct pixelGroup {
-    std::vector<pixelCoordinate> group;
+struct PixelGroup {
+    std::vector<PixelCoordinate> group;
     std::vector<Bounds> bounds;
     std::vector<Bounds> tempBounds;
     int row = -1;
 
-    void append(pixelGroup& theOtherGroup, int currentRow) {
+    void append(PixelGroup& theOtherGroup, int currentRow) {
 
         if (currentRow - 1 > row) {
             row == currentRow;
@@ -38,13 +38,23 @@ struct pixelGroup {
              theOtherGroup.group.begin(), 
              theOtherGroup.group.begin() + std::size(theOtherGroup.group));
     }
-};
 
-struct objectCoordinates {
-    int xMin;
-    int xMax;
-    int yMin;
-    int yMax;
+    bool newRow(int currentRow) {
+
+        if (row == currentRow) {
+            return true;
+
+        } else if (row == currentRow - 1) {
+            bounds = tempBounds;
+            tempBounds = {};
+            return true;
+
+        } else if (row <= currentRow - 2) {
+            return false;
+        }
+
+        throw std::runtime_error("row has decremented\n");
+    }
 };
 
 #endif

@@ -10,6 +10,7 @@
 // Fault Sense
 #include "../../main/training/train.h"
 #include "../../main/objects/PreProcessing.h"
+#include "../../main/objects/PreProcessingPipeline.h"
 #include "../../main/general/file-operations/generic-file-operations.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
@@ -52,9 +53,12 @@ TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
 
     PreProcessing preProcessingConfiguration;
     preProcessingConfiguration.edge = true;
+    PreProcessingPipeline preProcessingPipeline;
+    preProcessingPipeline.steps.push_back(preProcessingConfiguration);
+
 
     std::map<std::string, std::array<float, 5>> anomaly;
-    trainCellNorms(anomaly, preProcessingConfiguration, false);
+    trainCellNorms(anomaly, preProcessingPipeline, false);
 
     for (int index = 0; index < 12; index++) {
             
@@ -88,10 +92,14 @@ TEST_CASE( "Training cell norm individual", "[trainCell]" ) {
     for (int index = 0; index < 12; index++) {
 
         std::map<std::string, std::array<float, 5>> anomaly;
+
+
         PreProcessing preProcessingConfiguration;
         preProcessingConfiguration.edge = true;
+        PreProcessingPipeline preProcessingPipeline;
+        preProcessingPipeline.steps.push_back(preProcessingConfiguration);
 
-        trainCellNorms(anomaly, preProcessingConfiguration, false);
+        trainCellNorms(anomaly, preProcessingPipeline, false);
 
                 
         std::array<float, 5> categoryNorm = anomaly[ objectCategories[index] ];
@@ -122,9 +130,13 @@ TEST_CASE( "Training matrix norm distribution is normalized", "[trainMatrix]" ) 
     };
 
     std::map<std::string, cv::Mat> normal;
+
     PreProcessing preProcessingConfiguration;
     preProcessingConfiguration.edge = true;
-    trainMatrix(normal, preProcessingConfiguration, true);
+    PreProcessingPipeline preProcessingPipeline;
+    preProcessingPipeline.steps.push_back(preProcessingConfiguration);
+
+    trainMatrix(normal, preProcessingPipeline, true);
 
 
     for (int index = 0; index < 12; index++) {

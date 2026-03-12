@@ -13,30 +13,29 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 // Fault Sense
-#include "../objects/PixelCoordinates.h"
+#include "../objects/ObjectCoordinates.h"
 #include "../general/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 
 void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage);
-objectCoordinates getObject(cv::Mat &img);
+ObjectCoordinates getObject(cv::Mat &img);
 
 /*
  * objectDetection
  */
 void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage) {
 
-    cv::Mat image = returnImage.clone();
-    objectCoordinates objectBounds = getObject(inputImage);
-    crop(image, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
+    ObjectCoordinates objectBounds = getObject(inputImage);
+    crop(inputImage, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
 }
 
 /*
  * getObject
  */
-objectCoordinates getObject(cv::Mat &img) {
+ObjectCoordinates getObject(cv::Mat &img) {
 
     // Initalize with all set to max i.e image boundaries
-    objectCoordinates coordinates{.xMin=img.rows,
+    ObjectCoordinates coordinates{.xMin=img.rows,
                                   .xMax=0,
                                   .yMin=img.cols,
                                   .yMax=0};
@@ -58,6 +57,10 @@ objectCoordinates getObject(cv::Mat &img) {
             }
         }
     }
+    if (coordinates.xMin == img.rows) coordinates.xMin = 0;
+    if (coordinates.xMax == 0) coordinates.xMax = img.rows;
+    if (coordinates.yMin == img.cols) coordinates.yMin = 0;
+    if (coordinates.yMax == 0) coordinates.yMax = img.cols;
 
     return coordinates;
 }

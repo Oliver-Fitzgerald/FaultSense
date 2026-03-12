@@ -57,23 +57,21 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
     if (maxY <= minY) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be less than maxY [" + std::to_string(maxY) + "]");
     if (minX < 0) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be greater than 0");
     if (minY < 0) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be greater than 0");
-    if (minX + (maxX - minX) > image.rows) throw std::out_of_range("maxX [" + std::to_string(maxX) + "] must be less than image.rows: " + std::to_string(image.rows));
-    if (minY + (maxY - minY) > image.cols) throw std::out_of_range("maxY [" + std::to_string(maxY) + "] must be less than image.cols: " + std::to_string(image.cols));
+    if (minX + std::abs(maxX - minX) > image.rows) throw std::out_of_range("maxX [" + std::to_string(maxX) + "] must be less than image.rows: " + std::to_string(image.rows));
+    if (minY + std::abs(maxY - minY) > image.cols) throw std::out_of_range("maxY [" + std::to_string(maxY) + "] must be less than image.cols: " + std::to_string(image.cols));
 
-    /* DEBUG INFO
-    std::cout << "\n\nimage.rows: " << image.rows << "\n";
-    std::cout << "image.cols: " << image.cols << "\n";
-    std::cout << "maxX: " << maxX << "\n";
-    std::cout << "maxY: " << maxY << "\n\n";
-
-    std::cout << "minX: " << minX << "\n";
-    std::cout << "maxX - minX: " << maxX - minX << "\n";
-    std::cout << "minY: " << minY << "\n";
-    std::cout << "maxY - minY: " << maxY - minY << "\n";
-    */
+    // std::cout << "\n\nimage.rows: " << image.rows << "\n";
+    // std::cout << "image.cols: " << image.cols << "\n";
+    // std::cout << "maxX: " << maxX << "\n";
+    // std::cout << "maxY: " << maxY << "\n\n";
+    //
+    // std::cout << "minX: " << minX << "\n";
+    // std::cout << "maxX - minX: " << maxX - minX << "\n";
+    // std::cout << "minY: " << minY << "\n";
+    // std::cout << "maxY - minY: " << maxY - minY << "\n";
 
 
-    cv::Rect roi(minY, minX, (maxY - minY), (maxX - minX));
+    cv::Rect roi(minY, minX, std::abs(maxY - minY), std::abs(maxX - minX));
     returnImage = image(roi);
 }
 

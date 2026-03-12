@@ -12,11 +12,12 @@
 // Fault Sense
 #include "train_internal.h"
 #include "../feature/feature-extraction.h"
-#include "../feature/utils/pre-processing-utils.h"
+#include "../pre-processing/utils/pre-processing-utils.h"
 #include "../objects/CannyThreshold.h"
 #include "../objects/PreProcessingPipeline.h"
 #include "../general/file-operations/generic-file-operations.h"
 #include "../general/generic-utils.h"
+#include "../evaluation/evaluation.h"
 // Standard
 #include <map>
 #include <array>
@@ -55,7 +56,7 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipel
 
 
 /*
- * trainCellNorms
+ * rainCellNorms
  * Description
  * @param cellNorms A mapping of object type (string) to it's average anomaly distribution
  * @param normal
