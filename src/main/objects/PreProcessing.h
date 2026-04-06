@@ -3,6 +3,7 @@
 
 // Standard
 #include <exception>
+#include <optional>
 // OpenCV2
 #include <opencv2/opencv.hpp>
 // Fault Sense
@@ -29,7 +30,7 @@ struct PreProcessing {
      *
      * @param image The image to which the specified pre-processing functions will be applied to
      */
-    void apply(cv::Mat &image) const {
+    void apply(cv::Mat& image, ObjectCoordinates* objectBounds = nullptr) const {
 
         cv::Mat originalImage = image.clone();
 
@@ -55,9 +56,16 @@ struct PreProcessing {
         if (noiseThreshold > 0)
             removeNoise(originalImage, noiseThreshold);
 
-        if (enableObjectDetection)
+        if (enableObjectDetection) {
+            if (objectBounds != nullptr) {
+                *objectBounds = getObject(originalImage);
+                std::cout << "objectBounds.xMin: " << objectBounds->xMin << "\n";
+                std::cout << "objectBounds.xMax: " << objectBounds->xMax << "\n";
+                std::cout << "objectBounds.yMin: " << objectBounds->yMin << "\n";
+                std::cout << "objectBounds.yMax: " << objectBounds->yMax << "\n";
+            }
             objectDetection(originalImage, image);
-        else
+        } else
             image = originalImage.clone();
 
     }

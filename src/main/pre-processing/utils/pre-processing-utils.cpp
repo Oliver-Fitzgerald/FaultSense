@@ -28,7 +28,7 @@ void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage) {
  * @param image The image to which thresholding will be applied
  * @param threshold An optional custom threeshold point 
  */
-void binaryThreshold(cv::Mat& image, int threshold = 127) {
+void binaryThreshold(cv::Mat& image, int threshold) {
 
     if (image.type() != CV_8UC1) throw std::invalid_argument("binaryThreshold may only be invoked on an image of type CV_8UC1");
 

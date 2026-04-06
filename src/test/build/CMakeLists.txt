@@ -30,8 +30,11 @@ target_link_libraries(generic-utils-test PRIVATE Catch2::Catch2WithMain ${OpenCV
 add_executable(train-test ../training/train-test.cpp
                           ../../main/general/generic-utils.cpp
                           ../../main/feature/feature-extraction.cpp
-                          ../../main/feature/utils/pre-processing-utils.cpp
-                          ../../main/feature/object-detection.cpp
+                          ../../main/evaluation/evaluation.cpp
+                          ../../main/evaluation/evaluation-utils.cpp
+                          ../../main/pre-processing/utils/pre-processing-utils.cpp
+                          ../../main/pre-processing/object-detection.cpp
+                          ../../main/pre-processing/pre-processing.cpp
                           ../../main/general/file-operations/generic-file-operations.cpp
                           ../../main/training/train.cpp)
 target_link_libraries(train-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
@@ -45,20 +48,20 @@ add_executable(ground-truth-tests ../general/file-operations/ground-truth-tests.
 target_link_libraries(ground-truth-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
 add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
+                          ../../main/evaluation/evaluation-utils.cpp
                           ../../main/training/train.cpp
                           ../../main/general/generic-utils.cpp
-                          ../../main/feature/utils/pre-processing-utils.cpp
                           ../../main/general/file-operations/generic-file-operations.cpp
-                          ../../main/feature/pre-processing.cpp
                           ../../main/feature/feature-extraction.cpp
-                          ../../main/feature/object-detection.cpp
-                          ../../main/feature/utils/pre-processing-utils.cpp
-                          ../../main/feature/object-detection.cpp
+                          ../../main/pre-processing/pre-processing.cpp
+                          ../../main/pre-processing/utils/pre-processing-utils.cpp
+                          ../../main/pre-processing/object-detection.cpp
                           ../../main/evaluation/evaluation.cpp)
 target_link_libraries(evaluation-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
-add_executable(pre-processing-utils-tests ../feature/utils/pre-processing-utils-tests.cpp
+add_executable(pre-processing-utils-tests ../pre-processing/utils/pre-processing-utils-tests.cpp
                           ../../main/frontend/cli/image-viewer-ui/image-viewer.cpp
                           ../../main/general/generic-utils.cpp
-                          ../../main/feature/utils/pre-processing-utils.cpp)
+                          ../../main/pre-processing/pre-processing.cpp
+                          ../../main/pre-processing/utils/pre-processing-utils.cpp)
 target_link_libraries(pre-processing-utils-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)

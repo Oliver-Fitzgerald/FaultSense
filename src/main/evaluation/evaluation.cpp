@@ -14,6 +14,7 @@
 #include "evaluation-utils.h"
 #include "../objects/PreProcessingPipeline.h"
 #include "../objects/RGB.h"
+#include "../objects/Features.h"
 #include "../general/file-operations/generic-file-operations.h"
 #include "../general/generic-utils.h"
 #include "../../global-variables.h"
@@ -38,7 +39,7 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
         int normalCount = 0; int anomalyCount = 0;
 
         std::map<std::string, cv::Mat> images;
-        readImagesFromDirectory("../data/chewinggum/Data/Images/" + type[i] + "/", images); 
+        readImagesFromDirectory(global::projectRoot + "data/chewinggum/Data/Images/" + type[i] + "/", images); 
 
         std::cout << "\n";
         for (auto& [imageName, image] : images) {
@@ -114,18 +115,18 @@ void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std:
 /*
  * markFaultLBP
  */
-void markFaultLBP(PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
+void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
 
     //if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
 
     cv::Mat returnImage = image.clone();
-
+    ObjectCoordinates objectBounds;
     // Apply objectDetection if relevant
     if (preProcessingPipeline.steps[0].enableObjectDetection) {
         preProcessingPipeline.steps[0].enableObjectDetection = false;
         preProcessingPipeline.steps[0].apply(image);
-        ObjectCoordinates objectBounds = getObject(image);
+        objectBounds = getObject(image);
         image = returnImage.clone();
         preProcessingPipeline.steps[1].apply(image);
     }
@@ -140,7 +141,7 @@ void markFaultLBP(PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalS
             std::array<float, 5> cellLBPHistogram = {};
 
             // Feature Extraction
-            cellFeatures.extractFeatures(cell);
+            cellFeature.extractFeature(cell);
 
             int whitePixelCount = evaluate_utils::countWhitePixels(cell);
             lbpValueDistribution(cell, cellLBPHistogram);

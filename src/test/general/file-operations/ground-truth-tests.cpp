@@ -7,11 +7,13 @@
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
 #include "../../../main/general/file-operations/ground-truth.h"
+#include "../../../global-variables.h"
 // Standard
 #include <iomanip>
 
 TEST_CASE ( "Correct chewinggum binary classification" ) {
 
+    global::projectRoot = "../../../";
 
     std::map<std::string, std::array<std::string, 5>> parsedObjectLabels;
     readVisaLabels("chewinggum", parsedObjectLabels);

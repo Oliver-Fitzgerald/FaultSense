@@ -11,7 +11,6 @@
 
 namespace internal {
 
-    const std::string dataRoot = "../data/";
     const std::string objectCategories[12] = {
         "chewinggum/",
         "candle/",

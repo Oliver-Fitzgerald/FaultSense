@@ -14,8 +14,8 @@
 #include <cstdint>
 #include <cmath>
 // Fault Sense
+#include "../../pre-processing/object-detection.h"
 #include "../../feature/pre-processing.h"
-#include "../../feature/object-detection.h"
 #include "../../feature/utils/beta/texture-beta.h"
 #include "../../feature/utils/generic-utils.h"
 #include "../../feature/utils/pre-processing-utils.h"

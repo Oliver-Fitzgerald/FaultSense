@@ -26,6 +26,7 @@
 #include "../../general/file-operations/generic-file-operations.h"
 #include "../../objects/PreProcessing.h"
 #include "../../objects/PreProcessingPipeline.h"
+#include "../../objects/Features.h"
 
 void view(cv::Mat &image, PreProcessingPipeline &preProcessingPipeline, std::map<std::string, bool>& viewFlags);
 void evaluation(std::map<std::string, bool> flags, PreProcessingPipeline& preProcessingPipeline);
@@ -116,7 +117,8 @@ void view(cv::Mat& image, PreProcessingPipeline& preProcessingConfiguration, std
         std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
         readCellDistributions(anomalyNorm);
 
-        markFaultLBP(preProcessingConfiguration, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        FeatureFilter* param = new BinaryCountFeature();
+        markFaultLBP(*param, preProcessingConfiguration, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
 
 
     } else if (viewFlags["getRegion"]) {
@@ -170,7 +172,7 @@ void evaluation(std::map<std::string, bool> flags, PreProcessingPipeline& prePro
     readMatrixNorm(normalNorm);
 
     std::cout << "Reading anomaly norm ...\n";
-    std::map<std::string, std::array<float, 5>> anomalyNorm;
+    std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
     readCellDistributions(anomalyNorm);
 
 

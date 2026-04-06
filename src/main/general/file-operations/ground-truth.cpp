@@ -10,10 +10,9 @@
 #include <string>
 // Fault Sense
 #include "../../objects/SampleMat.h"
+#include "../../../global-variables.h"
 
 void readVisaLabels(const std::string objectCategory, std::map<std::string, std::array<std::string, 5>> &objectLabels);
-
-const std::string DATA_ROOT = "../data/";
 
 /*
  * readVisaLabels
@@ -25,10 +24,10 @@ const std::string DATA_ROOT = "../data/";
  */
 void readVisaLabels(const std::string objectCategory, std::map<std::string, std::array<std::string, 5>> &objectLabels) {
 
-    std::ifstream file(DATA_ROOT + objectCategory + "/image_anno.csv");
+    std::ifstream file(global::projectRoot + "data/" + objectCategory + "/image_anno.csv");
 
     if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open file: " + DATA_ROOT + objectCategory + "image_anno.csv");
+        throw std::runtime_error("Couldn't open file: " + global::projectRoot + "data/" + objectCategory + "/image_anno.csv");
     }
 
     std::string line;

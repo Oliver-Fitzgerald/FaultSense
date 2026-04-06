@@ -11,7 +11,9 @@
 #include <opencv2/imgproc.hpp>
 // Fault Sense
 #include "train_internal.h"
+#include "../../global-variables.h"
 #include "../feature/feature-extraction.h"
+#include "../pre-processing/pre-processing.h"
 #include "../pre-processing/utils/pre-processing-utils.h"
 #include "../objects/CannyThreshold.h"
 #include "../objects/PreProcessingPipeline.h"
@@ -40,7 +42,7 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipel
         if (categoryName.empty()) continue;
 
         std::vector<cv::Mat> images;
-        const std::string imagePath = internal::dataRoot + categoryName + "/" + (normal ? internal::normalPath : internal::anomalyPath);
+        const std::string imagePath = global::projectRoot + "data/" + categoryName + "/" + (normal ? internal::normalPath : internal::anomalyPath);
         readImagesFromDirectory(imagePath, images);
 
         internal::initNormMatrix(images[0], internal::cellSize, categoryNorm);
@@ -56,7 +58,7 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipel
 
 
 /*
- * rainCellNorms
+ * trainCellNorms
  * Description
  * @param cellNorms A mapping of object type (string) to it's average anomaly distribution
  * @param normal
@@ -68,7 +70,7 @@ void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, PreP
 
         if (categoryName.empty()) continue;
 
-        const std::string imagePath = internal::dataRoot + categoryName + "/" + (normal ? internal::normalPath : internal::anomalyPath);
+        const std::string imagePath = global::projectRoot + "data/" + categoryName + "/" + (normal ? internal::normalPath : internal::anomalyPath);
         if (normal) {
             std::vector<cv::Mat> images;
             readImagesFromDirectory(imagePath, images);
@@ -95,7 +97,7 @@ namespace internal {
      */
     void initNormMatrix(const std::map<std::string, cv::Mat>::iterator &itterator, int cellSize, cv::Mat &categoryNorm) {
 
-        cv::Mat sampleImage = itterator->second; cv::Mat sampleValues;
+        const cv::Mat sampleImage = itterator->second; cv::Mat sampleValues;
         lbpValues(sampleImage, sampleValues); // To remove 1 pixel margin
 
         int rowMargin = sampleValues.rows % internal::cellSize;
@@ -133,9 +135,9 @@ namespace internal {
         int colMargin = values.cols % internal::cellSize;
 
         int collIndex, rowIndex = 0; 
-        for (int row = rowMargin / 2; row < values.rows - (rowMargin / 2); row += internal::cellSize) {
+        for (int row = rowMargin / 2; row + internal::cellSize < values.rows - (rowMargin / 2); row += internal::cellSize) {
             collIndex = 0;
-            for (int col = colMargin / 2; col < values.cols - (colMargin / 2); col += internal::cellSize) {
+            for (int col = colMargin / 2; col + internal::cellSize < values.cols - (colMargin / 2); col += internal::cellSize) {
 
                 // Get LBP distribution of cell
                 cv::Mat cell = values(cv::Range(row, row + internal::cellSize), cv::Range(col, col + internal::cellSize));
@@ -165,14 +167,17 @@ namespace internal {
     void generateAnomalyCellNorm(std::array<float, 5> &cellNorm, std::map<std::string, cv::Mat> &images, const PreProcessingPipeline &preProcessingConfiguration, const std::string &categoryName) {
 
 
-        int lastTotalAnomalyCells = 0;
         int totalAnomalyCells = 0;
 
+        std::cout << "images.size:" << images.size() << "\n";
         for (auto& [imageName, image] : images) {
+
+            int rowMargin = image.rows % internal::cellSize;
+            int colMargin = image.cols % internal::cellSize;
 
             // Get image mask (to identify anomaly cells)
             std::string maskName = imageName.substr(0, imageName.size() - 3) + "png";
-            cv::Mat imageMask = cv::imread(internal::dataRoot + "masks/" + categoryName + "/" + maskName);
+            cv::Mat imageMask = cv::imread(global::projectRoot + "data/masks/" + categoryName + "/" + maskName);
 
             if (imageMask.empty()) {
                 std::cerr << "Warning: Could not load mask for " << imageName << "\n";
@@ -180,18 +185,19 @@ namespace internal {
             }
 
             // Apply pre-processing to image
-            preProcessingConfiguration.apply(image);
+            ObjectCoordinates objectBounds; cv::Mat croppedMask;
+            preProcessingConfiguration.apply(image, objectBounds);
+            if (preProcessingConfiguration.steps[0].enableObjectDetection) {
+                objectDetection(imageMask, croppedMask, objectBounds);
+                imageMask = croppedMask.clone();
+            }
 
             // Accumulate the distribution of pixel values accross anomaly cells
-            for (int row = (internal::cellSize / 2 ) + internal::cellSize; row + internal::cellSize < image.rows - internal::cellSize; row += internal::cellSize) {
-                for (int col = (internal::cellSize / 2) + internal::cellSize; col + internal::cellSize < image.cols - internal::cellSize; col += internal::cellSize) {
+            for (int row = rowMargin / 2; row + internal::cellSize < image.rows - (rowMargin / 2); row += internal::cellSize) {
+                for (int col = colMargin / 2; col + internal::cellSize < image.cols - (colMargin / 2); col += internal::cellSize) {
 
-                    if (preProcessingConfiguration.steps[1].lbp)
-                        if (checkIfCellIsNormal(imageMask(cv::Range(row + 1, row + internal::cellSize), cv::Range(col + 1, col + internal::cellSize)))) 
-                            continue; // skip normal cells
-                    else
-                        if (checkIfCellIsNormal(imageMask(cv::Range(row, row + internal::cellSize), cv::Range(col, col + internal::cellSize)))) 
-                            continue; // skip normal cells
+                    if (checkIfCellIsNormal(imageMask(cv::Range(row, row + internal::cellSize), cv::Range(col, col + internal::cellSize))))
+                        continue; // skip normal cells
                     totalAnomalyCells++;
 
                     // Get distribution of pixel values in anomaly cell
@@ -204,17 +210,9 @@ namespace internal {
                         cellNorm[j] += LBPHistogram[j];
                 }
             }
-
-            // Average the cummulated distribution for anomaly cells
-            if (totalAnomalyCells == 0 || totalAnomalyCells <= lastTotalAnomalyCells) {
-                std::cerr << "totalAnomalyCells == 0\n";
-                return; // Need to investigate why this is happening if its still happening
-            }
-            lastTotalAnomalyCells = totalAnomalyCells;
-
         }
 
-         // Average the cumulative distribution across all anomaly cells
+        // Average the cumulative distribution across all anomaly cells
         float sum = 0.0f;
         for (int k = 0; k < 5; k++) {
             cellNorm[k] /= totalAnomalyCells;

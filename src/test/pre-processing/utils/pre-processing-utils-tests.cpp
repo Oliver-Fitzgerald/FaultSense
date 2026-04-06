@@ -7,8 +7,9 @@
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
 #include "../../../main/general/generic-utils.h"
-#include "../../../main/feature/utils/pre-processing-utils.h"
-#include "../../../main/feature/utils/pre-processing-utils_internal.h"
+#include "../../../main/pre-processing/pre-processing.h"
+#include "../../../main/pre-processing/utils/pre-processing-utils.h"
+#include "../../../main/pre-processing/utils/pre-processing-utils_internal.h"
 #include "../../../main/frontend/cli/image-viewer-ui/image-viewer.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
@@ -155,7 +156,7 @@ TEST_CASE ("removeNoise test image 5") { // Image 005.jpg
 
 struct MergeOverlapData {
 
-    std::vector<pixelGroup> pixelGroups = {
+    std::vector<PixelGroup> pixelGroups = {
     {
         .group = {{1,1},{1,2}},
         .bounds = {{1, 2}},
@@ -177,14 +178,14 @@ TEST_CASE ("mergeOverlap") {
          * WBBW -> testGroup
          * WWWW
          */
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,1},{2,2}},
             .bounds = {{1, 2}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
 
@@ -196,14 +197,14 @@ TEST_CASE ("mergeOverlap") {
          * BBWW -> testGroup
          * WWWW
          */
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,0},{2,1}},
             .bounds = {{0, 1}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
     SECTION("Rigth Skewed") {
@@ -214,14 +215,14 @@ TEST_CASE ("mergeOverlap") {
          * WWBB -> testGroup
          * WWWW
          */
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,2},{2,3}},
             .bounds = {{2, 3}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
     SECTION("Overflow") {
@@ -232,14 +233,14 @@ TEST_CASE ("mergeOverlap") {
          * BBBB -> testGroup
          * WWWW
          */
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,0},{2,1},{2,2},{2,3}},
             .bounds = {{0, 3}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
     SECTION("underflow") {
@@ -253,14 +254,14 @@ TEST_CASE ("mergeOverlap") {
         data.pixelGroups[0].group = {{1,0}, {1,1}, {1,2}, {1,3}};
         data.pixelGroups[0].bounds = {{0,3}};
         data.pixelGroups[0].row = 1;
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,1},{2,2}},
             .bounds = {{1, 2}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
     SECTION("Disconnected") {
@@ -274,36 +275,36 @@ TEST_CASE ("mergeOverlap") {
         data.pixelGroups[0].group = {{1,0}, {1,1}, {1,2}, {1,3}};
         data.pixelGroups[0].bounds = {{0,3}};
         data.pixelGroups[0].row = 1;
-        pixelGroup testGroupOne = {
+        PixelGroup testGroupOne = {
             .group = {{2,0}},
             .bounds = {{0, 0}},
             .row = 2
         };
-        pixelGroup testGroupTwo = {
+        PixelGroup testGroupTwo = {
             .group = {{2,3}},
             .bounds = {{3, 3}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroupOne, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroupOne, data.pixelGroups, data.grpUsed, currentRow);
         CHECK(existingGroup == true);
 
         data.pixelGroups[0].append(testGroupOne, currentRow);
 
-        existingGroup = internal::mergeOverlappingGroups(testGroupTwo, data.pixelGroups, data.grpUsed, currentRow);
+        existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroupTwo, data.pixelGroups, data.grpUsed, currentRow);
         CHECK(existingGroup == true);
 
         REQUIRE(existingGroup == true);
 
         currentRow  = 3;
-        pixelGroup testGroupThree = {
+        PixelGroup testGroupThree = {
             .group = {{3,0},{3,1},{3,2},{3,3}},
             .bounds = {{0, 3}},
             .row = 3
         };
 
-        existingGroup = internal::mergeOverlappingGroups(testGroupThree, data.pixelGroups, data.grpUsed, currentRow);
+        existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroupThree, data.pixelGroups, data.grpUsed, currentRow);
         REQUIRE(existingGroup == true);
     }
 
@@ -318,14 +319,14 @@ TEST_CASE ("mergeOverlap") {
         data.pixelGroups[0].group = {{1,1}};
         data.pixelGroups[0].bounds = {{1,1}};
         data.pixelGroups[0].row = 1;
-        pixelGroup testGroup = {
+        PixelGroup testGroup = {
             .group = {{2,2}},
             .bounds = {{2, 2}},
             .row = 2
         };
         int currentRow = 2;
 
-        bool existingGroup = internal::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         CHECK(existingGroup == true);
     }
 

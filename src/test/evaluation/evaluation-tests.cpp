@@ -7,16 +7,19 @@
 // Catch2
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
+#include "../../global-variables.h"
+#include "../../main/objects/PreProcessing.h"
 #include "../../main/evaluation/evaluation.h"
-#include "../../main/feature/object-detection.h"
+#include "../../main/pre-processing/object-detection.h"
 #include "../../main/training/train.h"
 #include "../../main/objects/PreProcessing.h"
 
 TEST_CASE ( "Evaluation interface test" ) {
 
-    std::cout << "Generating normal samples ...\n";
-    std::map<std::string, cv::Mat> normal;
+    global::projectRoot = "../../../";
 
+    std::cout << "Generating normal samples ...\n";
+    std::map<std::string, cv::Mat> normal = {{"chewinggum", cv::Mat()}};
 
     PreProcessing preProcessingConfiguration;
     preProcessingConfiguration.edge = true;

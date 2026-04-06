@@ -19,8 +19,19 @@ struct PreProcessingPipeline {
      */
     void apply(cv::Mat &image) const {
 
+        cv::Mat originalImage = image.clone();
         for (const PreProcessing &step : steps)
             step.apply(image);
+    }
+    /*
+     * apply
+     * Applies each pre-processing step sequentially
+     *@param image The image which each step will be applied to
+     */
+    void apply(cv::Mat &image, ObjectCoordinates& objectBounds) const {
+
+        for (const PreProcessing &step : steps)
+            step.apply(image, &objectBounds);
     }
 };
 #endif

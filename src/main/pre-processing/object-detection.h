@@ -8,6 +8,7 @@
 #include "../objects/ObjectCoordinates.h"
 
 void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage);
+void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, ObjectCoordinates& objectBounds);
 ObjectCoordinates getObject(cv::Mat &img);
 
 #endif

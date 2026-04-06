@@ -3,6 +3,7 @@
 
 namespace global {
     const int cellSize = 60;
+    inline std::string projectRoot = "../";
 }
 
 #endif

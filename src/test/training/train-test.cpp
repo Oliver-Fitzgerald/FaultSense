@@ -12,6 +12,7 @@
 #include "../../main/objects/PreProcessing.h"
 #include "../../main/objects/PreProcessingPipeline.h"
 #include "../../main/general/file-operations/generic-file-operations.h"
+#include "../../global-variables.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -36,6 +37,9 @@
 
 TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
 
+    global::projectRoot = "../../../";
+
+
     const std::string objectCategories[12] = {
         "chewinggum",
         "candle",
@@ -57,10 +61,11 @@ TEST_CASE( "Training cell norm - regression", "[trainCell]" ) {
     preProcessingPipeline.steps.push_back(preProcessingConfiguration);
 
 
-    std::map<std::string, std::array<float, 5>> anomaly;
-    trainCellNorms(anomaly, preProcessingPipeline, false);
-
     for (int index = 0; index < 12; index++) {
+
+        std::map<std::string, std::array<float, 5>> anomaly = {{objectCategories[index], std::array<float, 5>()}};
+        trainCellNorms(anomaly, preProcessingPipeline, false);
+
             
         std::array<float, 5> categoryNorm = anomaly[ objectCategories[index] ];
 
@@ -91,8 +96,7 @@ TEST_CASE( "Training cell norm individual", "[trainCell]" ) {
 
     for (int index = 0; index < 12; index++) {
 
-        std::map<std::string, std::array<float, 5>> anomaly;
-
+        std::map<std::string, std::array<float, 5>> anomaly = {{objectCategories[index], std::array<float, 5>()}};
 
         PreProcessing preProcessingConfiguration;
         preProcessingConfiguration.edge = true;

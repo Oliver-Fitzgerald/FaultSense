@@ -7,7 +7,7 @@
 #include "../../objects/PixelCoordinates.h"
 
 cv::Mat brigthenDarkerAreas(const cv::Mat& img, const int threshold, const int amount);
-void binaryThreshold(cv::Mat& image, int threshold);
+void binaryThreshold(cv::Mat& image, int threshold = 127);
 void illuminationInvariance(const cv::Mat &image, cv::Mat &returnImage);
 
 namespace pre_processing_utils {

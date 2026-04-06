@@ -12,14 +12,16 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+//Fault Sense
+#include "../../../global-variables.h"
 
 void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
 void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
 void writeMatrixNorm(std::map<std::string, cv::Mat> &norms); 
 void readMatrixNorm(std::map<std::string, cv::Mat> &norms);
 
-const std::string NORMAL_FILEPATH = "../data/trained-data/normal-training-samples.yml";
-const std::string ANOMALY_FILEPATH = "../data/trained-data/anomaly-training-samples.yml";
+const std::string NORMAL_FILEPATH = "data/trained-data/normal-training-samples.yml";
+const std::string ANOMALY_FILEPATH = "data/trained-data/anomaly-training-samples.yml";
 
 /*
  * writeCellDistributions
@@ -29,10 +31,10 @@ const std::string ANOMALY_FILEPATH = "../data/trained-data/anomaly-training-samp
  */
 void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
 
-    std::ofstream file(ANOMALY_FILEPATH);
+    std::ofstream file(global::projectRoot + ANOMALY_FILEPATH);
 
     if (!file.is_open())
-        throw std::runtime_error("Could not open file: " + ANOMALY_FILEPATH);
+        throw std::runtime_error("Could not open file: " + global::projectRoot + ANOMALY_FILEPATH);
 
     for (const auto& [category, distribution] : distributions) {
         file << category << ":\n";
@@ -51,10 +53,10 @@ void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distrib
  */
 void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
 
-    std::ifstream file(ANOMALY_FILEPATH);
+    std::ifstream file(global::projectRoot + ANOMALY_FILEPATH);
 
     if (!file.is_open())
-        throw std::runtime_error("Could not open file: " + ANOMALY_FILEPATH);
+        throw std::runtime_error("Could not open file: " + global::projectRoot + ANOMALY_FILEPATH);
 
     int index = 5;
     std::array<float, 5> distribution;
@@ -85,13 +87,6 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
 
                 if (index == 5) {
                     distributions[category] = distribution;
-                    std::cout << "insertion\n";
-                }
-                std::cout << "index: " << index << "\n";
-                std::cout << "category: " << category << "\n";
-                if (index == 5)
-                for (int z = 0; z < 5; z++) {
-                    std::cout << "here: " << distributions["chewinggum"][z] << "\n";
                 }
             } catch (std::exception &exception) {
                 std::cout << "exception: " << exception.what() << "\n";
@@ -110,10 +105,10 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
  */
 void writeMatrixNorm(std::map<std::string, cv::Mat> &norms) {
 
-    cv::FileStorage fs(NORMAL_FILEPATH, cv::FileStorage::WRITE);
+    cv::FileStorage fs(global::projectRoot + NORMAL_FILEPATH, cv::FileStorage::WRITE);
 
     if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for writing: " + NORMAL_FILEPATH);
+        throw std::runtime_error("Failed to open file for writing: " + global::projectRoot + NORMAL_FILEPATH);
     }
     
     for (const auto& [category, matrixNorm] : norms)
@@ -130,10 +125,10 @@ void writeMatrixNorm(std::map<std::string, cv::Mat> &norms) {
  */
 void readMatrixNorm(std::map<std::string, cv::Mat> &norms) {
 
-    cv::FileStorage fs(NORMAL_FILEPATH, cv::FileStorage::READ);
+    cv::FileStorage fs(global::projectRoot + NORMAL_FILEPATH, cv::FileStorage::READ);
 
     if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for reading: " + NORMAL_FILEPATH);
+        throw std::runtime_error("Failed to open file for reading: " + global::projectRoot + NORMAL_FILEPATH);
     }
     
     for (auto& [category, matrixNorm] : norms)

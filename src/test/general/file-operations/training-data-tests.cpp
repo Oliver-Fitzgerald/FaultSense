@@ -15,8 +15,11 @@
 #include <string>
 // Fault Sense
 #include "../../../main/general/file-operations/training-data.h"
+#include "../../../global-variables.h"
 
 TEST_CASE ( "Reading and writing matrixs" ) {
+
+    global::projectRoot = "../../../";
 
     // Creating sample matrix
     cv::Mat sampleMatrix = cv::Mat(3, 3, CV_32SC1);
@@ -44,6 +47,8 @@ TEST_CASE ( "Reading and writing matrixs" ) {
 }
 
 TEST_CASE ( "Reading and writing distributions" ) {
+
+    global::projectRoot = "../../../";
 
     std::array<float, 5> original = {0.0, 0.1, 0.2, 0.3, 0.4};
 
