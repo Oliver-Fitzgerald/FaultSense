@@ -8,6 +8,10 @@
 #include <opencv2/opencv.hpp>
 // Fault Sense
 #include "../../../general/device_info.h"
+#include "../../../general/file-operations/training-data.h"
+#include "../../../objects/PreProcessingPipeline.h"
+#include "../../../objects/Features.h"
+#include "../../../evaluation/evaluation.h"
 
 namespace {
 
@@ -54,6 +58,56 @@ void imageViewer(cv::Mat &originalImage) {
         showImage(canvas, returnImage);
     }
     cv::destroyAllWindows();
+}
+
+/*
+ * view
+ * Displays an image given it's path, applying any pre-processing
+ * techniques specified
+ 
+ * @param imagePath The path to the image to be displayed
+ * @param flags A list of flags to indicate which pre-processing techniques should be applied.
+ */
+void view(cv::Mat& image, PreProcessingPipeline& preProcessingConfiguration, std::map<std::string, bool>& viewFlags) {
+
+
+
+    if (viewFlags["markFault"]) {
+        std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
+        readMatrixNorm(normalMatrixNorm);
+
+        std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
+        readCellDistributions(anomalyNorm);
+
+        FeatureFilter* param = new BinaryCountFeature();
+        markFaultLBP(*param, preProcessingConfiguration, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+
+
+    } else if (viewFlags["getRegion"]) {
+
+        preProcessingConfiguration.apply(image);
+
+        // Let user select ROI interactively
+        cv::Rect roi = cv::selectROI("Select Region", image);
+
+        // If width/height are zero, selection was cancelled
+        if (roi.width == 0 || roi.height == 0) {
+            std::cerr << "No region selected.\n";
+        }
+
+        // Crop the selected region
+        cv::Mat cropped = image(roi).clone();  // clone to ensure independent copy
+
+        // Save to file
+        if (!cv::imwrite("output.jpg", cropped)) {
+            std::cerr << "Error: Could not write output file.\n";
+        }
+
+
+    } else
+        preProcessingConfiguration.apply(image);
+
+    imageViewer(image);
 }
 
 namespace {

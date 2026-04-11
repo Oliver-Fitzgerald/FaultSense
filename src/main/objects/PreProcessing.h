@@ -59,10 +59,6 @@ struct PreProcessing {
         if (enableObjectDetection) {
             if (objectBounds != nullptr) {
                 *objectBounds = getObject(originalImage);
-                std::cout << "objectBounds.xMin: " << objectBounds->xMin << "\n";
-                std::cout << "objectBounds.xMax: " << objectBounds->xMax << "\n";
-                std::cout << "objectBounds.yMin: " << objectBounds->yMin << "\n";
-                std::cout << "objectBounds.yMax: " << objectBounds->yMax << "\n";
             }
             objectDetection(originalImage, image);
         } else

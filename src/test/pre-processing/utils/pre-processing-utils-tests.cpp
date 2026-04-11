@@ -10,7 +10,7 @@
 #include "../../../main/pre-processing/pre-processing.h"
 #include "../../../main/pre-processing/utils/pre-processing-utils.h"
 #include "../../../main/pre-processing/utils/pre-processing-utils_internal.h"
-#include "../../../main/frontend/cli/image-viewer-ui/image-viewer.h"
+#include "../../../main/frontend/cli/image-viewer/image-viewer.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>

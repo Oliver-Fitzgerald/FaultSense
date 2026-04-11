@@ -37,11 +37,6 @@ void objectDetection(cv::Mat &inputImage, cv::Mat &originalImage) {
  * @param returnImage
  */
 void objectDetection(cv::Mat& inputImage, cv::Mat& originalImage, ObjectCoordinates& objectBounds) {
-    std::cout << "objectDetection\n";
-    std::cout << "objectBounds.xMin: " << objectBounds.xMin << "\n";
-    std::cout << "objectBounds.xMax: " << objectBounds.xMax << "\n";
-    std::cout << "objectBounds.yMin: " << objectBounds.yMin << "\n";
-    std::cout << "objectBounds.yMax: " << objectBounds.yMax << "\n";
     crop(inputImage, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, originalImage);
 }
 

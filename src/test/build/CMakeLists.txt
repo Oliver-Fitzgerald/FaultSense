@@ -60,7 +60,7 @@ add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
 target_link_libraries(evaluation-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
 add_executable(pre-processing-utils-tests ../pre-processing/utils/pre-processing-utils-tests.cpp
-                          ../../main/frontend/cli/image-viewer-ui/image-viewer.cpp
+                          ../../main/frontend/cli/image-viewer/image-viewer.cpp
                           ../../main/general/generic-utils.cpp
                           ../../main/pre-processing/pre-processing.cpp
                           ../../main/pre-processing/utils/pre-processing-utils.cpp)

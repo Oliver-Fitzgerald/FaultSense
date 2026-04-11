@@ -34,6 +34,9 @@ FetchContent_MakeAvailable(simpleini)
 
 # Compilation
 add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
+                           ../src/main/frontend/cli/image-viewer/image-viewer.cpp
+                           ../src/main/frontend/cli/evaluation/evaluation-interface.cpp
+                           ../src/main/frontend/cli/training/training-interface.cpp
                            ../src/main/feature/feature-extraction.cpp
                            ../src/main/pre-processing/object-detection.cpp
                            ../src/main/pre-processing/pre-processing.cpp
@@ -42,7 +45,6 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/training/train.cpp
                            ../src/main/general/file-operations/training-data.cpp
                            ../src/main/general/file-operations/generic-file-operations.cpp
-                           ../src/main/frontend/cli/image-viewer-ui/image-viewer.cpp
                            ../src/main/evaluation/evaluation.cpp
                            ../src/main/evaluation/evaluation-utils.cpp)
 target_include_directories(fault-sense-cli PRIVATE ${CMAKE_BINARY_DIR}/_deps/simpleini-src)

@@ -169,7 +169,6 @@ namespace internal {
 
         int totalAnomalyCells = 0;
 
-        std::cout << "images.size:" << images.size() << "\n";
         for (auto& [imageName, image] : images) {
 
             int rowMargin = image.rows % internal::cellSize;
