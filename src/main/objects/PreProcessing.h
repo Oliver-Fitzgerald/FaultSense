@@ -12,16 +12,16 @@
 #include "../feature/feature-extraction.h"
 #include "CannyThreshold.h"
 
+enum class Mode { None, LBP, HSV, EDGE };
+
 /*
  * PreProcessing
  * A struct to  ...
  */
 struct PreProcessing {
 
-    bool lbp = false;
-    bool hsv = false;
-    bool edge = false;
-    bool enableObjectDetection = false;
+    Mode mode = Mode::None;
+    bool applyObjectDetection = false; // Applies object detection on the new image and crops original image to the new bounds
     int noiseThreshold = 0; // if <= 0 no action taken i.e remove noise == false
 
     /*
@@ -30,34 +30,35 @@ struct PreProcessing {
      *
      * @param image The image to which the specified pre-processing functions will be applied to
      */
-    void apply(cv::Mat& image, ObjectCoordinates* objectBounds = nullptr) const {
+    void apply(cv::Mat& image, std::optional<ObjectCoordinates> objectBounds = std::nullopt) const {
 
         cv::Mat originalImage = image.clone();
-
-        if (enableObjectDetection && lbp) 
+        if (applyObjectDetection && mode == Mode::LBP) 
             throw std::invalid_argument("Object detection input must be normalized to 0 || 255, i.e binary");
-        if ( (lbp && hsv) || (lbp && edge) || (edge && hsv) )
+
+
+        if (mode == Mode::None) {
             throw std::invalid_argument("Only one of the following functions may be applied (\"hsv\", \"lbp\", \"edge\")");
-
-
-        if (lbp) {
+            
+        } else if (mode == Mode::LBP) {
             lbpValues(image, originalImage);
 
-        } else if (edge) {
+        } else if (mode == Mode::EDGE) {
             CannyThreshold threshold{57, 29};
             cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
             edgeDetection(originalImage, kernal, threshold);
 
-        } else if (hsv) {
+        } else if (mode == Mode::HSV) {
             HSV HSVThreshold{0, 22, 0, 119, 88,255};
             thresholdHSV(originalImage, HSVThreshold);
         }
 
+
         if (noiseThreshold > 0)
             removeNoise(originalImage, noiseThreshold);
 
-        if (enableObjectDetection) {
-            if (objectBounds != nullptr) {
+        if (applyObjectDetection) {
+            if (objectBounds.has_value()) {
                 *objectBounds = getObject(originalImage);
             }
             objectDetection(originalImage, image);

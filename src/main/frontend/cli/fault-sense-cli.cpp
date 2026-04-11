@@ -31,6 +31,7 @@
 #include "../../objects/Features.h"
 
 namespace {
+    Mode modeFromString(std::string stringValue);
     void readConfig(PreProcessingPipeline& preProcessingPipeline);
 }
 
@@ -121,23 +122,37 @@ namespace {
         bool exists = ini.SectionExists("ObjectDetection");
         if (exists) {
             PreProcessing objectDetection;
-            objectDetection.enableObjectDetection = true;
-            objectDetection.lbp = ini.GetBoolValue("ObjectDetection", "lbp");
-            objectDetection.hsv = ini.GetBoolValue("ObjectDetection", "hsv");
-            objectDetection.edge = ini.GetBoolValue("ObjectDetection", "edge");
+            objectDetection.applyObjectDetection = true;
+            objectDetection.mode = modeFromString(ini.GetValue("ObjectDetection", "mode", "None"));
             objectDetection.noiseThreshold = (int) ini.GetLongValue("ObjectDetection", "noiseThreshold");
-            preProcessingPipeline.steps.push_back(objectDetection);
+            preProcessingPipeline.objectDetectionConfiguration = objectDetection;
         }
 
         exists = ini.SectionExists("PreProcessing");
         if (exists) {
             PreProcessing preProcessing;
-            preProcessing.lbp = ini.GetBoolValue("PreProcessing", "lbp");
-            preProcessing.hsv = ini.GetBoolValue("PreProcessing", "hsv");
-            preProcessing.edge = ini.GetBoolValue("PreProcessing", "edge");
+            preProcessing.mode = modeFromString(ini.GetValue("PreProcessing", "mode", "None"));
             preProcessing.noiseThreshold = (int) ini.GetLongValue("PreProcessing", "noiseThreshold");
-            preProcessingPipeline.steps.push_back(preProcessing);
+            preProcessingPipeline.preProcessingConfiguration = preProcessing;
         }
+    }
+
+    /*
+     * modeFromString
+     * Converts string from configuration file to the relevant pre-processing
+     * mode
+     * @param preProcessingMode the string representation of the preProcessingMode
+     */
+    Mode modeFromString(std::string stringValue) {
+
+        if (stringValue == "HSV")
+            return Mode::HSV;
+        else if (stringValue == "EDGE")
+            return Mode::EDGE;
+        else if (stringValue == "LBP")
+            return Mode::LBP;
+        else
+            throw std::invalid_argument("Error convertign string to pre-processing-mode: " + stringValue);
     }
 
 }

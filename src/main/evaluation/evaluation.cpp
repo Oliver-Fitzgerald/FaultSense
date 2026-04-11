@@ -122,13 +122,18 @@ void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessi
 
     cv::Mat returnImage = image.clone();
     ObjectCoordinates objectBounds;
+
     // Apply objectDetection if relevant
-    if (preProcessingPipeline.steps[0].enableObjectDetection) {
-        preProcessingPipeline.steps[0].enableObjectDetection = false;
-        preProcessingPipeline.steps[0].apply(image);
+    if (preProcessingPipeline.objectDetectionConfiguration.has_value()) {
+
+        std::optional<PreProcessing> preProcessingConfiguration = preProcessingPipeline.preProcessingConfiguration;
+        std::optional<PreProcessing> objectDetectionConfiguration = preProcessingPipeline.objectDetectionConfiguration;
+
+        objectDetectionConfiguration->apply(image);
         objectBounds = getObject(image);
+
         image = returnImage.clone();
-        preProcessingPipeline.steps[1].apply(image);
+        preProcessingConfiguration->apply(image);
     }
 
     // Itterate over image cells

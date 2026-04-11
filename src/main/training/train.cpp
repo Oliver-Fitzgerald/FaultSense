@@ -186,7 +186,7 @@ namespace internal {
             // Apply pre-processing to image
             ObjectCoordinates objectBounds; cv::Mat croppedMask;
             preProcessingConfiguration.apply(image, objectBounds);
-            if (preProcessingConfiguration.steps[0].enableObjectDetection) {
+            if (preProcessingConfiguration.objectDetectionConfiguration.has_value()) {
                 objectDetection(imageMask, croppedMask, objectBounds);
                 imageMask = croppedMask.clone();
             }

@@ -1,8 +1,6 @@
 #ifndef pre_processing_pipeline_H
 #define pre_processing_pipeline_H
 
-// Standard
-#include <vector>
 //Fault Sense
 #include "PreProcessing.h"
 // OpenCV2
@@ -10,7 +8,8 @@
 
 struct PreProcessingPipeline {
 
-    std::vector<PreProcessing> steps;
+    std::optional<PreProcessing> objectDetectionConfiguration;
+    std::optional<PreProcessing> preProcessingConfiguration;
 
     /*
      * apply
@@ -19,10 +18,13 @@ struct PreProcessingPipeline {
      */
     void apply(cv::Mat &image) const {
 
-        cv::Mat originalImage = image.clone();
-        for (const PreProcessing &step : steps)
-            step.apply(image);
+        if (objectDetectionConfiguration.has_value())
+            objectDetectionConfiguration->apply(image);
+
+        if (preProcessingConfiguration.has_value())
+            preProcessingConfiguration->apply(image);
     }
+
     /*
      * apply
      * Applies each pre-processing step sequentially
@@ -30,8 +32,11 @@ struct PreProcessingPipeline {
      */
     void apply(cv::Mat &image, ObjectCoordinates& objectBounds) const {
 
-        for (const PreProcessing &step : steps)
-            step.apply(image, &objectBounds);
+        if (objectDetectionConfiguration.has_value())
+            objectDetectionConfiguration->apply(image, objectBounds);
+
+        if (preProcessingConfiguration.has_value())
+            preProcessingConfiguration->apply(image);
     }
 };
 #endif
