@@ -13,6 +13,16 @@
 #include "CannyThreshold.h"
 
 enum class Mode { None, LBP, HSV, EDGE };
+inline std::ostream& operator<<(std::ostream& os, const Mode& m) {
+    switch (m) {
+        case Mode::LBP:     os << "LBP";     break;
+        case Mode::EDGE:    os << "EDGE"; break;
+        case Mode::HSV:     os << "HSV"; break;
+        default:            os << "None";  break;
+    }
+    return os;
+}
+
 
 /*
  * PreProcessing

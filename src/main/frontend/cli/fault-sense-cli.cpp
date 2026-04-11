@@ -65,6 +65,12 @@ int main(int argc, char** argv) {
     });
 
 
+    std::cout << "Fault Sense CLI\n";
+    std::cout << "=====================\n";
+    std::cout << preProcessingPipeline;
+    std::cout << "=====================\n";
+    std::cout << "execution...\n";
+
     // View subcommand
     CLI::App* viewSubcommand = faultSense.add_subcommand("view", "View image with optional filters applied")->ignore_case();
     std::map<std::string, bool> viewFlags = { {"markFault", false}, {"getRegion", false} };
@@ -154,5 +160,4 @@ namespace {
         else
             throw std::invalid_argument("Error convertign string to pre-processing-mode: " + stringValue);
     }
-
 }
