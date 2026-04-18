@@ -57,6 +57,8 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
 
     if (!file.is_open())
         throw std::runtime_error("Could not open file: " + global::projectRoot + ANOMALY_FILEPATH);
+    
+    std::cout << "INFO: reading cell distributions ...\n";
 
     int index = 5;
     std::array<float, 5> distribution;
@@ -71,7 +73,7 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
             line.erase(0, line.find_first_not_of(" \t"));
             line.erase(line.find(":"));
             category = line;
-            std::cout << "category: " << category << "\n";
+            std::cout << "INFO: reading category: " << category << "\n";
             index = 0;
 
         } else {
@@ -82,7 +84,6 @@ void readCellDistributions(std::map<std::string, std::array<float, 5>> &distribu
             try {
                 float value = std::stof(line);
                 distribution[index] = value;
-                std::cout << "distribution[" << index << "] = " << value << "\n";
                 index++;
 
                 if (index == 5) {
@@ -111,8 +112,12 @@ void writeMatrixNorm(std::map<std::string, cv::Mat> &norms) {
         throw std::runtime_error("Failed to open file for writing: " + global::projectRoot + NORMAL_FILEPATH);
     }
     
-    for (const auto& [category, matrixNorm] : norms)
+    std::cout << "INFO: writing matrix norms ...\n";
+    
+    for (const auto& [category, matrixNorm] : norms) {
+        std::cout << "INFO: writing category: " << category << "\n";
         fs << category << matrixNorm;
+    }
 
     fs.release();
 }
@@ -130,9 +135,12 @@ void readMatrixNorm(std::map<std::string, cv::Mat> &norms) {
     if (!fs.isOpened()) {
         throw std::runtime_error("Failed to open file for reading: " + global::projectRoot + NORMAL_FILEPATH);
     }
+    std::cout << "INFO: reading matrix norms ...\n";
     
-    for (auto& [category, matrixNorm] : norms)
+    for (auto& [category, matrixNorm] : norms) {
+        std::cout << "INFO: reading category: " << category << "\n";
         fs[category] >> matrixNorm;
+    }
 
     fs.release();
 }

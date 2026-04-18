@@ -12,6 +12,7 @@
 #include <CLI/CLI.hpp>
 // Standard
 #include <map>
+#include <cctype>
 // simpleini
 #include "SimpleIni.h"
 // Fault Sense
@@ -151,12 +152,15 @@ namespace {
      */
     Mode modeFromString(std::string stringValue) {
 
-        if (stringValue == "HSV")
+
+        if (stringValue == "HSV" || stringValue == "hsv")
             return Mode::HSV;
-        else if (stringValue == "EDGE")
+        else if (stringValue == "EDGE" || stringValue == "edge")
             return Mode::EDGE;
-        else if (stringValue == "LBP")
+        else if (stringValue == "LBP" || stringValue == "lbp")
             return Mode::LBP;
+        else if (stringValue == "NONE" || stringValue == "none")
+            return Mode::None;
         else
             throw std::invalid_argument("Error convertign string to pre-processing-mode: " + stringValue);
     }

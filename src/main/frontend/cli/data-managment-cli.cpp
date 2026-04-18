@@ -7,7 +7,8 @@
 #include <CLI/CLI.hpp>
 // Fault Sense
 #include "../../data-preperation/generate-masks.h"
-#include "../../data-preperation/synthetic-data-generation.h"
+#include "../../data-preperation/synthetic-pre-processing-data-generation.h"
+#include "../../data-preperation/synthetic-features-data-generation.h"
 #include "../../general/file-operations/generic-file-operations.h"
 
 void generate(std::map<const char*, bool> flags);
@@ -20,11 +21,12 @@ int main(int argc, char** argv) {
 
     // Generate synthetic data
     CLI::App* generateSubcommand = dataManagmentCLI.add_subcommand("generate", "Generates synthetic data for testing")->ignore_case()->require_option(1);
-    std::map<const char*, bool> generateFlags = {{"all", false}, {"removeNoise", false}, {"mergeOverlap", false}};
+    std::map<const char*, bool> generateFlags = {{"all", false}, {"removeNoise", false}, {"mergeOverlap", false}, {"features", false}};
 
     generateSubcommand->add_flag("--all, -a", generateFlags["all"], "Generate synthetic testing data for the all test methods");
     generateSubcommand->add_flag("--removeNoise", generateFlags["removeNoise"], "Generate synthetic testing data for the removeNoise method");
     generateSubcommand->add_flag("--mergeOverlap, -m", generateFlags["mergeOverlap"], "Generate synthetic testing data for the removeNoise method");
+    generateSubcommand->add_flag("--features, -f", generateFlags["features"], "Generate synthetic testing data for feature classes");
     generateSubcommand->final_callback([&generateFlags]() {
         generate(generateFlags);
     });
@@ -58,8 +60,19 @@ void generate(std::map<const char*, bool> flags) {
         } catch (std::exception& exception) {
             std::cerr << exception.what();
         }
+
+     } else if (flags["features"]) {
+        try {
+            std::vector<cv::Mat> images;
+            generateFeatureTestData(images);
+
+            for (int index = 0; index < images.size(); index++)
+                writeImage(images[index], "test-images/synthetic/features/00" + std::to_string(index) + ".png");
+
+        } catch (std::exception& exception) {
+            std::cerr << exception.what();
+        }
         
-    
     } else if ( flags["all"] )
-        std::cerr << "ALL FLAG NOT IMPLMENTED YET!!!\n";
+        std::cerr << "ERROR: ALL FLAG NOT IMPLMENTED YET!!!\n";
 }

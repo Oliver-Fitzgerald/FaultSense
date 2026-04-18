@@ -54,5 +54,6 @@ add_executable(data-managment-cli ../src/main/frontend/cli/data-managment-cli.cp
                            ../src/main/general/file-operations/generic-file-operations.cpp
                            ../src/main/general/generic-utils.cpp
                            ../src/main/data-preperation/generate-masks.cpp
-                           ../src/main/data-preperation/synthetic-data-generation.cpp)
+                           ../src/main/data-preperation/synthetic-features-data-generation.cpp
+                           ../src/main/data-preperation/synthetic-pre-processing-data-generation.cpp)
 target_link_libraries(data-managment-cli PRIVATE  ${OpenCV_LIBS} CLI11::CLI11)

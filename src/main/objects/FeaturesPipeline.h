@@ -6,4 +6,5 @@
 class FeaturesPipeline {
 
 };
+
 #endif

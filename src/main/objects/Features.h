@@ -109,6 +109,28 @@ class BinaryDistributionFeature : public FeatureFilter {
     void updateFeature(cv::Mat& cell) {
     }
     int compareFeature (FeatureFilter* feature) {
+
+        //Cell evaluation
+        float* normal = normalSample.ptr<float>(rowIndex,collIndex);
+        float normalDistance = 0; float anomolyDistance = 0;
+        for (int i = 0; i < 5; i++) {
+            normalDistance += std::abs(cellLBPHistogram[i] - normal[i]);
+            anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
+            //std::cout << "- normalSample[" << i << "]: " << normal[i] << "\n";
+            //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
+        }
+
+        // Mark anomoly
+        //if (anomolyDistance < normalDistance) {
+        if (whitePixelCount > 100) {
+            //std::cout << "\nanomaly\n";
+            RGB colour = RGB{0,0,255};
+            markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
+        } else
+            //std::cout << "\nnormal\n";
+        //imageViewer(cell);
+        std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+
         return 0;
     }
 

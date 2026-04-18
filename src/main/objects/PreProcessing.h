@@ -48,7 +48,7 @@ struct PreProcessing {
 
 
         if (mode == Mode::None) {
-            throw std::invalid_argument("Only one of the following functions may be applied (\"hsv\", \"lbp\", \"edge\")");
+            return;
             
         } else if (mode == Mode::LBP) {
             lbpValues(image, originalImage);
