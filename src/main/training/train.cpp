@@ -17,6 +17,7 @@
 #include "../pre-processing/utils/pre-processing-utils.h"
 #include "../objects/CannyThreshold.h"
 #include "../objects/PreProcessingPipeline.h"
+#include "../objects/FeaturesCollection.h"
 #include "../general/file-operations/generic-file-operations.h"
 #include "../general/generic-utils.h"
 #include "../evaluation/evaluation.h"
@@ -34,7 +35,7 @@
  * @param preProcessingConfiguration
  * @param normal
  */
-void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipeline &preProcessingConfiguration, const bool normal) {
+void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, FeaturesCollection& features, const bool normal) {
 
 
     for ( auto& [categoryName, categoryNorm] : matrixNorms ) {
@@ -49,8 +50,9 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipel
 
         for (auto& image : images) {
 
+            // CHANGES REQUIRED HERE
             // Compute LBP values for each pixel
-            preProcessingConfiguration.apply(image);
+            //preProcessingConfiguration.apply(image);
             internal::updateCategoryNorm(categoryNorm, image, internal::cellSize, images.size());
         }
     }
@@ -63,7 +65,7 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, PreProcessingPipel
  * @param cellNorms A mapping of object type (string) to it's average anomaly distribution
  * @param normal
  */
-void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, PreProcessingPipeline &preProcessingConfiguration, const bool normal) {
+void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, FeaturesCollection& features, const bool normal) {
 
 
     for ( auto& [categoryName, categoryNorm] : cellNorms ) {
@@ -74,12 +76,12 @@ void trainCellNorms(std::map<std::string, std::array<float, 5>> &cellNorms, PreP
         if (normal) {
             std::vector<cv::Mat> images;
             readImagesFromDirectory(imagePath, images);
-            internal::generateNormalCellNorm(categoryNorm, images, preProcessingConfiguration);
+            internal::generateNormalCellNorm(categoryNorm, images, features);
 
         } else {
             std::map<std::string, cv::Mat> images;
             readImagesFromDirectory(imagePath, images);
-            internal::generateAnomalyCellNorm(categoryNorm, images, preProcessingConfiguration, categoryName);
+            internal::generateAnomalyCellNorm(categoryNorm, images, features, categoryName);
         }
     }
 }
@@ -164,7 +166,7 @@ namespace internal {
      * @param preProcessingConfiguration
      * @param categoryName
      */
-    void generateAnomalyCellNorm(std::array<float, 5> &cellNorm, std::map<std::string, cv::Mat> &images, const PreProcessingPipeline &preProcessingConfiguration, const std::string &categoryName) {
+    void generateAnomalyCellNorm(std::array<float, 5> &cellNorm, std::map<std::string, cv::Mat> &images, const FeaturesCollection& features, const std::string &categoryName) {
 
 
         int totalAnomalyCells = 0;
@@ -183,13 +185,16 @@ namespace internal {
                 continue;
             }
 
+            // CHANGES REQUIRED HERE
             // Apply pre-processing to image
             ObjectCoordinates objectBounds; cv::Mat croppedMask;
-            preProcessingConfiguration.apply(image, objectBounds);
+            //preProcessingConfiguration.apply(image, objectBounds);
+            /*
             if (preProcessingConfiguration.objectDetectionConfiguration.has_value()) {
                 objectDetection(imageMask, croppedMask, objectBounds);
                 imageMask = croppedMask.clone();
             }
+            */
 
             // Accumulate the distribution of pixel values accross anomaly cells
             for (int row = rowMargin / 2; row + internal::cellSize < image.rows - (rowMargin / 2); row += internal::cellSize) {
@@ -234,12 +239,13 @@ namespace internal {
      * @param images
      * @param preProcessingConfiguration
      */
-    void generateNormalCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images, const PreProcessingPipeline &preProcessingConfiguration) {
+    void generateNormalCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images, const FeaturesCollection& features) {
 
         for (auto& image : images) {
 
             // Apply pre-processing to image
-            preProcessingConfiguration.apply(image);
+            // CHANGES REQUIRED HERE
+            //preProcessingConfiguration.apply(image);
 
             // Accumulate the distribution of pixel values accross anomaly cells
             for (int row = internal::cellSize / 2; row + internal::cellSize < image.rows; row += internal::cellSize) {

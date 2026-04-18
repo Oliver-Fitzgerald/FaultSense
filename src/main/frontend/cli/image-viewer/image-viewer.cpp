@@ -11,13 +11,18 @@
 #include "../../../general/file-operations/training-data.h"
 #include "../../../objects/PreProcessingPipeline.h"
 #include "../../../objects/Features.h"
+#include "../../../objects/FeaturesCollection.h"
 #include "../../../evaluation/evaluation.h"
+// simpleini
+#include "SimpleIni.h"
 
 namespace {
 
     double zoomFactor = 1.0;
     bool zoom(int key, cv::Mat &image, cv::Mat &result);
     void showImage(cv::Mat &image, cv::Mat &canvas);
+    Mode modeFromString(std::string stringValue);
+    void readConfig(PreProcessingPipeline& preProcessingPipeline);
 }
 
 /*
@@ -68,9 +73,11 @@ void imageViewer(cv::Mat &originalImage) {
  * @param imagePath The path to the image to be displayed
  * @param flags A list of flags to indicate which pre-processing techniques should be applied.
  */
-void view(cv::Mat& image, PreProcessingPipeline& preProcessingConfiguration, std::map<std::string, bool>& viewFlags) {
+void view(cv::Mat& image, FeaturesCollection& features, std::map<std::string, bool>& viewFlags) {
 
-
+    PreProcessingPipeline preProcessingPipeline;
+    readConfig(preProcessingPipeline);
+    std::cout << preProcessingPipeline;
 
     if (viewFlags["markFault"]) {
         std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
@@ -79,13 +86,12 @@ void view(cv::Mat& image, PreProcessingPipeline& preProcessingConfiguration, std
         std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
         readCellDistributions(anomalyNorm);
 
-        FeatureFilter* param = new BinaryCountFeature();
-        markFaultLBP(*param, preProcessingConfiguration, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        markFaultLBP(features, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
 
 
     } else if (viewFlags["getRegion"]) {
 
-        preProcessingConfiguration.apply(image);
+        preProcessingPipeline.apply(image);
 
         // Let user select ROI interactively
         cv::Rect roi = cv::selectROI("Select Region", image);
@@ -105,7 +111,7 @@ void view(cv::Mat& image, PreProcessingPipeline& preProcessingConfiguration, std
 
 
     } else
-        preProcessingConfiguration.apply(image);
+        preProcessingPipeline.apply(image);
 
     imageViewer(image);
 }
@@ -145,5 +151,72 @@ namespace {
 
         image.copyTo(canvas(cv::Rect(x, y, image.cols, image.rows)));
         cv::imshow("img", canvas);
+    }
+
+    /*
+     * readConfig
+     * Reads in the project configuration file and retreives the correct 
+     * desired pre-processing configuration to be applied in the image-viewer 
+     * @param preProcessingPipeline The pre-processing configuration to be applied in the image-viewer
+     */
+    void readConfig(PreProcessingPipeline& preProcessingPipeline) {
+
+        CSimpleIniA ini;
+        SI_Error rc = ini.LoadFile("../configuration.ini");
+        if (rc < SI_OK) {
+            std::cerr << "Error loading configuration in image-viewer (file): " << rc << std::endl;
+            return;
+        }
+
+        bool exists = ini.SectionExists("ImageViewer");
+        std::string includeSection = ini.GetValue("ImageViewer", "enabled", "false");
+        if (exists &&  includeSection == "true") {
+            std::cout << "here\n";
+
+            std::unique_ptr<PreProcessingPipeline> preProcessingPipeline = std::make_unique<PreProcessingPipeline>();
+
+            exists = ini.SectionExists("ImageViewer.ObjectDetection");
+            includeSection = ini.GetValue("ImageViewer.ObjectDetection", "enabled", "false");
+            if (exists && includeSection == "true") {
+
+                PreProcessing objectDetection;
+                objectDetection.applyObjectDetection = true;
+                objectDetection.mode = modeFromString(ini.GetValue("ImageViewer.ObjectDetection", "mode", "NONE"));
+                objectDetection.noiseThreshold = (int) ini.GetLongValue("ImageViewer.ObjectDetection", "noiseThreshold");
+                preProcessingPipeline->objectDetectionConfiguration = objectDetection;
+            }
+
+            ;
+            exists = ini.SectionExists("ImageViewer.PreProcessing");
+            includeSection = ini.GetValue("ImageViewer.PreProcessing", "enabled", "false");
+            if (exists && includeSection == "true") {
+
+                PreProcessing preProcessing;
+                preProcessing.mode = modeFromString(ini.GetValue("ImageViewer.PreProcessing", "mode", "NONE"));
+                preProcessing.noiseThreshold = (int) ini.GetLongValue("ImageViewer.PreProcessing", "noiseThreshold");
+                preProcessingPipeline->preProcessingConfiguration = preProcessing;
+            }
+        }
+    }
+
+    /*
+     * modeFromString
+     * Converts string from configuration file to the relevant pre-processing
+     * mode
+     * @param preProcessingMode the string representation of the preProcessingMode
+     */
+    Mode modeFromString(std::string stringValue) {
+
+
+        if (stringValue == "HSV" || stringValue == "hsv")
+            return Mode::HSV;
+        else if (stringValue == "EDGE" || stringValue == "edge")
+            return Mode::EDGE;
+        else if (stringValue == "LBP" || stringValue == "lbp")
+            return Mode::LBP;
+        else if (stringValue == "NONE" || stringValue == "none")
+            return Mode::NONE;
+        else
+            throw std::invalid_argument("Error converting string to pre-processing-mode: " + stringValue);
     }
 }

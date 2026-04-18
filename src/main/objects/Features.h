@@ -22,7 +22,7 @@ public:
 
     virtual void extractFeature(cv::Mat& cell) = 0;
     virtual void updateFeature(cv::Mat& cell) = 0;
-    virtual int compareFeature (FeatureFilter* feature) = 0;
+    virtual int compare(FeatureFilter* feature) = 0;
 
     virtual ~FeatureFilter() = default;
 };
@@ -76,15 +76,15 @@ public:
     }
 
     /*
-     * compareFeature
+     * compare
      * Returns the difference between the ratio in white pixels. The return value
      * is positive if the ratio of the passed feature is greater else negative
      *
      * @parma feature The feature for comparision
      */
-    int compareFeature (FeatureFilter* feature) override {
+    int compare(FeatureFilter* feature) override {
 
-        if (typeid(feature).name() != "BinaryCountFeature")
+        if (typeid(*feature) != typeid(BinaryCountFeature))
             std::cout << "Error invalid feature class (" << typeid(feature).name() << ") is an invalid type\n";
 
         BinaryCountFeature* internalFeature = dynamic_cast<BinaryCountFeature*>(feature);
@@ -108,9 +108,10 @@ class BinaryDistributionFeature : public FeatureFilter {
     }
     void updateFeature(cv::Mat& cell) {
     }
-    int compareFeature (FeatureFilter* feature) {
+    int compare(FeatureFilter* feature) {
 
         //Cell evaluation
+        /*
         float* normal = normalSample.ptr<float>(rowIndex,collIndex);
         float normalDistance = 0; float anomolyDistance = 0;
         for (int i = 0; i < 5; i++) {
@@ -119,17 +120,19 @@ class BinaryDistributionFeature : public FeatureFilter {
             //std::cout << "- normalSample[" << i << "]: " << normal[i] << "\n";
             //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
         }
+        */
 
         // Mark anomoly
         //if (anomolyDistance < normalDistance) {
+        /*
         if (whitePixelCount > 100) {
-            //std::cout << "\nanomaly\n";
+            std::cout << "\nanomaly\n";
             RGB colour = RGB{0,0,255};
             markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
         } else
-            //std::cout << "\nnormal\n";
-        //imageViewer(cell);
+            std::cout << "\nnormal\n";
         std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+        */
 
         return 0;
     }

@@ -12,13 +12,13 @@
 #include "../feature/feature-extraction.h"
 #include "CannyThreshold.h"
 
-enum class Mode { None, LBP, HSV, EDGE };
+enum class Mode { NONE, LBP, HSV, EDGE };
 inline std::ostream& operator<<(std::ostream& os, const Mode& m) {
     switch (m) {
         case Mode::LBP:     os << "LBP";     break;
         case Mode::EDGE:    os << "EDGE"; break;
         case Mode::HSV:     os << "HSV"; break;
-        default:            os << "None";  break;
+        default:            os << "NONE";  break;
     }
     return os;
 }
@@ -30,7 +30,7 @@ inline std::ostream& operator<<(std::ostream& os, const Mode& m) {
  */
 struct PreProcessing {
 
-    Mode mode = Mode::None;
+    Mode mode = Mode::NONE;
     bool applyObjectDetection = false; // Applies object detection on the new image and crops original image to the new bounds
     int noiseThreshold = 0; // if <= 0 no action taken i.e remove noise == false
 
@@ -47,7 +47,7 @@ struct PreProcessing {
             throw std::invalid_argument("Object detection input must be normalized to 0 || 255, i.e binary");
 
 
-        if (mode == Mode::None) {
+        if (mode == Mode::NONE) {
             return;
             
         } else if (mode == Mode::LBP) {

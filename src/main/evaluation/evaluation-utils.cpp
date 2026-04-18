@@ -12,6 +12,7 @@
 #include "../../global-variables.h"
 #include "../feature/feature-extraction.h"
 #include "../objects/EvaluationMetrics.h"
+#include "../objects/FeaturesCollection.h"
 
 int euclidianDistance(std::array<float, 5>& pointOne, std::array<float, 5>& pointTwo);
 int euclidianDistance(std::array<float, 5>& pointOne, float* pointTwo);
@@ -25,7 +26,7 @@ namespace evaluate_utils {
      * Determines wether an image is closer to given normal sample or a given anomally sample.
      * It is determined by a majority vote over each cell in the image.
      */
-    bool evaluateImage(cv::Mat &image, cv::Mat &normalMatrix, std::array<float, 5> &anomalySample, EvaluationMetrics& evaluationMetrics) {
+    bool evaluateImage(cv::Mat &image, FeaturesCollection& features, cv::Mat &normalMatrix, std::array<float, 5> &anomalySample, EvaluationMetrics& evaluationMetrics) {
 
         int rowMargin = image.rows % global::cellSize;
         int colMargin = image.cols % global::cellSize;
@@ -42,18 +43,18 @@ namespace evaluate_utils {
             collIndex = 0;
             for (int col = colMargin / 2; col  + global::cellSize < image.cols - (colMargin / 2); col += global::cellSize) {
 
-
-                    // Get LBP distribution of cell
                 cv::Mat cell = image(cv::Range(row, row + global::cellSize), cv::Range(col, col + global::cellSize));
+
+                // Extract feature from cell
                 std::array<float, 5> cellLBPHistogram = {};
                 lbpValueDistribution(cell, cellLBPHistogram);
 
-                // Get Normal & Anomaly Distance
                 float* normalSample = normalMatrix.ptr<float>(rowIndex,collIndex);
-
                 float normalDistance = euclidianDistance(cellLBPHistogram, normalSample);
                 float anomalyDistance =  euclidianDistance(cellLBPHistogram, anomalySample);
 
+                // Compare cell feature to anomaly and normal features 
+                // i.e Make Prediction
                 if (normalDistance <= anomalyDistance) {
                     normalCellCount++;
                     evaluationMetrics.averageNormalCells++;
@@ -64,6 +65,7 @@ namespace evaluate_utils {
                 }
                 tempAnomallyDistanceAvg += anomalyDistance;
                 tempNormalDistanceAvg += normalDistance;
+
                 // Classify Cell
                 /*
                 if (normalDistance <= ) {
@@ -100,6 +102,7 @@ namespace evaluate_utils {
         evaluationMetrics.averageAnomalyDistance += tempAnomallyDistanceAvg / cellCount;
         evaluationMetrics.averageNormalDistance += tempNormalDistanceAvg / cellCount;
 
+        // Return final comparsion result across all cells
         // Anomaly
         // Normal Predictions: (0/100) - avg normalCells(114)
         // Anomaly Predictions: (100/100) - avg anomalyCells(242)

@@ -2,7 +2,7 @@
 #define train_internal_H
 
 // Fault Sense
-#include "../objects/PreProcessingPipeline.h"
+#include "../objects/FeaturesCollection.h"
 //Standard
 #include <array>
 #include <map>
@@ -32,8 +32,8 @@ namespace internal {
     void initNormMatrix(const std::map<std::string, cv::Mat>::iterator &itterator, int cellSize, cv::Mat &categoryNorm);
     void initNormMatrix(const cv::Mat &sampleImage, int cellSize, cv::Mat &categoryNorm);
     void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOfSamples);
-    void generateNormalCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images, const PreProcessingPipeline &preProcessingConfiguration);
-    void generateAnomalyCellNorm(std::array<float, 5> &cellNorm, std::map<std::string, cv::Mat> &images, const PreProcessingPipeline &preProcessingConfiguration, const std::string &categoryName);
+    void generateNormalCellNorm(std::array<float, 5> &cellNorm, std::vector<cv::Mat> &images, const FeaturesCollection& features);
+    void generateAnomalyCellNorm(std::array<float, 5> &cellNorm, std::map<std::string, cv::Mat> &images, const FeaturesCollection &features, const std::string &categoryName);
 }
 
 #endif

@@ -5,8 +5,8 @@
 #include <map>
 #include <string>
 // Fault Sense
-#include "../../../objects/PreProcessingPipeline.h"
+#include "../../../objects/FeaturesCollection.h"
 
-void train(std::map<std::string, bool> flags, PreProcessingPipeline& preProcessingPipeline);
+void train(std::map<std::string, bool> flags, FeaturesCollection& features);
 
 #endif

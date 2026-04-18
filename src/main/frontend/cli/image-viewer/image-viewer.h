@@ -7,9 +7,9 @@
 #include <map>
 #include <string>
 // Fault Sense
-#include "../../../objects/PreProcessingPipeline.h"
+#include "../../../objects/FeaturesCollection.h"
 
 void imageViewer(cv::Mat &originalImage);
-void view(cv::Mat &image, PreProcessingPipeline &preProcessingPipeline, std::map<std::string, bool>& viewFlags);
+void view(cv::Mat &image, FeaturesCollection& features, std::map<std::string, bool>& viewFlags);
 
 #endif

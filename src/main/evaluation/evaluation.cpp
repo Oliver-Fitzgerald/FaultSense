@@ -29,7 +29,7 @@
  * @param anomalyDistributionNorm
  * @param preProcessingPipeline
  */
-void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNorm, std::array<float, 5> &anomalyDistributionNorm, PreProcessingPipeline &preProcessingPipeline) {
+void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNorm, std::array<float, 5> &anomalyDistributionNorm, FeaturesCollection& features) {
 
     EvaluationMetrics evaluationMetrics;
 
@@ -46,9 +46,7 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
 
             std::cout << "Evaluating image: " << imageName << " / " << images.size() << " :";
 
-            preProcessingPipeline.apply(image);
-
-            if ( evaluate_utils::evaluateImage(image, normalMatrixNorm, anomalyDistributionNorm, evaluationMetrics) )
+            if ( evaluate_utils::evaluateImage(image, features, normalMatrixNorm, anomalyDistributionNorm, evaluationMetrics) )
                 normalCount++;
             else 
                 anomalyCount++;
@@ -115,7 +113,7 @@ void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std:
 /*
  * markFaultLBP
  */
-void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessingPipeline, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
+void markFaultLBP(FeaturesCollection& features, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
 
     //if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
@@ -123,7 +121,9 @@ void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessi
     cv::Mat returnImage = image.clone();
     ObjectCoordinates objectBounds;
 
+    // CHANGES REQUIRED HERE
     // Apply objectDetection if relevant
+    /*
     if (preProcessingPipeline.objectDetectionConfiguration.has_value()) {
 
         std::optional<PreProcessing> preProcessingConfiguration = preProcessingPipeline.preProcessingConfiguration;
@@ -135,6 +135,7 @@ void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessi
         image = returnImage.clone();
         preProcessingConfiguration->apply(image);
     }
+    */
 
     // Itterate over image cells
     int collIndex, rowIndex = 0; 
@@ -146,15 +147,18 @@ void markFaultLBP(FeatureFilter& cellFeature, PreProcessingPipeline& preProcessi
             std::array<float, 5> cellLBPHistogram = {};
 
             // Feature Extraction
-            cellFeature.extractFeature(cell);
+            // cellFeature.extractFeature(cell); //CHANGES REQUIRED HERE
+            std::unique_ptr<FeatureFilter> tempTestFilter = std::make_unique<BinaryCountFeature>();
 
             //Cell evaluation
             //if (anomolyDistance < normalDistance) {
-            if (whitePixelCount > 100) {
+            /* CHANGES REQUIRED HERE
+            if (cellFeature.compare(tempTestFilter.get())) {
                 // Mark anomoly
                 RGB colour = RGB{0,0,255};
                 markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
             }
+            */
             collIndex++;
         }
         rowIndex++;

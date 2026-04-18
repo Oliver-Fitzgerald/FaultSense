@@ -30,17 +30,20 @@
 #include "../../objects/PreProcessing.h"
 #include "../../objects/PreProcessingPipeline.h"
 #include "../../objects/Features.h"
+#include "../../objects/FeaturesCollection.h"
 
 namespace {
     Mode modeFromString(std::string stringValue);
-    void readConfig(PreProcessingPipeline& preProcessingPipeline);
+    std::unique_ptr<FeatureFilter> featureFromString(std::string stringValue);
+    void readConfig(FeaturesCollection& features);
+    void parseArray(const char* featuresValue);
 }
 
 int main(int argc, char** argv) {
 
     // Read Configuration
-    PreProcessingPipeline preProcessingPipeline;
-    readConfig(preProcessingPipeline);
+    FeaturesCollection features;
+    readConfig(features);
 
     std::string imagePath = "";
     std::vector<cv::Mat> images;
@@ -68,8 +71,11 @@ int main(int argc, char** argv) {
 
     std::cout << "Fault Sense CLI\n";
     std::cout << "=====================\n";
-    std::cout << preProcessingPipeline;
-    std::cout << "=====================\n";
+    for (auto& [feature, preProcessingPipeline] : features.features) {
+        std::cout << "Feature: " << typeid(feature.get()).name() << "\n";
+        std::cout << preProcessingPipeline.get();
+        std::cout << "=====================\n";
+    }
     std::cout << "execution...\n";
 
     // View subcommand
@@ -78,9 +84,9 @@ int main(int argc, char** argv) {
     viewSubcommand->add_flag("-m, --markFault", viewFlags["markFault"], "Does fault detection and marks each of the predicted faulty celss in the final image");
     viewSubcommand->add_flag("-r, --getRegion", viewFlags["getRegion"], "Gets a selected region of an image and writes is to a file");
 
-    viewSubcommand->final_callback([&images, &viewFlags, &preProcessingPipeline] {
+    viewSubcommand->final_callback([&images, &viewFlags, &features] {
         for (auto& image : images) {
-            view(image, preProcessingPipeline, viewFlags);
+            view(image, features, viewFlags);
         }
     });
 
@@ -90,8 +96,8 @@ int main(int argc, char** argv) {
     std::map<std::string, bool> evalFlags = {{"chewinggum", false}};
     evaluationSubcommand->add_flag("--chewinggum", evalFlags["chewinggum"], "Evaluates the effectivness of trained norm at binary classification");
 
-    evaluationSubcommand->final_callback([&evalFlags, &preProcessingPipeline]() {
-        evaluation(evalFlags, preProcessingPipeline);
+    evaluationSubcommand->final_callback([&evalFlags, &features]() {
+        evaluation(evalFlags, features);
     });
 
 
@@ -99,8 +105,8 @@ int main(int argc, char** argv) {
     CLI::App* trainSubcommand = faultSense.add_subcommand("train", "Trains norms and writes result to file")->ignore_case();
     std::map<std::string, bool> trainFlags = {{"", false}};
 
-    trainSubcommand->final_callback([&trainFlags, &preProcessingPipeline]() {
-        train(trainFlags, preProcessingPipeline);
+    trainSubcommand->final_callback([&trainFlags, &features]() {
+        train(trainFlags, features);
     });
 
     CLI11_PARSE(faultSense, argc, argv);
@@ -116,8 +122,10 @@ namespace {
      * readConfig
      * Reads in the project configuration file to set the pre-processing techniques applied throughout the
      * project
+     * @param features The features to be extracted, trained, evaluated arcoss system functions and the 
+     *                 pre-processing configuration to be applied to extract the feature
      */
-    void readConfig(PreProcessingPipeline& preProcessingPipeline) {
+    void readConfig(FeaturesCollection& features) {
 
         CSimpleIniA ini;
         SI_Error rc = ini.LoadFile("../configuration.ini");
@@ -126,21 +134,39 @@ namespace {
             return;
         }
 
-        bool exists = ini.SectionExists("ObjectDetection");
-        if (exists) {
-            PreProcessing objectDetection;
-            objectDetection.applyObjectDetection = true;
-            objectDetection.mode = modeFromString(ini.GetValue("ObjectDetection", "mode", "None"));
-            objectDetection.noiseThreshold = (int) ini.GetLongValue("ObjectDetection", "noiseThreshold");
-            preProcessingPipeline.objectDetectionConfiguration = objectDetection;
-        }
+        const std::string available_features[2] = {"BinaryCountFeature", "BinaryDistributionFeature"};
 
-        exists = ini.SectionExists("PreProcessing");
-        if (exists) {
-            PreProcessing preProcessing;
-            preProcessing.mode = modeFromString(ini.GetValue("PreProcessing", "mode", "None"));
-            preProcessing.noiseThreshold = (int) ini.GetLongValue("PreProcessing", "noiseThreshold");
-            preProcessingPipeline.preProcessingConfiguration = preProcessing;
+        for (auto featureName : available_features) {
+
+            bool exists = ini.SectionExists(featureName.c_str());
+            if (exists && ini.GetValue(featureName.c_str(), "enabled", "false") == "true") {
+
+                std::unique_ptr<FeatureFilter> feature = std::make_unique<BinaryCountFeature>();
+                std::unique_ptr<PreProcessingPipeline> preProcessingPipeline = std::make_unique<PreProcessingPipeline>();
+
+                std::string section = featureName + ".ObjectDetection";
+                exists = ini.SectionExists(section.c_str());
+                if (exists && ini.GetValue(featureName.c_str(), "enabled", "false") == "true") {
+
+                    PreProcessing objectDetection;
+                    objectDetection.applyObjectDetection = true;
+                    objectDetection.mode = modeFromString(ini.GetValue("ObjectDetection", "mode", "NONE"));
+                    objectDetection.noiseThreshold = (int) ini.GetLongValue("ObjectDetection", "noiseThreshold");
+                    preProcessingPipeline->objectDetectionConfiguration = objectDetection;
+                }
+
+                section = featureName + ".PreProcessing";
+                exists = ini.SectionExists(section.c_str());
+                if (exists && ini.GetValue(section.c_str(), "enabled", "false") == "true") {
+
+                    PreProcessing preProcessing;
+                    preProcessing.mode = modeFromString(ini.GetValue("PreProcessing", "mode", "NONE"));
+                    preProcessing.noiseThreshold = (int) ini.GetLongValue("PreProcessing", "noiseThreshold");
+                    preProcessingPipeline->preProcessingConfiguration = preProcessing;
+                }
+
+                features.features.emplace(std::move(feature), std::move(preProcessingPipeline));
+            }
         }
     }
 
@@ -160,8 +186,60 @@ namespace {
         else if (stringValue == "LBP" || stringValue == "lbp")
             return Mode::LBP;
         else if (stringValue == "NONE" || stringValue == "none")
-            return Mode::None;
+            return Mode::NONE;
         else
             throw std::invalid_argument("Error convertign string to pre-processing-mode: " + stringValue);
+    }
+
+    /*
+     * featureFromString
+     * Converts string from configuration file to the relevant object
+     * @param stringValue the string representation of the feature classes name
+     */
+    std::unique_ptr<FeatureFilter> featureFromString(std::string stringValue) {
+
+        if (stringValue == "BinaryCountFeature")
+            return std::make_unique<BinaryCountFeature>();
+        else if (stringValue == "BinaryDistributionFeature")
+            return std::make_unique<BinaryDistributionFeature>();
+        else
+            throw std::invalid_argument("Error convertign string to feature class: " + stringValue);
+    }
+
+    /*
+     * parseArray
+     * Parses and ini array of format "key = [value1, value2, value3]"
+     * an array value can be obtained with the following function call
+     * ini.GetValue("Section", "key", "");
+     * @param featureValue The array of values format "[value1, value2, value3]"
+     */
+    void parseArray(const char* featuresValue) {
+        if (!featuresValue || strlen(featuresValue) <= 0)
+            throw std::invalid_argument("[Features] not defined in configuration.ini\n");
+
+        std::string featuresStr(featuresValue);
+        
+        // Strip surrounding brackets [ ]
+        size_t start = featuresStr.find('[');
+        size_t end = featuresStr.find(']');
+        
+        // Parse feature parameters
+        if (start != std::string::npos && end != std::string::npos && end > start) {
+            std::string inner = featuresStr.substr(start + 1, end - start - 1);
+            
+            std::stringstream ss(inner);
+            std::string token;
+            
+            // Split by comma and trim whitespace
+            while (std::getline(ss, token, ',')) {
+                // Trim leading/trailing whitespace
+                size_t tokenStart = token.find_first_not_of(" \t");
+                size_t tokenEnd = token.find_last_not_of(" \t");
+                
+                if (tokenStart != std::string::npos) {
+                    std::cout << "token: " << token.substr(tokenStart, tokenEnd - tokenStart + 1) << "\n";
+                }
+            }
+        }
     }
 }

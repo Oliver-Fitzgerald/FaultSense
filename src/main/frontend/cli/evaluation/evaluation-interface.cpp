@@ -8,6 +8,7 @@
 #include <string>
 // Fault Sense
 #include "../../../objects/PreProcessingPipeline.h"
+#include "../../../objects/FeaturesCollection.h"
 #include "../../../general/file-operations/training-data.h"
 #include "../../../evaluation/evaluation.h"
 
@@ -15,7 +16,7 @@
  * evaluation
  * Under Construction
  */
-void evaluation(std::map<std::string, bool> flags, PreProcessingPipeline& preProcessingPipeline) {
+void evaluation(std::map<std::string, bool>& flags, FeaturesCollection& features) {
 
     std::cout << "Reading normal norm ...\n";
     std::map<std::string, cv::Mat> normalNorm = {
@@ -41,7 +42,7 @@ void evaluation(std::map<std::string, bool> flags, PreProcessingPipeline& prePro
 
     if (flags["chewinggum"]) {
         std::cout << "Evaluating chewing gum instances ...\n";
-        evaluateObjectCategory("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"], preProcessingPipeline);
+        evaluateObjectCategory("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"], features);
     } else {
         std::cout << "Warning: No object type selected\n";
     }
