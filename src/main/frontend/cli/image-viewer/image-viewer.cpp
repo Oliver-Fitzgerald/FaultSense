@@ -86,7 +86,10 @@ void view(cv::Mat& image, FeaturesCollection& features, std::map<std::string, bo
         std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
         readCellDistributions(anomalyNorm);
 
-        markFaultLBP(features, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        //markFaults(features, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        FeaturesCollection normalFeatures;
+        FeaturesCollection anomalyFeatures;
+        markFaults(normalFeatures, anomalyFeatures, image);
 
 
     } else if (viewFlags["getRegion"]) {

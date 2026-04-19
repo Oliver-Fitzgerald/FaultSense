@@ -141,7 +141,7 @@ namespace {
             bool exists = ini.SectionExists(featureName.c_str());
             if (exists && ini.GetValue(featureName.c_str(), "enabled", "false") == "true") {
 
-                std::unique_ptr<FeatureFilter> feature = std::make_unique<BinaryCountFeature>();
+                std::unique_ptr<FeatureFilter> feature = std::make_unique<BinaryCountFeature>(false);
                 std::unique_ptr<PreProcessingPipeline> preProcessingPipeline = std::make_unique<PreProcessingPipeline>();
 
                 std::string section = featureName + ".ObjectDetection";
@@ -199,7 +199,7 @@ namespace {
     std::unique_ptr<FeatureFilter> featureFromString(std::string stringValue) {
 
         if (stringValue == "BinaryCountFeature")
-            return std::make_unique<BinaryCountFeature>();
+            return std::make_unique<BinaryCountFeature>(false);
         else if (stringValue == "BinaryDistributionFeature")
             return std::make_unique<BinaryDistributionFeature>();
         else

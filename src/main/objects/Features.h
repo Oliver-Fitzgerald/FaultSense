@@ -20,9 +20,13 @@ class FeatureFilter {
 
 public:
 
+    const int cellSize = 60;
+    int rowMargin;
+    int colMargin;
+
     virtual void extractFeature(cv::Mat& cell) = 0;
     virtual void updateFeature(cv::Mat& cell) = 0;
-    virtual int compare(FeatureFilter* feature) = 0;
+    virtual double compare(FeatureFilter* feature) = 0;
 
     virtual ~FeatureFilter() = default;
 };
@@ -36,43 +40,120 @@ public:
 class BinaryCountFeature : public FeatureFilter {
 public:
 
-    int pixelCount = 0;
-    double whitePixelRatio = 0;
+    cv::Mat pixelRatios; // Stores the ratio of white to non-white pixels in each cell/image as the percentage of white pixels
+    double pixelWeigth;
+    int pixelCount;
+    bool singleCell;
+
+    /*
+     * BinaryCountFeature (Constructor)
+     * @param singleCell    - If true the feature is an average of all cells otherwise unique feature stored for every image cell
+     * @param imageRows     - The number of rows in the image matrix
+     * @param imageColumns  - The number of columns in the image matrix
+     */
+    BinaryCountFeature(bool singleCell, int imageRows, int imageColumns) {
+
+        this->singleCell = singleCell;
+        this->rowMargin = imageRows % cellSize;
+        this->colMargin = imageColumns % cellSize;
+
+        if (singleCell) {
+            
+            this->pixelCount = (imageRows - rowMargin) * (imageColumns - colMargin);
+            this->pixelRatios = cv::Mat(imageRows, imageColumns, CV_64FC2);
+
+        } else {
+            this->pixelCount = cellSize * 2;
+            this->pixelRatios = cv::Mat(1, 1, CV_64FC2);
+        }
+
+        this->pixelWeigth = 100 / this->pixelCount;
+    }
+
+    /*
+     * BinaryCountFeature (Constructor)
+     * @param singleCell    - If true the feature is an average of all cells otherwise unique feature stored for every image cell
+     */
+    BinaryCountFeature(bool singleCell) {
+
+        this->singleCell = singleCell;
+    }
+
+    /*
+     * initalize
+     * Initalize the feature based on image dimensions 
+     * @param imageRows     - The number of rows in the image matrix
+     * @param imageColumns  - The number of columns in the image matrix
+     */
+    void initalize(int imageRows, int imageColumns) {
+        this->rowMargin = imageRows % cellSize;
+        this->colMargin = imageColumns % cellSize;
+
+        if (singleCell) {
+            
+            this->pixelCount = (imageRows - rowMargin) * (imageColumns - colMargin);
+            this->pixelRatios = cv::Mat(imageRows, imageColumns, CV_64FC2);
+
+        } else {
+            this->pixelCount = cellSize * 2;
+            this->pixelRatios = cv::Mat(1, 1, CV_64FC2);
+        }
+
+        this->pixelWeigth = 100 / this->pixelCount;
+    }
 
     /*
      * extractFeature
-     * Extracts the ratio of white pixels in the passed image as a percentage of 100
-     * @param image The image that the white pixels will be counted in
+     * Extracts the ratio of white pixels in the passed (image/image cells) as a percentage of 100
+     * @param image - The image that the white pixels will be counted in
      */
-    void extractFeature(cv::Mat& cell) override {
+    void extractFeature(cv::Mat& image) override {
 
-        pixelCount = cell.rows * cell.cols;
-        int pixelWeigth = pixelCount / 100;
+        int colIndex, rowIndex = 0; 
+        for (int row = (rowMargin / 2); (row + cellSize) < image.rows - (rowMargin / 2); row += cellSize) {
+            colIndex = 0;
+            for (int col = colMargin / 2; (col  + cellSize) < image.cols - (colMargin / 2); col += cellSize) {
 
-        for (int rows = 0; rows < cell.rows; rows++) {
-            for (int cols = 0; cols < cell.cols; cols++) {
-                
-                int pixel = cell.at<uchar>(rows, cols);
-                if (pixel == 255)
-                    whitePixelRatio += pixelWeigth;
+                cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
 
+                if (singleCell)
+                    updatePixelValue(cell, pixelRatios.at<uchar>(0, 0));
+                else
+                    updatePixelValue(cell, pixelRatios.at<uchar>(rowIndex, colIndex));
+
+                cell.release();
+                colIndex++;
             }
+            rowIndex++;
         }
     }
 
-    void updateFeature(cv::Mat& cell) override {
-        pixelCount = cell.rows * cell.cols;
-        int pixelWeigth = pixelCount / 100;
+    /*
+     * updateFeature
+     * Updates the current feature to incorporate the pixel values in the passed image
+     * @param image - The image providing pixel values for feature update
+     */
+    void updateFeature(cv::Mat& image) override {
 
-        for (int rows = 0; rows < cell.rows; rows++) {
-            for (int cols = 0; cols < cell.cols; cols++) {
-                
-                int pixel = cell.at<uchar>(rows, cols);
-                if (pixel == 255)
-                    whitePixelRatio += pixelWeigth;
+        cv::Mat pixelRatios;
 
-            }
-        }
+        // Update current feature values
+        if (singleCell)
+            pixelCount += (image.rows - rowMargin) * (image.cols - colMargin);
+        else
+            pixelCount *= 2; // cellSize is equal regardless of image size threfore * 2
+
+        double oldPixelWeigth = pixelWeigth;
+        pixelWeigth = 100.0 / pixelCount;
+
+        double scale = oldPixelWeigth / pixelWeigth;
+
+        for (int row = 0; row < pixelRatios.rows; row++)
+            for (int col = 0; col < pixelRatios.cols; col++)
+                pixelRatios.at<double>(row, col) *= scale;
+
+        // Append new pixel values to feature values
+        this->extractFeature(image);
     }
 
     /*
@@ -82,17 +163,41 @@ public:
      *
      * @parma feature The feature for comparision
      */
-    int compare(FeatureFilter* feature) override {
+    double compare(FeatureFilter* feature) override {
 
         if (typeid(*feature) != typeid(BinaryCountFeature))
-            std::cout << "Error invalid feature class (" << typeid(feature).name() << ") is an invalid type\n";
+            std::cout << "Error invalid feature class (" << typeid(feature).name() << ") is an invalid type for comparsion operation\n";
 
         BinaryCountFeature* internalFeature = dynamic_cast<BinaryCountFeature*>(feature);
-        if (internalFeature->whitePixelRatio > whitePixelRatio)
-            return (int) internalFeature->whitePixelRatio - whitePixelRatio;
-        else
-            return (int) whitePixelRatio - internalFeature->whitePixelRatio;
 
+        if (singleCell) {
+            return internalFeature->pixelRatios.at<double>(0,0) - pixelRatios.at<double>(0, 0);
+
+        } else {
+            double difference = 0;
+            for (int row = 0; row < pixelRatios.rows; row++)
+                for (int col = 0; col < pixelRatios.cols; col++)
+                    difference += internalFeature->pixelRatios.at<double>(0,0) - pixelRatios.at<double>(0, 0);
+
+            return difference;
+        }
+    }
+
+    /*
+     * updatePixelValue
+     * Updates a feature value based on the current pixelValue
+     * @param featureValue - Cell providing pixel values for feature update
+     * @param featureValue - The value of the current feature
+     */
+    void updatePixelValue(cv::Mat& cell, unsigned char& featureValue) {
+
+        for (int row = 0; row < cell.rows; row++) {
+            for (int col = 0; col < cell.cols; col++) {
+
+                if (cell.at<uchar>(row, col) == 255)
+                     featureValue += pixelWeigth;
+            }
+        }
     }
 
 };
@@ -108,11 +213,11 @@ class BinaryDistributionFeature : public FeatureFilter {
     }
     void updateFeature(cv::Mat& cell) {
     }
-    int compare(FeatureFilter* feature) {
+    double compare(FeatureFilter* feature) {
 
         //Cell evaluation
         /*
-        float* normal = normalSample.ptr<float>(rowIndex,collIndex);
+        float* normal = normalSample.ptr<float>(rowIndex,colIndex);
         float normalDistance = 0; float anomolyDistance = 0;
         for (int i = 0; i < 5; i++) {
             normalDistance += std::abs(cellLBPHistogram[i] - normal[i]);

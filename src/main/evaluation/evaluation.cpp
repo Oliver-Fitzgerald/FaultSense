@@ -61,8 +61,6 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
     }
 }
 
-void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
-
 /*
  * markFaultLBP
  */
@@ -111,9 +109,14 @@ void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std:
 }
 
 /*
- * markFaultLBP
+ * markFaults
+ * Given a set of normal and anomaly features this function extracts those same features from the given image
+ * and classifies sectors of the image as anomalies or normal based of those passed features
+ * @param normalFeatures    - 
+ * @param anomalyFeatures   -
+ * @param image             -
  */
-void markFaultLBP(FeaturesCollection& features, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
+void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyFeatures, cv::Mat &image) {
 
     //if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
@@ -148,7 +151,7 @@ void markFaultLBP(FeaturesCollection& features, cv::Mat& normalSample, const std
 
             // Feature Extraction
             // cellFeature.extractFeature(cell); //CHANGES REQUIRED HERE
-            std::unique_ptr<FeatureFilter> tempTestFilter = std::make_unique<BinaryCountFeature>();
+            std::unique_ptr<FeatureFilter> tempTestFilter = std::make_unique<BinaryCountFeature>(false, image.rows, image.cols);
 
             //Cell evaluation
             //if (anomolyDistance < normalDistance) {

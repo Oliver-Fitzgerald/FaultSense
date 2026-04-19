@@ -12,8 +12,9 @@
 #include "../objects/Features.h"
 
 void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution, FeaturesCollection& features);
-void markFaultLBP(const std::array<float, 5>&normalSampe, const std::array<float, 5>& anomolySample, cv::Mat &image);
-void markFaultLBP(FeaturesCollection& features, cv::Mat& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
+void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
+void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyFeatures, cv::Mat &image);
+
 bool checkIfCellIsNormal(cv::Mat cell);
 
 #endif
