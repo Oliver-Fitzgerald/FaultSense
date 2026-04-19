@@ -6,7 +6,7 @@
 // Catch2
 #include <catch2/catch_test_macros.hpp>
 // Fault Sense
-#include "../../../main/general/file-operations/ground-truth.h"
+#include "../../../main/general/file-operations/read-data-labels.h"
 #include "../../../global-variables.h"
 // Standard
 #include <iomanip>

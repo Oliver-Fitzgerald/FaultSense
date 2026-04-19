@@ -9,7 +9,7 @@
 #include "../../data-preperation/generate-masks.h"
 #include "../../data-preperation/synthetic-pre-processing-data-generation.h"
 #include "../../data-preperation/synthetic-features-data-generation.h"
-#include "../../general/file-operations/generic-file-operations.h"
+#include "../../general/file-operations/image-file-operations.h"
 
 void generate(std::map<const char*, bool> flags);
 

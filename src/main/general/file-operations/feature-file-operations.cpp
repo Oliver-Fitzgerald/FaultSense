@@ -1,6 +1,6 @@
 /*
- * training-data.cpp
- * A collection of functions for the reading and writing of training data to 
+ * feature-file-operations.cpp
+ * A collection of functions for the reading and writing of trained features to 
  * persistant memory
  */
 
@@ -15,13 +15,11 @@
 //Fault Sense
 #include "../../../global-variables.h"
 
-void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions);
-void writeMatrixNorm(std::map<std::string, cv::Mat> &norms); 
-void readMatrixNorm(std::map<std::string, cv::Mat> &norms);
 
-const std::string NORMAL_FILEPATH = "data/trained-data/normal-training-samples.yml";
-const std::string ANOMALY_FILEPATH = "data/trained-data/anomaly-training-samples.yml";
+namespace {
+    const std::string NORMAL_FILEPATH = "data/trained-data/normal-training-samples.yml";
+    const std::string ANOMALY_FILEPATH = "data/trained-data/anomaly-training-samples.yml";
+}
 
 /*
  * writeCellDistributions

@@ -11,7 +11,7 @@
 #include "../../main/training/train.h"
 #include "../../main/objects/PreProcessing.h"
 #include "../../main/objects/PreProcessingPipeline.h"
-#include "../../main/general/file-operations/generic-file-operations.h"
+#include "../../main/general/file-operations/image-file-operations.h"
 #include "../../global-variables.h"
 // OpenCV2
 #include <opencv2/imgcodecs.hpp>

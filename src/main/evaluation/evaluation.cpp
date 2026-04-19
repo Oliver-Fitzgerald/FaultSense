@@ -15,7 +15,7 @@
 #include "../objects/PreProcessingPipeline.h"
 #include "../objects/RGB.h"
 #include "../objects/Features.h"
-#include "../general/file-operations/generic-file-operations.h"
+#include "../general/file-operations/image-file-operations.h"
 #include "../general/generic-utils.h"
 #include "../../global-variables.h"
 
@@ -118,7 +118,7 @@ void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std:
  */
 void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyFeatures, cv::Mat &image) {
 
-    //if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
+    //if (std::size(normalSaple) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
 
     cv::Mat returnImage = image.clone();

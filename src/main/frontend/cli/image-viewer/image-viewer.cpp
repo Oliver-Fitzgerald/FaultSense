@@ -8,7 +8,7 @@
 #include <opencv2/opencv.hpp>
 // Fault Sense
 #include "../../../general/device_info.h"
-#include "../../../general/file-operations/training-data.h"
+#include "../../../general/file-operations/feature-file-operations.h"
 #include "../../../objects/PreProcessingPipeline.h"
 #include "../../../objects/Features.h"
 #include "../../../objects/FeaturesCollection.h"
@@ -31,17 +31,18 @@ namespace {
  *
  * @param image The image to be displayed and transformed
  */
-void imageViewer(cv::Mat &originalImage) {
+void imageViewer(cv::Mat& image) {
 
     cv::namedWindow("img", cv::WINDOW_AUTOSIZE);
-    cv::Mat canvas(device::WINDOWHEIGHT, device::WINDOWWIDTH, originalImage.type(), cv::Scalar(128));
+    cv::Mat canvas(device::WINDOWHEIGHT, device::WINDOWWIDTH, image.type(), cv::Scalar(128));
 
-    cv::Mat image;
-    double scaleX = static_cast<double>(device::WINDOWWIDTH  - 10) / originalImage.cols;
-    double scaleY = static_cast<double>(device::WINDOWHEIGHT - 10) / originalImage.rows;
+    double scaleX = static_cast<double>(device::WINDOWWIDTH  - 10) / image.cols;
+    double scaleY = static_cast<double>(device::WINDOWHEIGHT - 10) / image.rows;
     double scale  = std::min(scaleX, scaleY);
 
-    cv::resize(originalImage, image, cv::Size(), scale, scale, cv::INTER_AREA);
+    cv::Mat tempImage;
+    cv::resize(image, tempImage, cv::Size(), scale, scale, cv::INTER_AREA);
+    image = tempImage.clone();
     showImage(canvas, image);
 
     while (true) {
@@ -69,15 +70,14 @@ void imageViewer(cv::Mat &originalImage) {
  * view
  * Displays an image given it's path, applying any pre-processing
  * techniques specified
- 
- * @param imagePath The path to the image to be displayed
- * @param flags A list of flags to indicate which pre-processing techniques should be applied.
+ * @param imagePath - The path to the image to be displayed
+ * @param flags     - A list of flags to indicate which pre-processing techniques should be applied.
  */
-void view(cv::Mat& image, FeaturesCollection& features, std::map<std::string, bool>& viewFlags) {
+void view(cv::Mat& image, std::map<std::string, bool>& viewFlags) {
 
     PreProcessingPipeline preProcessingPipeline;
     readConfig(preProcessingPipeline);
-    std::cout << preProcessingPipeline;
+    std::cout << preProcessingPipeline; // INFO
 
     if (viewFlags["markFault"]) {
         std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};

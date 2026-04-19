@@ -16,7 +16,7 @@
 #include <exception>
 // Fault Sense
 #include "../general/generic-utils.h"
-#include "../general/file-operations/generic-file-operations.h"
+#include "../general/file-operations/image-file-operations.h"
 
 void generateMasks();
 

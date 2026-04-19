@@ -25,8 +25,8 @@
 #include "../../feature/feature-extraction.h"
 #include "../../evaluation/evaluation.h"
 #include "../../training/train.h"
-#include "../../general/file-operations/training-data.h"
-#include "../../general/file-operations/generic-file-operations.h"
+#include "../../general/file-operations/feature-file-operations.h"
+#include "../../general/file-operations/image-file-operations.h"
 #include "../../objects/PreProcessing.h"
 #include "../../objects/PreProcessingPipeline.h"
 #include "../../objects/Features.h"
@@ -84,9 +84,9 @@ int main(int argc, char** argv) {
     viewSubcommand->add_flag("-m, --markFault", viewFlags["markFault"], "Does fault detection and marks each of the predicted faulty celss in the final image");
     viewSubcommand->add_flag("-r, --getRegion", viewFlags["getRegion"], "Gets a selected region of an image and writes is to a file");
 
-    viewSubcommand->final_callback([&images, &viewFlags, &features] {
+    viewSubcommand->final_callback([&images, &viewFlags] {
         for (auto& image : images) {
-            view(image, features, viewFlags);
+            view(image, viewFlags);
         }
     });
 

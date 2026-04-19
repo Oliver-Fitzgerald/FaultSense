@@ -6,10 +6,8 @@
 // Standard
 #include <map>
 #include <string>
-// Fault Sense
-#include "../../../objects/FeaturesCollection.h"
 
-void imageViewer(cv::Mat &originalImage);
-void view(cv::Mat &image, FeaturesCollection& features, std::map<std::string, bool>& viewFlags);
+void imageViewer(cv::Mat &image);
+void view(cv::Mat &image, std::map<std::string, bool>& viewFlags);
 
 #endif

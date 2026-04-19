@@ -18,7 +18,7 @@
 #include "../objects/CannyThreshold.h"
 #include "../objects/PreProcessingPipeline.h"
 #include "../objects/FeaturesCollection.h"
-#include "../general/file-operations/generic-file-operations.h"
+#include "../general/file-operations/image-file-operations.h"
 #include "../general/generic-utils.h"
 #include "../evaluation/evaluation.h"
 // Standard

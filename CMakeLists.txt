@@ -43,15 +43,15 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/pre-processing/utils/pre-processing-utils.cpp
                            ../src/main/general/generic-utils.cpp
                            ../src/main/training/train.cpp
-                           ../src/main/general/file-operations/training-data.cpp
-                           ../src/main/general/file-operations/generic-file-operations.cpp
+                           ../src/main/general/file-operations/feature-file-operations.cpp
+                           ../src/main/general/file-operations/image-file-operations.cpp
                            ../src/main/evaluation/evaluation.cpp
                            ../src/main/evaluation/evaluation-utils.cpp)
 target_include_directories(fault-sense-cli PRIVATE ${CMAKE_BINARY_DIR}/_deps/simpleini-src)
 target_link_libraries(fault-sense-cli PRIVATE ${OpenCV_LIBS} CLI11::CLI11)
 
 add_executable(data-managment-cli ../src/main/frontend/cli/data-managment-cli.cpp
-                           ../src/main/general/file-operations/generic-file-operations.cpp
+                           ../src/main/general/file-operations/image-file-operations.cpp
                            ../src/main/general/generic-utils.cpp
                            ../src/main/data-preperation/generate-masks.cpp
                            ../src/main/data-preperation/synthetic-features-data-generation.cpp

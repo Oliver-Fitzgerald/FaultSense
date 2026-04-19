@@ -35,7 +35,7 @@ add_executable(train-test ../training/train-test.cpp
                           ../../main/pre-processing/utils/pre-processing-utils.cpp
                           ../../main/pre-processing/object-detection.cpp
                           ../../main/pre-processing/pre-processing.cpp
-                          ../../main/general/file-operations/generic-file-operations.cpp
+                          ../../main/general/file-operations/image-file-operations.cpp
                           ../../main/training/train.cpp)
 target_link_libraries(train-test PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
@@ -44,14 +44,14 @@ add_executable(training-data-tests ../general/file-operations/training-data-test
 target_link_libraries(training-data-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
 add_executable(ground-truth-tests ../general/file-operations/ground-truth-tests.cpp
-                          ../../main/general/file-operations/ground-truth.cpp)
+                          ../../main/general/file-operations/read-data-labels.cpp)
 target_link_libraries(ground-truth-tests PRIVATE Catch2::Catch2WithMain ${OpenCV_LIBS} stdc++fs)
 
 add_executable(evaluation-tests ../evaluation/evaluation-tests.cpp
                           ../../main/evaluation/evaluation-utils.cpp
                           ../../main/training/train.cpp
                           ../../main/general/generic-utils.cpp
-                          ../../main/general/file-operations/generic-file-operations.cpp
+                          ../../main/general/file-operations/image-file-operations.cpp
                           ../../main/feature/feature-extraction.cpp
                           ../../main/pre-processing/pre-processing.cpp
                           ../../main/pre-processing/utils/pre-processing-utils.cpp

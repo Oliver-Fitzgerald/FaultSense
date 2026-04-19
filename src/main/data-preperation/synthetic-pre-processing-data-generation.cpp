@@ -5,7 +5,7 @@
 // OpenCV2
 #include <opencv2/opencv.hpp>
 // Fault Sense
-#include "../general/file-operations/generic-file-operations.h"
+#include "../general/file-operations/image-file-operations.h"
 #include "../general/generic-utils.h"
 // Standard
 #include <array>
