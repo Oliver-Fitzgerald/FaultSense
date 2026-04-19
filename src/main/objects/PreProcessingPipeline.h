@@ -42,16 +42,16 @@ struct PreProcessingPipeline {
 
     friend std::ostream& operator<<(std::ostream& os, const PreProcessingPipeline& p) {
 
-        os << "Pre-Processing and Object Detection Configuration\n\n";
+        os << "Pre-Processing and Object Detection Configuration:\n\n";
 
-        os << "Object Detection Applied: " << (p.objectDetectionConfiguration.has_value() ? "true" : "false") << "\n";
+        os << "Object Detection Applied:         " << (p.objectDetectionConfiguration.has_value() ? "true" : "false") << "\n";
         if (p.objectDetectionConfiguration.has_value()) {
-            os << "Object Detection Mode: " << p.objectDetectionConfiguration->mode << "\n";
+            os << "Object Detection Mode:            " << p.objectDetectionConfiguration->mode << "\n";
             os << "Object Detection Noise Threshold: " << p.objectDetectionConfiguration->noiseThreshold << "\n\n";
         }
 
-        os << "Pre Procesing Mode: " << p.preProcessingConfiguration->mode << "\n";
-        os << "Pre Processing Noise Threshold: " << p.preProcessingConfiguration->noiseThreshold << "\n\n";
+        os << "Pre Procesing Mode:               " << p.preProcessingConfiguration->mode << "\n";
+        os << "Pre Processing Noise Threshold:   " << p.preProcessingConfiguration->noiseThreshold << "\n\n";
 
         return os;
     }

@@ -171,30 +171,30 @@ namespace {
         bool exists = ini.SectionExists("ImageViewer");
         std::string includeSection = ini.GetValue("ImageViewer", "enabled", "false");
         if (exists &&  includeSection == "true") {
-            std::cout << "here\n";
-
-            std::unique_ptr<PreProcessingPipeline> preProcessingPipeline = std::make_unique<PreProcessingPipeline>();
+            std::cout << "INFO: parsing image viewer ...\n";
 
             exists = ini.SectionExists("ImageViewer.ObjectDetection");
             includeSection = ini.GetValue("ImageViewer.ObjectDetection", "enabled", "false");
             if (exists && includeSection == "true") {
+                std::cout << "INFO: parsing image viewer object detection ...\n";
 
                 PreProcessing objectDetection;
                 objectDetection.applyObjectDetection = true;
                 objectDetection.mode = modeFromString(ini.GetValue("ImageViewer.ObjectDetection", "mode", "NONE"));
                 objectDetection.noiseThreshold = (int) ini.GetLongValue("ImageViewer.ObjectDetection", "noiseThreshold");
-                preProcessingPipeline->objectDetectionConfiguration = objectDetection;
+                preProcessingPipeline.objectDetectionConfiguration = objectDetection;
             }
 
             ;
             exists = ini.SectionExists("ImageViewer.PreProcessing");
             includeSection = ini.GetValue("ImageViewer.PreProcessing", "enabled", "false");
             if (exists && includeSection == "true") {
+                std::cout << "INFO: parsing image viewer pre-processing ...\n";
 
                 PreProcessing preProcessing;
                 preProcessing.mode = modeFromString(ini.GetValue("ImageViewer.PreProcessing", "mode", "NONE"));
                 preProcessing.noiseThreshold = (int) ini.GetLongValue("ImageViewer.PreProcessing", "noiseThreshold");
-                preProcessingPipeline->preProcessingConfiguration = preProcessing;
+                preProcessingPipeline.preProcessingConfiguration = preProcessing;
             }
         }
     }
