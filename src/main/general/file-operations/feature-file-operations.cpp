@@ -16,128 +16,61 @@
 #include "../../../global-variables.h"
 
 
-namespace {
-    const std::string NORMAL_FILEPATH = "data/trained-data/normal-training-samples.yml";
-    const std::string ANOMALY_FILEPATH = "data/trained-data/anomaly-training-samples.yml";
-}
-
 /*
- * writeCellDistributions
- * Writes a set of pixel value distribtutions for given samples to a yaml file
- *
- * @param distributions (std::map<std::string, std::array<float, 5>>) The collection of distributions to be written to a yaml
+ * writeObjectFeatures
+ * Writes a collection of feature matrixes to a yaml file for an object category
+ * Note: A duplicate object category will be overriden
+ * @param features          - The features for the object category
+ * @param objectCategory    - The object category for which features are being written
+ * @param normal            - Indicates wether the features where trained on normal or anomaly samples
  */
-void writeCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
+void writeObjectFeatures(std::map<std::string, cv::Mat> &features, const std::string objectCategory, bool normal) {
 
-    std::ofstream file(global::projectRoot + ANOMALY_FILEPATH);
-
-    if (!file.is_open())
-        throw std::runtime_error("Could not open file: " + global::projectRoot + ANOMALY_FILEPATH);
-
-    for (const auto& [category, distribution] : distributions) {
-        file << category << ":\n";
-        for (int index = 0; index < 5; index++)
-            file << "  - " << std::fixed << std::setprecision(6) << distribution[index] << "\n";
-    }
-
-    file.close();
-}
-
-/*
- * readCellDistributions
- * Reads a set of pixel value distribtutions for given samples from a yaml file
- *
- * @param distributions (std::map<std::string, std::array<float, 5>>) The collection of distributions to be written to a yaml
- */
-void readCellDistributions(std::map<std::string, std::array<float, 5>> &distributions) {
-
-    std::ifstream file(global::projectRoot + ANOMALY_FILEPATH);
-
-    if (!file.is_open())
-        throw std::runtime_error("Could not open file: " + global::projectRoot + ANOMALY_FILEPATH);
     
-    std::cout << "INFO: reading cell distributions ...\n";
+    std::string filePath;
+    if (normal)
+        filePath = "data/trained-data/" + objectCategory + "-normal-features.yml";
+    else
+        filePath = "data/trained-data/" + objectCategory + "-anomaly-features.yml";
 
-    int index = 5;
-    std::array<float, 5> distribution;
-    std::string category = "";
-    std::string line;
-    while (std::getline(file, line)) {
-
-        if (line.empty() || line[0] == '#') continue;
-
-        if (index == 5) {
-
-            line.erase(0, line.find_first_not_of(" \t"));
-            line.erase(line.find(":"));
-            category = line;
-            std::cout << "INFO: reading category: " << category << "\n";
-            index = 0;
-
-        } else {
-
-            line.erase(0, line.find('-') + 2);
-            line.erase(line.find_last_not_of(" \t") + 1);
-
-            try {
-                float value = std::stof(line);
-                distribution[index] = value;
-                index++;
-
-                if (index == 5) {
-                    distributions[category] = distribution;
-                }
-            } catch (std::exception &exception) {
-                std::cout << "exception: " << exception.what() << "\n";
-            }
-        }
-    }
-    distributions.insert( {category, distribution} );
-    file.close();
-}
-
-/*
- * writeMatrixNorm
- * Writes a collection of matrixes of norm distributions to a yaml file 
- *
- * @param norms (std::map< std::string, cv::Mat>) The norm matrices to be written to yaml
- */
-void writeMatrixNorm(std::map<std::string, cv::Mat> &norms) {
-
-    cv::FileStorage fs(global::projectRoot + NORMAL_FILEPATH, cv::FileStorage::WRITE);
+    cv::FileStorage fs(global::projectRoot + filePath, cv::FileStorage::WRITE);
 
     if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for writing: " + global::projectRoot + NORMAL_FILEPATH);
+        throw std::runtime_error("Failed to open file for writing: " + global::projectRoot + filePath);
     }
     
-    std::cout << "INFO: writing matrix norms ...\n";
-    
-    for (const auto& [category, matrixNorm] : norms) {
-        std::cout << "INFO: writing category: " << category << "\n";
-        fs << category << matrixNorm;
+    for (const auto& [feature, matrixNorm] : features) {
+        std::cout << "INFO: writing features to file : " << filePath << "\n";
+        fs << feature << matrixNorm;
     }
 
     fs.release();
 }
 
 /*
- * readMatrixNorm
+ * readObjectFeatures
  * Reads a collection of matrixes of norm distributions from a yaml file 
  *
- * @param norms (std::map< std::string, cv::Mat>) The norm matrix categories to be populated 
+ * @param features       - The data structure to store feature matrices
+ * @param objectCategory - The object category for which features should be retreived
+ * @param normal         - Indicates wether normal or anoamly samples should be retreived
  */
-void readMatrixNorm(std::map<std::string, cv::Mat> &norms) {
+void readObjectFeatures(std::map<std::string, cv::Mat> &features, const std::string objectCategory, bool normal) {
 
-    cv::FileStorage fs(global::projectRoot + NORMAL_FILEPATH, cv::FileStorage::READ);
+    std::string filePath;
+    if (normal)
+        filePath = "data/trained-data/" + objectCategory + "-normal-features.yml";
+    else
+        filePath = "data/trained-data/" + objectCategory + "-anomaly-features.yml";
+
+    cv::FileStorage fs(global::projectRoot + filePath, cv::FileStorage::READ);
 
     if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for reading: " + global::projectRoot + NORMAL_FILEPATH);
+        throw std::runtime_error("Failed to open file for reading: " + global::projectRoot + filePath);
     }
-    std::cout << "INFO: reading matrix norms ...\n";
-    
-    for (auto& [category, matrixNorm] : norms) {
-        std::cout << "INFO: reading category: " << category << "\n";
-        fs[category] >> matrixNorm;
+    for (auto& [feature, featureMatrix] : features) {
+        std::cout << "INFO: reading features from file : " << filePath << "\n";
+        fs[feature] >> featureMatrix;
     }
 
     fs.release();
