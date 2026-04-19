@@ -13,6 +13,7 @@
 
 // Standard
 #include <typeinfo>
+#include <string>
 // OpenCV2
 #include <opencv2/core.hpp>
 
@@ -27,6 +28,7 @@ public:
     virtual void extractFeature(cv::Mat& cell) = 0;
     virtual void updateFeature(cv::Mat& cell) = 0;
     virtual double compare(FeatureFilter* feature) = 0;
+    virtual std::string getName() = 0;
 
     virtual ~FeatureFilter() = default;
 };
@@ -183,6 +185,11 @@ public:
         }
     }
 
+    std::string getName() {
+        return std::string("BinaryCountFeature");
+    }
+
+
     /*
      * updatePixelValue
      * Updates a feature value based on the current pixelValue
@@ -215,33 +222,48 @@ class BinaryDistributionFeature : public FeatureFilter {
     }
     double compare(FeatureFilter* feature) {
 
-        //Cell evaluation
-        /*
-        float* normal = normalSample.ptr<float>(rowIndex,colIndex);
-        float normalDistance = 0; float anomolyDistance = 0;
-        for (int i = 0; i < 5; i++) {
-            normalDistance += std::abs(cellLBPHistogram[i] - normal[i]);
-            anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
-            //std::cout << "- normalSample[" << i << "]: " << normal[i] << "\n";
-            //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
-        }
+        
+        /*  Cell evaluation
+         *
+            float* normal = normalSample.ptr<float>(rowIndex,colIndex);
+            float normalDistance = 0; float anomolyDistance = 0;
+            for (int i = 0; i < 5; i++) {
+                normalDistance += std::abs(cellLBPHistogram[i] - normal[i]);
+                anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
+                //std::cout << "- normalSample[" << i << "]: " << normal[i] << "\n";
+                //std::cout << "- anomalySample[" << i << "]: " << anomolySample[i] << "\n";
+            }
         */
 
-        // Mark anomoly
-        //if (anomolyDistance < normalDistance) {
         /*
-        if (whitePixelCount > 100) {
-            std::cout << "\nanomaly\n";
-            RGB colour = RGB{0,0,255};
-            markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
-        } else
-            std::cout << "\nnormal\n";
-        std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+         *
+            if (whitePixelCount > 100) {
+                std::cout << "\nanomaly\n";
+                RGB colour = RGB{0,0,255};
+                markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
+            } else
+                std::cout << "\nnormal\n";
+            std::cout << "anomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
+        */
+
+        /* 
+         * Following excerpt taken from evaluateImage in evaluation-utils
+         * Extract feature from cell
+         *
+            std::array<float, 5> cellLBPHistogram = {};
+            lbpValueDistribution(cell, cellLBPHistogram);
+
+            float* normalSample = normalMatrix.ptr<float>(rowIndex,collIndex);
+            float normalDistance = euclidianDistance(cellLBPHistogram, normalSample);
+            float anomalyDistance =  euclidianDistance(cellLBPHistogram, anomalySample);
         */
 
         return 0;
     }
 
+    std::string getName() {
+        return std::string("BinaryDistributionFeature");
+    }
 };
 
 #endif

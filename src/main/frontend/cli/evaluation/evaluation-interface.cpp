@@ -18,32 +18,33 @@
  */
 void evaluation(std::map<std::string, bool>& flags, FeaturesCollection& features) {
 
-    std::cout << "Reading normal norm ...\n";
-    std::map<std::string, cv::Mat> normalNorm = {
-        {"chewinggum", cv::Mat()},
-        {"candle", cv::Mat()},
-        {"capsules", cv::Mat()},
-        {"cashew", cv::Mat()},
-        {"fryum", cv::Mat()},
-        {"macaroni1", cv::Mat()},
-        {"macaroni2", cv::Mat()},
-        {"pcb1", cv::Mat()},
-        {"pcb2", cv::Mat()},
-        {"pcb3", cv::Mat()},
-        {"pcb4", cv::Mat()},
-        {"pipe_fryum", cv::Mat()}
-    };
-    readMatrixNorm(normalNorm);
+    std::vector<std::string> featureNames;
+    features.getFeatureNames(featureNames);
 
-    std::cout << "Reading anomaly norm ...\n";
-    std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
-    readCellDistributions(anomalyNorm);
+    int skipped = 0;
+    for (const auto& [objectCategory, evaluate] : flags) {
 
+        if (!evaluate) { skipped++; continue;}
 
-    if (flags["chewinggum"]) {
-        std::cout << "Evaluating chewing gum instances ...\n";
-        evaluateObjectCategory("chewinggum", normalNorm["chewinggum"], anomalyNorm["chewinggum"], features);
-    } else {
-        std::cout << "Warning: No object type selected\n";
+        std::cout << "Reading trained " << objectCategory << " normal features ...\n";
+        std::map<std::string, cv::Mat> normalFeatures;
+        for (const auto& feature : featureNames)
+            normalFeatures[feature] = cv::Mat();
+        readObjectFeatures(normalFeatures, objectCategory, true);
+
+        std::cout << "Reading trained " << objectCategory << " anomaly features ...\n";
+        std::map<std::string, cv::Mat> anomalyFeatures;
+        for (const auto& feature : featureNames)
+            anomalyFeatures[feature] = cv::Mat();
+        readObjectFeatures(anomalyFeatures, objectCategory, false);
+
+        std::cout << "Evaluating " << objectCategory << " instances ...\n";
+        evaluateObjectCategory(objectCategory, features, normalFeatures, anomalyFeatures);
+    }
+
+    if (skipped == flags.size()) {
+        std::cout << "WARNING: No object category was selected to be evaluated please choose one of the following flags\n"
+                  << "--chewinggum\n"
+                  << "--cashew\n";
     }
 }

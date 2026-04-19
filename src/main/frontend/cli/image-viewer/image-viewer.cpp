@@ -80,6 +80,9 @@ void view(cv::Mat& image, std::map<std::string, bool>& viewFlags) {
     std::cout << preProcessingPipeline; // INFO
 
     if (viewFlags["markFault"]) {
+
+        std::cout << "ERROR: image viewer mark fault function is broken\n";
+        /*
         std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
         readMatrixNorm(normalMatrixNorm);
 
@@ -90,6 +93,7 @@ void view(cv::Mat& image, std::map<std::string, bool>& viewFlags) {
         FeaturesCollection normalFeatures;
         FeaturesCollection anomalyFeatures;
         markFaults(normalFeatures, anomalyFeatures, image);
+        */
 
 
     } else if (viewFlags["getRegion"]) {

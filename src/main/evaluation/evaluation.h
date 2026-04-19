@@ -10,8 +10,10 @@
 #include "../objects/PreProcessingPipeline.h"
 #include "../objects/FeaturesCollection.h"
 #include "../objects/Features.h"
+#include "../objects/EvaluationMetrics.h"
 
-void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution, FeaturesCollection& features);
+void evaluateObjectCategory(const std::string& objectCategory, FeaturesCollection& features, std::map<std::string, cv::Mat>& normalFeatures, std::map<std::string, cv::Mat>& anomalyFeatures);
+
 void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
 void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyFeatures, cv::Mat &image);
 

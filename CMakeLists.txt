@@ -32,6 +32,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(simpleini)
 
+FetchContent_Declare(
+    libsvm
+    GIT_REPOSITORY https://github.com/cjlin1/libsvm.git
+    GIT_TAG        v332   # latest stable tag — check for newer
+)
+FetchContent_MakeAvailable(libsvm)
+
+# libsvm
+add_library(svm STATIC ${libsvm_SOURCE_DIR}/svm.cpp)
+target_include_directories(svm PUBLIC ${libsvm_SOURCE_DIR})
+target_compile_options(svm PRIVATE -w)
+
+
 # Compilation
 add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/frontend/cli/image-viewer/image-viewer.cpp
@@ -48,7 +61,7 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/evaluation/evaluation.cpp
                            ../src/main/evaluation/evaluation-utils.cpp)
 target_include_directories(fault-sense-cli PRIVATE ${CMAKE_BINARY_DIR}/_deps/simpleini-src)
-target_link_libraries(fault-sense-cli PRIVATE ${OpenCV_LIBS} CLI11::CLI11)
+target_link_libraries(fault-sense-cli PRIVATE ${OpenCV_LIBS} CLI11::CLI11 svm)
 
 add_executable(data-managment-cli ../src/main/frontend/cli/data-managment-cli.cpp
                            ../src/main/general/file-operations/image-file-operations.cpp

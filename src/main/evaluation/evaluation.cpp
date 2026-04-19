@@ -25,11 +25,12 @@
  * Given an object category it iterates over all normal and anomoly sample from the given category and prints 
  * the evaluation of each image as well as the total and average evaluations for normal and anomaly samples
  * @param objectCategory
- * @param normalMatrixNorm
- * @param anomalyDistributionNorm
- * @param preProcessingPipeline
  */
-void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNorm, std::array<float, 5> &anomalyDistributionNorm, FeaturesCollection& features) {
+void evaluateObjectCategory(const std::string& objectCategory, FeaturesCollection& features, std::map<std::string, cv::Mat>& normalFeatures, std::map<std::string, cv::Mat>& anomalyFeatures) {
+
+    std::cout << "######################################\n";
+    std::cout << "# Evaluation Results\n";
+    std::cout << "######################################\n";
 
     EvaluationMetrics evaluationMetrics;
 
@@ -39,20 +40,21 @@ void evaluateObjectCategory(const char *objectCategory, cv::Mat &normalMatrixNor
         int normalCount = 0; int anomalyCount = 0;
 
         std::map<std::string, cv::Mat> images;
-        readImagesFromDirectory(global::projectRoot + "data/chewinggum/Data/Images/" + type[i] + "/", images); 
+        readImagesFromDirectory(global::projectRoot + "data/" + objectCategory + "/Data/Images/" + type[i] + "/", images); 
 
         std::cout << "\n";
         for (auto& [imageName, image] : images) {
 
             std::cout << "Evaluating image: " << imageName << " / " << images.size() << " :";
 
-            if ( evaluate_utils::evaluateImage(image, features, normalMatrixNorm, anomalyDistributionNorm, evaluationMetrics) )
+            if ( evaluate_utils::evaluateImage(image, features, normalFeatures, anomalyFeatures, evaluationMetrics) )
                 normalCount++;
             else 
                 anomalyCount++;
 
         }
 
+        // Print Evaluation Report
         std::cout << "you have called evaluationNormal" << "\n";
         std::cout << "Normal Predictions: (" << normalCount << "/" << images.size() << ") - avg normalCells(" << evaluationMetrics.averageNormalCells / images.size() << ")\n";
         std::cout << "Anomaly Predictions: (" << anomalyCount << "/" << images.size() << ") - avg anomalyCells(" << evaluationMetrics.averageAnomalyCells / images.size() << ")\n";

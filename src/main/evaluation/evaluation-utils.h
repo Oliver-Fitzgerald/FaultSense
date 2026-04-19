@@ -15,7 +15,7 @@ namespace evaluate_utils {
 
     void initMatrix(const std::map<std::string, cv::Mat>::iterator &iterator, cv::Mat &categoryNorm);
     void initMatrix(const cv::Mat &sampleImage, cv::Mat &categoryNorm);
-    bool evaluateImage(cv::Mat &image, FeaturesCollection& features, cv::Mat &normalMatrix, std::array<float, 5> &anomalySample, EvaluationMetrics& evaluationMetrics);
+    bool evaluateImage(cv::Mat& image, FeaturesCollection& features, std::map<std::string, cv::Mat>& normalFeatures, std::map<std::string, cv::Mat>& anomalyFeatures, EvaluationMetrics& evaluationMetrics);
 
     int euclidianDistance(std::array<float, 5>& pointOne, std::array<float, 5>& pointTwo);
     int euclidianDistance(std::array<float, 5>& pointOne, float* pointTwo);

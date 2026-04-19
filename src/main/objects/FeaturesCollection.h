@@ -12,6 +12,16 @@ class FeaturesCollection {
 public:
     std::map<std::unique_ptr<FeatureFilter>, std::unique_ptr<PreProcessingPipeline>> features;
 
+    /*
+     * getFeatureNames
+     * populates a list of feature namese as strings
+     * @param featureNames - the vector of feature names to be populated
+     */
+    void getFeatureNames(std::vector<std::string>& featureNames) {
+        for (const auto& [filter, pipeline] : features)
+            featureNames.push_back(filter->getName());
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const FeaturesCollection& features) {
         os << "Features Configuration\n\n";
 

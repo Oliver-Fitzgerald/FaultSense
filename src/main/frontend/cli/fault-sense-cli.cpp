@@ -94,7 +94,8 @@ int main(int argc, char** argv) {
     // Evaluation subcommand
     CLI::App* evaluationSubcommand = faultSense.add_subcommand("eval", "Evaluates the trained norms")->ignore_case();
     std::map<std::string, bool> evalFlags = {{"chewinggum", false}};
-    evaluationSubcommand->add_flag("--chewinggum", evalFlags["chewinggum"], "Evaluates the effectivness of trained norm at binary classification");
+    evaluationSubcommand->add_flag("--chewinggum", evalFlags["chewinggum"], "Evaluates the effectivness of trained features at binary classification");
+    evaluationSubcommand->add_flag("--cashew", evalFlags["cashew"], "Evaluates the effectivness of trained features at binary classification");
 
     evaluationSubcommand->final_callback([&evalFlags, &features]() {
         evaluation(evalFlags, features);

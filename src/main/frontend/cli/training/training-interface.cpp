@@ -18,6 +18,8 @@
  */
 void train(std::map<std::string, bool> flags, FeaturesCollection& features) {
 
+    std::cout << "ERROR: training is broken\n";
+    /*
     std::cout << "Generate nomral norm matrix\n";
     std::map<std::string, cv::Mat> normalNorm = {{"chewinggum", cv::Mat()}};
     trainMatrix(normalNorm, features, true);
@@ -29,5 +31,6 @@ void train(std::map<std::string, bool> flags, FeaturesCollection& features) {
     trainCellNorms(anomalyNorm, features, false);
     std::cout << "Write anomaly norm to file\n";
     writeCellDistributions(anomalyNorm);
+    */
 
 }
