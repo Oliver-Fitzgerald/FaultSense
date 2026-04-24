@@ -13,7 +13,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 // Fault Sense
-#include "objects/PixelCoordinates.h"
+#include "../objects/PixelCoordinates.h"
 #include "utils/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 

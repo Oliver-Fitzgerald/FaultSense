@@ -20,8 +20,10 @@
 #include "../../evaluation/evaluation.h"
 #include "../../training/train.h"
 #include "../../general/file-operations/training-data.h"
+#include "../../general/file-operations/generic-read-write.h"
 
 void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
+void view(cv::Mat image, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
 void evaluation(std::map<std::string, bool> flags);
 void train(std::map<std::string, bool> flags);
 
@@ -48,7 +50,18 @@ int main(int argc, char** argv) {
     viewSubcommand->final_callback([&imagePath, &viewFlags, &noiseThreshold]() {
         if (imagePath == "")
             imagePath = "../data/chewinggum/Data/Images/Anomaly/000.JPG";
-        view(imagePath, viewFlags, noiseThreshold);
+
+        if (imagePath.rfind("/") == imagePath.size() - 1) {
+            std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
+
+            // new implmentation of view & readImageFromDirectory
+            for (auto& [imageName, image] : images)
+                view(image, viewFlags, noiseThreshold);
+
+        } else {
+            cv::Mat image = cv::imread(imagePath);
+            view(imagePath, viewFlags, noiseThreshold);
+        }
     });
 
     // Evaluation subcommand
@@ -180,5 +193,54 @@ void train(std::map<std::string, bool> flags) {
     trainCell(anomalyNorm, false);
     std::cout << "Write anomaly norm to file\n";
     writeCellDistributions(anomalyNorm);
+
+}
+
+
+void view(cv::Mat theImage, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
+
+    cv::Mat temp = theImage.clone();
+    cv::Mat original = theImage.clone();
+    cv::Mat image;
+
+    if (flags["objectDetection"])
+        objectDetection(temp, image);
+    else 
+        image = temp.clone();
+
+    if (flags["lbp"]) {
+        lbpValues(temp, image);
+
+    } else if (flags["edge"]) {
+
+        CannyThreshold threshold{57, 29};
+        cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+        edgeDetection(image, kernal, threshold);
+
+    } else if (flags["hsv"]) {
+        HSV HSVThreshold{0, 22, 0, 119, 88,255};
+        thresholdHSV(image, HSVThreshold);
+    } 
+
+    if (noiseThreshold > 0) {
+        removeNoise(image, noiseThreshold);
+    }
+
+
+    if (flags["markFault"]) {
+        std::cout << "Generate normal norm cell\n";
+        std::map<std::string, std::array<float, 5>> normalNorm;
+        trainCell(normalNorm, true, "chewinggum");
+
+        std::cout << "Generate anomaly norm cell\n";
+        std::map<std::string, std::array<float, 5>> anomalyNorm;
+        trainCell(anomalyNorm, false, "chewinggum");
+
+        markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], image);
+        cv::imshow("Image", image);
+    } else
+        cv::imshow("Image", image);
+
+    while (cv::pollKey() != 113);
 
 }
