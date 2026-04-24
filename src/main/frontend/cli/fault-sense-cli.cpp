@@ -72,28 +72,30 @@ int main(int argc, char** argv) {
     std::cout << "Fault Sense CLI\n";
     std::cout << "=====================\n";
     for (auto& [feature, preProcessingPipeline] : features.features) {
-        std::cout << "Feature: " << typeid(feature.get()).name() << "\n";
-        std::cout << preProcessingPipeline.get();
+        std::cout << "Feature: " << feature->getName() << "\n";
+        std::cout << *preProcessingPipeline;
         std::cout << "=====================\n";
     }
     std::cout << "execution...\n";
 
     // View subcommand
+    std::string objectCategory = "No object category selected";
     CLI::App* viewSubcommand = faultSense.add_subcommand("view", "View image with optional filters applied")->ignore_case();
     std::map<std::string, bool> viewFlags = { {"markFault", false}, {"getRegion", false} };
     viewSubcommand->add_flag("-m, --markFault", viewFlags["markFault"], "Does fault detection and marks each of the predicted faulty celss in the final image");
     viewSubcommand->add_flag("-r, --getRegion", viewFlags["getRegion"], "Gets a selected region of an image and writes is to a file");
+    viewSubcommand->add_option("-o, --objectCategory", objectCategory, "The objectCategory the image viewed belongs to");
 
-    viewSubcommand->final_callback([&images, &viewFlags] {
+    viewSubcommand->final_callback([&images, &viewFlags, &objectCategory, &features, &imagePath] {
         for (auto& image : images) {
-            view(image, viewFlags);
+            view(image, viewFlags, objectCategory, features, imagePath);
         }
     });
 
 
     // Evaluation subcommand
     CLI::App* evaluationSubcommand = faultSense.add_subcommand("eval", "Evaluates the trained norms")->ignore_case();
-    std::map<std::string, bool> evalFlags = {{"chewinggum", false}};
+    std::map<std::string, bool> evalFlags = {{"chewinggum", false}, {"cashew", false}};
     evaluationSubcommand->add_flag("--chewinggum", evalFlags["chewinggum"], "Evaluates the effectivness of trained features at binary classification");
     evaluationSubcommand->add_flag("--cashew", evalFlags["cashew"], "Evaluates the effectivness of trained features at binary classification");
 
@@ -104,7 +106,9 @@ int main(int argc, char** argv) {
 
     // Train subcommand
     CLI::App* trainSubcommand = faultSense.add_subcommand("train", "Trains norms and writes result to file")->ignore_case();
-    std::map<std::string, bool> trainFlags = {{"", false}};
+    std::map<std::string, bool> trainFlags = {{"chewinggum", false}, {"cashew", false}};
+    trainSubcommand->add_flag("--chewinggum", trainFlags["chewinggum"], "Evaluates the effectivness of trained features at binary classification");
+    trainSubcommand->add_flag("--cashew", trainFlags["cashew"], "Evaluates the effectivness of trained features at binary classification");
 
     trainSubcommand->final_callback([&trainFlags, &features]() {
         train(trainFlags, features);
@@ -140,29 +144,35 @@ namespace {
         for (auto featureName : available_features) {
 
             bool exists = ini.SectionExists(featureName.c_str());
-            if (exists && ini.GetValue(featureName.c_str(), "enabled", "false") == "true") {
+            if (exists && std::string(ini.GetValue(featureName.c_str(), "enabled", "false")) == "true") {
 
-                std::unique_ptr<FeatureFilter> feature = std::make_unique<BinaryCountFeature>(false);
+                std::unique_ptr<FeatureFilter> feature;
+                if (featureName == "BinaryCountFeature")
+                    feature = std::make_unique<BinaryCountFeature>();
+                else if (featureName == "BinaryDistributionFeature")
+                    feature = std::make_unique<BinaryCountFeature>();
+                    //feature = std::make_unique<BinaryDistributionFeature>();
+
                 std::unique_ptr<PreProcessingPipeline> preProcessingPipeline = std::make_unique<PreProcessingPipeline>();
 
                 std::string section = featureName + ".ObjectDetection";
                 exists = ini.SectionExists(section.c_str());
-                if (exists && ini.GetValue(featureName.c_str(), "enabled", "false") == "true") {
+                if (exists && std::string(ini.GetValue(featureName.c_str(), "enabled", "false")) == "true") {
 
                     PreProcessing objectDetection;
                     objectDetection.applyObjectDetection = true;
-                    objectDetection.mode = modeFromString(ini.GetValue("ObjectDetection", "mode", "NONE"));
-                    objectDetection.noiseThreshold = (int) ini.GetLongValue("ObjectDetection", "noiseThreshold");
+                    objectDetection.mode = modeFromString(ini.GetValue(section.c_str(), "mode", "NONE"));
+                    objectDetection.noiseThreshold = (int) ini.GetLongValue(section.c_str(), "noiseThreshold");
                     preProcessingPipeline->objectDetectionConfiguration = objectDetection;
                 }
 
                 section = featureName + ".PreProcessing";
                 exists = ini.SectionExists(section.c_str());
-                if (exists && ini.GetValue(section.c_str(), "enabled", "false") == "true") {
+                if (exists && std::string(ini.GetValue(section.c_str(), "enabled", "false")) == "true") {
 
                     PreProcessing preProcessing;
-                    preProcessing.mode = modeFromString(ini.GetValue("PreProcessing", "mode", "NONE"));
-                    preProcessing.noiseThreshold = (int) ini.GetLongValue("PreProcessing", "noiseThreshold");
+                    preProcessing.mode = modeFromString(ini.GetValue(section.c_str(), "mode", "NONE"));
+                    preProcessing.noiseThreshold = (int) ini.GetLongValue(section.c_str(), "noiseThreshold");
                     preProcessingPipeline->preProcessingConfiguration = preProcessing;
                 }
 
@@ -200,7 +210,7 @@ namespace {
     std::unique_ptr<FeatureFilter> featureFromString(std::string stringValue) {
 
         if (stringValue == "BinaryCountFeature")
-            return std::make_unique<BinaryCountFeature>(false);
+            return std::make_unique<BinaryCountFeature>();
         else if (stringValue == "BinaryDistributionFeature")
             return std::make_unique<BinaryDistributionFeature>();
         else

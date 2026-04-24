@@ -6,6 +6,7 @@
 // OpenCV2
 #include <opencv2/opencv.hpp>
 
+
 struct PreProcessingPipeline {
 
     std::optional<PreProcessing> objectDetectionConfiguration;
@@ -33,7 +34,7 @@ struct PreProcessingPipeline {
     void apply(cv::Mat &image, ObjectCoordinates& objectBounds) const {
 
         if (objectDetectionConfiguration.has_value())
-            objectDetectionConfiguration->apply(image, objectBounds);
+            objectDetectionConfiguration->apply(image, &objectBounds);
 
         if (preProcessingConfiguration.has_value())
             preProcessingConfiguration->apply(image);

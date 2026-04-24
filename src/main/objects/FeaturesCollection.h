@@ -1,41 +1,45 @@
-#ifndef FeaturesPipeline_H
-#define FeaturesPipeline_H
+#pragma once
 
 // Standard
+#include <map>
+#include <memory>
+#include <string>
 #include <vector>
-// Fault Sense
-#include "Features.h"
-#include "PreProcessingPipeline.h"
+#include <ostream>
+
+// OpenCV
+#include <opencv2/core.hpp>
+
+// Forward declarations
+class FeatureFilter;
+class PreProcessingPipeline;
 
 class FeaturesCollection {
 
 public:
-    std::map<std::unique_ptr<FeatureFilter>, std::unique_ptr<PreProcessingPipeline>> features;
+    std::map<std::unique_ptr<FeatureFilter>,
+             std::unique_ptr<PreProcessingPipeline>> features;
 
-    /*
-     * getFeatureNames
-     * populates a list of feature namese as strings
-     * @param featureNames - the vector of feature names to be populated
-     */
-    void getFeatureNames(std::vector<std::string>& featureNames) {
-        for (const auto& [filter, pipeline] : features)
-            featureNames.push_back(filter->getName());
-    }
+    // Train using directory
+    FeaturesCollection& train(const std::string& objectCategory,
+                              const std::string& classification,
+                              bool singleCell);
 
-    friend std::ostream& operator<<(std::ostream& os, const FeaturesCollection& features) {
-        os << "Features Configuration\n\n";
+    // Train using single image
+    FeaturesCollection& train(cv::Mat& image,
+                              bool singleCell,
+                              std::string imageName = "None");
 
-        
+    // Extract features
+    FeaturesCollection& extract(std::map<std::string, cv::Mat>& normalFeatures);
 
-        for (const auto& [feature, preProcessingPipeline] : features.features) {
-            if (typeid(*feature) == typeid(BinaryCountFeature))
-                os << "Collecting Feature BinaryCountFeature: true\n";
-            else if (typeid(*feature) == typeid(BinaryDistributionFeature))
-                os << "Collecting Feature BinaryDistributionFeature: true\n";
-        }
+    // Reset all features
+    void reset();
 
-        return os;
-    }
+    // Get feature names
+    void getFeatureNames(std::vector<std::string>& featureNames);
+
+    // Stream operator
+    friend std::ostream& operator<<(std::ostream& os,
+                                   const FeaturesCollection& features);
 };
-
-#endif

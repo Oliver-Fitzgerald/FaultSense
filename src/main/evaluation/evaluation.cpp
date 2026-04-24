@@ -15,6 +15,8 @@
 #include "../objects/PreProcessingPipeline.h"
 #include "../objects/RGB.h"
 #include "../objects/Features.h"
+#include "../pre-processing/object-detection.h"
+#include "../classification/ClassificationModel.h"
 #include "../general/file-operations/image-file-operations.h"
 #include "../general/generic-utils.h"
 #include "../../global-variables.h"
@@ -27,6 +29,7 @@
  * @param objectCategory
  */
 void evaluateObjectCategory(const std::string& objectCategory, FeaturesCollection& features, std::map<std::string, cv::Mat>& normalFeatures, std::map<std::string, cv::Mat>& anomalyFeatures) {
+
 
     std::cout << "######################################\n";
     std::cout << "# Evaluation Results\n";
@@ -118,58 +121,78 @@ void markFaultLBP(const PreProcessingPipeline& preProcessingPipeline, const std:
  * @param anomalyFeatures   -
  * @param image             -
  */
-void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyFeatures, cv::Mat &image) {
+void markFaults(std::map<std::string, cv::Mat>& normalFeatures, std::map<std::string, cv::Mat>& anomalyFeatures, cv::Mat &image, FeaturesCollection& featureCollection, std::string imageName) {
+
+    cv::Mat imageTemp = image.clone();
+    std::map<std::string, cv::Mat> features;
+    featureCollection.train(image, false, imageName).extract(features);
+
+    image = imageTemp.clone();
 
     //if (std::size(normalSaple) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
     if (global::cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
 
-    cv::Mat returnImage = image.clone();
+    int rowMargin = image.rows % global::cellSize;
+    int colMargin = image.cols % global::cellSize;
+    std::cout << "initalizing classification model ... \n";
+    std::unique_ptr<ClassificationModel> model = std::make_unique<SVM>(normalFeatures, anomalyFeatures);
+    std::cout << "classification model initalized\n";
+
+
+    BinaryCountFeature temp = BinaryCountFeature();
+    temp.initFeatureMatrix(image);
+    cv::Mat featureMatrix = temp.featureMatrix;
+
+
     ObjectCoordinates objectBounds;
+    auto& pipeline = featureCollection.features.begin()->second;
+    cv::Mat temp3 = image.clone();
+    if (pipeline->objectDetectionConfiguration->applyObjectDetection) {
 
-    // CHANGES REQUIRED HERE
-    // Apply objectDetection if relevant
-    /*
-    if (preProcessingPipeline.objectDetectionConfiguration.has_value()) {
+        cv::Mat mat = image.clone();
+        cv::Mat temp1 = image.clone();
+        cv::Mat temp2 = image.clone();
+        pipeline->objectDetectionConfiguration->apply(temp1, &objectBounds);
+        objectDetection(temp2, temp3, objectBounds);
 
-        std::optional<PreProcessing> preProcessingConfiguration = preProcessingPipeline.preProcessingConfiguration;
-        std::optional<PreProcessing> objectDetectionConfiguration = preProcessingPipeline.objectDetectionConfiguration;
-
-        objectDetectionConfiguration->apply(image);
-        objectBounds = getObject(image);
-
-        image = returnImage.clone();
-        preProcessingConfiguration->apply(image);
+    } else {
+        objectBounds = ObjectCoordinates{.xMin=0, .xMax=image.rows, .yMin=0, .yMax=image.cols};
     }
-    */
 
-    // Itterate over image cells
-    int collIndex, rowIndex = 0; 
-    for (int row = (global::cellSize / 2) + objectBounds.xMin + global::cellSize; row < (image.rows - global::cellSize) - (image.rows - objectBounds.xMax) - global::cellSize; row += global::cellSize) {
-        collIndex = 0;
-        for (int col = (global::cellSize / 2) + objectBounds.yMin + global::cellSize; col < (image.cols - global::cellSize) - (image.cols - objectBounds.yMax) - global::cellSize; col += global::cellSize) {
+    std::vector<std::vector<svm_node>> featureValues = model->toSvmNodes(features);
+    auto featureItterator = featureValues.begin();
 
-            cv::Mat cell = image(cv::Range(row, row + global::cellSize), cv::Range(col, col + global::cellSize));
-            std::array<float, 5> cellLBPHistogram = {};
 
-            // Feature Extraction
-            // cellFeature.extractFeature(cell); //CHANGES REQUIRED HERE
-            std::unique_ptr<FeatureFilter> tempTestFilter = std::make_unique<BinaryCountFeature>(false, image.rows, image.cols);
 
-            //Cell evaluation
-            //if (anomolyDistance < normalDistance) {
-            /* CHANGES REQUIRED HERE
-            if (cellFeature.compare(tempTestFilter.get())) {
-                // Mark anomoly
-                RGB colour = RGB{0,0,255};
-                markFault(returnImage, col, col + global::cellSize, row , row + global::cellSize, nullptr, colour);
+    auto& mat = featureCollection.features.begin()->first->featureMatrix;
+    std::cout << " rows=" << mat.rows 
+              << " cols=" << mat.cols 
+              << " channels=" << mat.channels()
+              << " total=" << mat.total() << "\n";
+
+    std::cout << "grid cells: " << (image.rows / global::cellSize) 
+              << " x " << (image.cols / global::cellSize) << "\n";
+    std::cout << "featureMat: " << mat.rows << " x " << mat.cols << "\n";
+
+    int expectedCells = 0;
+    for (int row = 0; row < mat.rows; ++row) {
+        for (int col = 0; col < mat.cols; ++col) {
+            int cellIdx = row * mat.cols + col;
+            bool result = model->classify(featureValues[cellIdx]);
+            if (!result) {
+                int imgRow = row * global::cellSize;
+                int imgCol = col * global::cellSize;
+                RGB colour = RGB{0, 0, 255};
+                markFault(temp3, imgCol, imgCol + global::cellSize, 
+                                 imgRow, imgRow + global::cellSize, nullptr, colour);
             }
-            */
-            collIndex++;
         }
-        rowIndex++;
     }
 
-    image = returnImage.clone();
+    image = temp3.clone();
+
+    std::cout << "featureValues.size()=" << featureValues.size() 
+          << " expectedCells=" << expectedCells << "\n";
 
     /* Testing
     cv::imshow("Image", image);
@@ -187,14 +210,47 @@ void markFaults(FeaturesCollection& normalFeatures, FeaturesCollection& anomalyF
  */
 bool checkIfCellIsNormal(cv::Mat cell) {
 
+
+    // while (cv::pollKey() != 113) cv::imshow("image", cell);
+    // std::cout << "======================================\n";
+    // std::cout << "channels: " << cell.channels() << "\n";
+    // std::cout << "type: " << cell.type() << "\n";
+    // std::cout << "depth: " << cell.depth() << "\n";
+    //
+    // uchar b = pixel[0];
+    // uchar g = pixel[1];
+    // uchar r = pixel[2];
+    // int ib = pixel[0];
+    // int ig = pixel[1];
+    // int ir = pixel[2];
+    //
+    // std::cout << "b: " << (int)b << "\n";
+    // std::cout << "g: " << (int)g << "\n";
+    // std::cout << "r: " << (int)r << "\n";
+    // std::cout << "b: " << ib << "\n";
+    // std::cout << "g: " << ig << "\n";
+    // std::cout << "r: " << ir << "\n";
+    // std::cout << "empty? " << cell.empty() << "\n";
+    // std::cout << "size: " << cell.cols << " x " << cell.rows << "\n";
+    // std::cout << "======================================\n";
+    
+
     for (int row = 0; row < cell.rows; row++) { 
         for (int col = 0; col < cell.cols; col++) {
             
             int pixel = cell.at<uchar>(row, col);
+
+            // std::cout << "value(" << row << ", " << col << "): " << pixel << "\n";
+            cv::Vec3b testPixel = cell.at<cv::Vec3b>(row, col);
+            // std::cout << "value(" << row << ", " << col << "): " << (int)testPixel[0];
+            // std::cout << ", " << (int)testPixel[1];
+            // std::cout << ", " << (int)testPixel[2] << "\n";;
+
             if (pixel == 255) // white
                 return false;
         }
     }
+    // std::cout << "======================================\n";
 
     return true;
 }

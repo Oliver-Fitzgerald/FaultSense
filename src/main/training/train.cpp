@@ -50,7 +50,6 @@ void trainMatrix(std::map<std::string, cv::Mat> &matrixNorms, FeaturesCollection
 
         for (auto& image : images) {
 
-            // CHANGES REQUIRED HERE
             // Compute LBP values for each pixel
             //preProcessingConfiguration.apply(image);
             internal::updateCategoryNorm(categoryNorm, image, internal::cellSize, images.size());
@@ -185,16 +184,9 @@ namespace internal {
                 continue;
             }
 
-            // CHANGES REQUIRED HERE
             // Apply pre-processing to image
             ObjectCoordinates objectBounds; cv::Mat croppedMask;
             //preProcessingConfiguration.apply(image, objectBounds);
-            /*
-            if (preProcessingConfiguration.objectDetectionConfiguration.has_value()) {
-                objectDetection(imageMask, croppedMask, objectBounds);
-                imageMask = croppedMask.clone();
-            }
-            */
 
             // Accumulate the distribution of pixel values accross anomaly cells
             for (int row = rowMargin / 2; row + internal::cellSize < image.rows - (rowMargin / 2); row += internal::cellSize) {

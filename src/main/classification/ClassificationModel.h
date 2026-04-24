@@ -18,7 +18,8 @@ protected:
 
 public:
 
-    virtual bool classify(cv::Mat cell) = 0;
+    virtual std::vector<std::vector<svm_node>> toSvmNodes(const std::map<std::string, cv::Mat>& featureMap) = 0;
+    virtual bool classify(std::vector<svm_node>& nodes) = 0;
     virtual bool result() const = 0;
     virtual ~ClassificationModel() = default;
 
@@ -30,46 +31,59 @@ public:
 
     svm_model* model;
 
-    SVM(const std::map<std::string, cv::Mat>& normalFeatures,
-                         const std::map<std::string, cv::Mat>& anomalyFeatures)
+    SVM(const std::map<std::string, cv::Mat>& normalFeatures, const std::map<std::string, cv::Mat>& anomalyFeatures)
         : ClassificationModel(normalFeatures, anomalyFeatures) {
 
-        // Training data: 4 points, 2 features each
-        // Labels: +1 or -1
-        std::vector<double> labels = {+1, +1, -1, -1};
-        std::vector<std::vector<double>> features = {
-            {2.0, 3.0}, {3.0, 3.5}, {-1.0, -1.5}, {-2.0, -2.0}
-        };
+               std::vector<double> labels;
+    std::vector<std::vector<svm_node>> nodes;
 
-        int n = labels.size();
-
-        // Build libsvm node structure
-        std::vector<std::vector<svm_node>> nodes(n);
-        for (int i = 0; i < n; ++i) {
-            for (double val : features[i])
-                nodes[i].push_back({(int)(&val - &features[i][0]) + 1, val});
-            nodes[i].push_back({-1, 0}); // sentinel — required by libsvm
+    auto addSamples = [&](const std::map<std::string, cv::Mat>& featureMap, double label) {
+        int numCells = featureMap.begin()->second.total();
+        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+            labels.push_back(label);
+            std::vector<svm_node> node;
+            int featureIdx = 1;
+            for (auto& [_, mat] : featureMap) {
+                cv::Mat flat;
+                mat.reshape(1, mat.total()).convertTo(flat, CV_64F);
+                node.push_back({featureIdx++, flat.at<double>(cellIdx)});
+            }
+            node.push_back({-1, 0}); // sentinel
+            nodes.push_back(std::move(node));
         }
+    };
 
-        // Fill the training problem
-        svm_problem prob;
-        prob.l = n;
-        prob.y = labels.data();
-        std::vector<svm_node*> x_ptrs(n);
-        for (int i = 0; i < n; ++i) x_ptrs[i] = nodes[i].data();
-        prob.x = x_ptrs.data();
+    addSamples(normalFeatures,  +1.0);
+    addSamples(anomalyFeatures, -1.0);
 
-        // Configure SVM: C-SVC with RBF kernel
-        svm_parameter param{};
-        param.svm_type    = C_SVC;
-        param.kernel_type = RBF;
-        param.C           = 1.0;   // regularisation — tune this
-        param.gamma       = 0.5;   // RBF bandwidth — tune this
-        param.eps         = 1e-3;
-        param.cache_size  = 100;   // MB
-        param.nr_weight   = 0;
+    int n = labels.size();
+    std::vector<svm_node*> x_ptrs(n);
+    for (int i = 0; i < n; ++i)
+        x_ptrs[i] = nodes[i].data();
 
-        model = svm_train(&prob, &param);
+    std::cout << "CHECK SAMPLE STABILITY\n";
+    for (int i = 0; i < std::min(5, (int)nodes.size()); ++i) {
+        std::cout << nodes[i][0].value << "\n";
+    }
+
+    svm_problem prob;
+    prob.l = n;
+    prob.y = labels.data();
+    prob.x = x_ptrs.data();
+
+    svm_parameter param{};
+    param.svm_type    = C_SVC;
+    param.kernel_type = RBF;
+    param.C           = 1.0;
+    param.gamma       = 1.0 / n; 
+    param.eps         = 1e-3;
+    param.cache_size  = 100;
+    param.nr_weight   = 0;
+    std::cout << "n: " << 1.0 / n << "\n";
+    const char* err = svm_check_parameter(&prob, &param);
+    if (err) throw std::runtime_error(std::string("SVM param error: ") + err);
+
+    model = svm_train(&prob, &param);
 
     }
 
@@ -78,15 +92,20 @@ public:
      * DESCRITPION
      * PARAMS
     */ 
-    bool classify(cv::Mat cell) override {
+    bool classify(std::vector<svm_node>& nodes) override {
 
         // Predict a new point
-        std::vector<svm_node> test = {{1, 2.5}, {2, 3.0}, {-1, 0}};
-        double prediction = svm_predict(model, test.data());
-        std::cout << "Predicted class: " << prediction << "\n"; // +1 or -1
+        // std::cout << "nodes: " << nodes.data() << "\n";
+        double prediction = svm_predict(model, nodes.data());
+        //svm_free_and_destroy_model(&model);
 
-        svm_free_and_destroy_model(&model);
-        return true;
+        // std::cout << "Predicted class: " << prediction << "\n"; // +1 or -1
+
+        if (prediction == +1)
+            return true;
+        else 
+            return false;
+
     }
 
     /*
@@ -99,6 +118,30 @@ public:
         std::cout << "ERROR: NOT IMPLMENTED\n";
         return true;
     }
+
+    /*
+     * toSVMNodes
+     * Converts a map of cv::Mat features into libsvm-ready nodes
+     */
+    std::vector<std::vector<svm_node>> toSvmNodes(const std::map<std::string, cv::Mat>& featureMap) {
+
+        int numCells = featureMap.begin()->second.total();
+        std::vector<std::vector<svm_node>> nodes(numCells);
+
+        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+            int featureIdx = 1;
+            for (auto& [_, mat] : featureMap) {
+                // Flatten mat and grab the value for this cell
+                cv::Mat flat = mat.reshape(1, mat.total());
+                flat.convertTo(flat, CV_64F);
+                double val = flat.at<double>(cellIdx);
+                nodes[cellIdx].push_back({featureIdx++, val});
+            }
+            nodes[cellIdx].push_back({-1, 0}); // sentinel
+        }
+        return nodes;
+    }
+
 };
 
 #endif

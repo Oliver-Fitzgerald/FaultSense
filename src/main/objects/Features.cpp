@@ -1,15 +1,3 @@
-/* Features
- * Contains feature classes used to store a arbitrary feature data object as well
- * as transformer feature functions for extracting and compare features from images (cv::Mat)
- *
- * Contains the following class
- * FeatureFilter - Interface for all Features
- * BinaryCountFeature - TODO
- * BinaryDistributionFeature - TODO
- */
-#ifndef Features_H
-#define Features_H
-
 // Standard
 #include <typeinfo>
 #include <string>
@@ -19,8 +7,6 @@
 #include "../evaluation/evaluation.h"
 #include "../frontend/cli/image-viewer/image-viewer.h"
 #include "../general/file-operations/image-file-operations.h"
-#include "../pre-processing/object-detection.h"
-
 
 
 class FeatureFilter {
@@ -34,8 +20,8 @@ public:
     int colMargin;
 
 
-    virtual void extractFeature(cv::Mat& cell, bool singleCell, const bool anomaly, std::string imageName, ObjectCoordinates* objectBounds = nullptr) = 0;
-    virtual void updateFeature(cv::Mat& cell, bool singleCell, const bool anomaly = false, std::string imageName = "None", ObjectCoordinates* objectBounds = nullptr) = 0;
+    virtual void extractFeature(cv::Mat& cell, bool singleCell, const bool anomaly, std::string imageName) = 0;
+    virtual void updateFeature(cv::Mat& cell, bool singleCell, const bool anomaly = false, std::string imageName = "None") = 0;
 
     virtual std::string getName() = 0;
 
@@ -79,65 +65,31 @@ private:
      * Extracts the ratio of white pixels in the passed (image/image cells) as a percentage of 100
      * @param image - The image that the white pixels will be counted in
      */
-    void extractFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None", ObjectCoordinates* objectBounds = nullptr) override {
+    void extractFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None") override {
 
-        cv::Mat imageMask = cv::Mat();
+        cv::Mat imageMask;
         if (anomaly) { // read image mask
             if (imageName == "None") throw std::invalid_argument("optional parameter imageName must be passed if anomaly true");
 
-            const std::string marker = "/data/";
-            const std::string pattern = "/Data/Images/Anomaly";
+            const std::string from = "Images";
+            const std::string to = "Masks";
 
-            // Step 1: locate "/data/"
-            std::size_t dataPos = imageName.find(marker);
-            if (dataPos == std::string::npos)
-                throw std::invalid_argument("Invalid path (missing /data/): " + imageName);
-
-            // Step 2: extract object category (e.g., "chewinggum")
-            std::size_t categoryStart = dataPos + marker.length();
-            std::size_t categoryEnd = imageName.find('/', categoryStart);
-            if (categoryEnd == std::string::npos)
-                throw std::invalid_argument("Invalid path (missing category): " + imageName);
-
-            std::string category = imageName.substr(categoryStart, categoryEnd - categoryStart);
-
-            // Step 3: verify and replace full pattern
-            std::string fullPattern = "/" + category + pattern;
-            std::size_t patternPos = imageName.find(fullPattern);
-            if (patternPos == std::string::npos)
-                throw std::invalid_argument("Expected pattern not found: " + imageName);
-
-            std::string replacement = "/masks/" + category;
-            imageName.replace(patternPos, fullPattern.length(), replacement);
-
-            // Step 4: replace extension
-            std::size_t extPos = imageName.rfind(".JPG");
-            if (extPos != std::string::npos)
-                imageName.replace(extPos, 4, ".png");
+            std::size_t pos = imageName.find(from);
+            if (pos != std::string::npos)
+                imageName.replace(pos, from.length(), to);
             else
-                throw std::invalid_argument("Expected .JPG extension: " + imageName);
+                throw std::invalid_argument("imageName must be the full path: " + imageName);
 
-            cv::Mat temp;
-            readImage(imageName, temp);
+            pos = imageName.rfind(".JPG");
+            if (pos != std::string::npos)
+                imageName.replace(pos, 4, ".png");
+            else
+                throw std::invalid_argument("imageName must be the full path: " + imageName);
 
-            if (objectBounds != nullptr) {
-                std::cout << "INFO: object detection applied to anomaly mask\n";
-                std::cout << "Bounds: "
-                          << objectBounds->xMin << ", "
-                          << objectBounds->xMax << ", "
-                          << objectBounds->yMin << ", "
-                          << objectBounds->yMax << "\n";
-                objectDetection(temp, imageMask, *objectBounds);
-            } else {
-                imageMask = temp.clone();
-                std::cout << "INFO: No object detection applied to anomaly mask\n";
-            }
-
+            readImage(imageName, imageMask);
         }
 
-
         int colIndex, rowIndex = 0; 
-        int cellCount = (image.rows - rowMargin) / cellSize * (image.cols - colMargin) / cellSize;
         for (int row = (rowMargin / 2); (row + cellSize) < image.rows - (rowMargin / 2); row += cellSize) {
             colIndex = 0;
             for (int col = colMargin / 2; (col  + cellSize) < image.cols - (colMargin / 2); col += cellSize) {
@@ -147,17 +99,20 @@ private:
                 if (anomaly) cellMask = imageMask(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
 
                 if (singleCell) {
-                    if (!anomaly)
-                        featureMatrix.at<double>(0, 0) += (updatePixelValue(cell) / cellCount);
-                    else if (anomaly && !checkIfCellIsNormal(cellMask)) {
-                        std::cout << "value before(0, 0):" << featureMatrix.at<double>(0, 0) << "\n";
-                        featureMatrix.at<double>(0, 0) += (updatePixelValue(cell) / cellCount);
-                        std::cout << "value after(0, 0):" << featureMatrix.at<double>(0, 0) << "\n";
-                    } else
-                        std::cout << "skipping normal cell\n";
+                    if (anomaly && !checkIfCellIsNormal(cellMask))
+                        featureMatrix.at<double>(0, 0) += updatePixelValue(cell);
+                    std::cout << "value(0, 0):" << featureMatrix.at<double>(0, 0) << "\n";
                 } else {
 
+                    /* DEBUG INFO (UNCOMMENT) 
+                    std::cout << "rowIndex: " << rowIndex << "\n";
+                    std::cout << "feature.rows: " << featureMatrix.rows << "\n";
+                    std::cout << "colIndex: " << colIndex << "\n";
+                    std::cout << "feature.cols: " << featureMatrix.cols << "\n\n";
+                    */
+                    std::cout << "value before pixelUpdate(" << rowIndex << ", " << colIndex << "):" << featureMatrix.at<double>(rowIndex, colIndex) << "\n";
                     featureMatrix.at<double>(rowIndex, colIndex) += updatePixelValue(cell);
+                    std::cout << "value after pixelUpdate(" << rowIndex << ", " << colIndex << "):" << featureMatrix.at<double>(rowIndex, colIndex) << "\n";
                 }
 
                 cell.release();
@@ -178,8 +133,12 @@ public:
      * Updates the current feature to incorporate the pixel values in the passed image
      * @param image - The image providing pixel values for feature update
      */
-    void updateFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None",  ObjectCoordinates* objectBounds = nullptr) override {
+    void updateFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None") override {
 
+        if (anomaly && singleCell != true) {
+            throw std::invalid_argument("If you are updating an anomaly feature singleCell should be true");
+            //singleCell = true;
+        }
 
         if (!featureInitalized) {
 
@@ -189,7 +148,7 @@ public:
             this->pixelCount = cellSize * cellSize;
 
             if (singleCell) {
-                this->featureMatrix = cv::Mat::zeros(1, 1, CV_64F);
+                this->featureMatrix = cv::Mat(1, 1, CV_64F);
             } else {
                 initFeatureMatrix(image);
             }
@@ -197,7 +156,7 @@ public:
             this->pixelWeigth = 100.0 / (this->pixelCount + 1);
             std::cout << "pixelWeigth: " << pixelWeigth << "\n";
 
-            this->extractFeature(image, singleCell, anomaly, imageName, objectBounds);
+            this->extractFeature(image, singleCell, anomaly, imageName);
             this->featureInitalized = true;
 
         } else {
@@ -216,7 +175,7 @@ public:
             std::cout << "pixelWeigth (after scale): " << pixelWeigth << "\n";
 
             // Append new pixel values to feature values
-            this->extractFeature(image, singleCell, anomaly, imageName, objectBounds);
+            this->extractFeature(image, singleCell, anomaly, imageName);
         }
     }
 
@@ -234,17 +193,26 @@ public:
     double updatePixelValue(cv::Mat& cell) {
 
 
+        std::cout << "pixelWeigth: " << pixelWeigth << "\n";
+        std::cout << "cel.row: " << cell.rows << "\n";
+        std::cout << "cel.row: " << cell.cols << "\n";
         double featureValue = 0;
         int count = 0;
+        ////////////////////////////////////////////////
+        while (cv::pollKey() != 113) cv::imshow("Imag", cell);
+        ////////////////////////////////////////////////
         for (int row = 0; row < cell.rows; row++) {
             for (int col = 0; col < cell.cols; col++) {
 
                 count++;
+                //std::cout << "pixel value: " << (int)cell.at<uchar>(row, col) << "\n";
                 if (cell.at<uchar>(row, col) > 0)
                      featureValue += pixelWeigth;
 
             }
         }
+        std::cout << "returning feature value: " << featureValue << "\n";
+        std::cout << "count: " << count / pixelWeigth << "\n\n";
         return featureValue;
     }
 
@@ -258,7 +226,7 @@ public:
 class BinaryDistributionFeature : public FeatureFilter {
 
 private:
-    void extractFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "",  ObjectCoordinates* objectBounds = nullptr) {
+    void extractFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "") {
 
         int colIndex, rowIndex = 0; 
         for (int row = (rowMargin / 2); (row + cellSize) < image.rows - (rowMargin / 2); row += cellSize) {
@@ -282,7 +250,7 @@ private:
 
 public:
 
-    void updateFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None",  ObjectCoordinates* objectBounds = nullptr) {
+    void updateFeature(cv::Mat& image, bool singleCell, const bool anomaly, std::string imageName = "None") {
 
         if (anomaly) singleCell = true;
 

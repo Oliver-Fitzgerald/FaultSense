@@ -26,20 +26,29 @@ void evaluation(std::map<std::string, bool>& flags, FeaturesCollection& features
 
         if (!evaluate) { skipped++; continue;}
 
-        std::cout << "Reading trained " << objectCategory << " normal features ...\n";
-        std::map<std::string, cv::Mat> normalFeatures;
-        for (const auto& feature : featureNames)
-            normalFeatures[feature] = cv::Mat();
-        readObjectFeatures(normalFeatures, objectCategory, true);
+        try {
 
-        std::cout << "Reading trained " << objectCategory << " anomaly features ...\n";
-        std::map<std::string, cv::Mat> anomalyFeatures;
-        for (const auto& feature : featureNames)
-            anomalyFeatures[feature] = cv::Mat();
-        readObjectFeatures(anomalyFeatures, objectCategory, false);
+            std::cout << "Reading trained " << objectCategory << " normal features ...\n";
+            std::map<std::string, cv::Mat> normalFeatures;
+            for (const auto& feature : featureNames)
+                normalFeatures[feature] = cv::Mat();
+            readObjectFeatures(normalFeatures, objectCategory, true);
 
-        std::cout << "Evaluating " << objectCategory << " instances ...\n";
-        evaluateObjectCategory(objectCategory, features, normalFeatures, anomalyFeatures);
+            std::cout << "Reading trained " << objectCategory << " anomaly features ...\n";
+            std::map<std::string, cv::Mat> anomalyFeatures;
+            for (const auto& feature : featureNames)
+                anomalyFeatures[feature] = cv::Mat();
+            readObjectFeatures(anomalyFeatures, objectCategory, false);
+
+            std::cout << "Evaluating " << objectCategory << " instances ...\n";
+            evaluateObjectCategory(objectCategory, features, normalFeatures, anomalyFeatures);
+
+        } catch (const std::exception& e) {
+
+            std::cerr << "\033[31mFATAL ERROR\033[0m: " << e.what() << '\n';
+            std::cerr << "\033[93mSuggestion\033[0m: Have you trained features for this object category?\n";
+            std::exit(EXIT_FAILURE);
+        }
     }
 
     if (skipped == flags.size()) {

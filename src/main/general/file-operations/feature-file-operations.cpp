@@ -68,8 +68,10 @@ void readObjectFeatures(std::map<std::string, cv::Mat> &features, const std::str
     if (!fs.isOpened()) {
         throw std::runtime_error("Failed to open file for reading: " + global::projectRoot + filePath);
     }
+
     for (auto& [feature, featureMatrix] : features) {
-        std::cout << "INFO: reading features from file : " << filePath << "\n";
+        std::cout << "INFO: reading features from file : " << global::projectRoot << filePath << "\n";
+        std::cout << featureMatrix << "\n";
         fs[feature] >> featureMatrix;
     }
 

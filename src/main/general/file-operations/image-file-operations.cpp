@@ -76,6 +76,21 @@ void readImagesFromDirectory(const std::string& directory, std::vector<cv::Mat> 
 }    
 
 /*
+ * readImage
+ */
+void readImage(const std::string& imagePath, cv::Mat& image) {
+
+    namespace fs = std::filesystem;
+    
+    try {
+        image = cv::imread(imagePath);
+
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << std::endl;
+    }
+}    
+
+/*
  * writeImage
  * Writes a single image to a path below the data directory
  *

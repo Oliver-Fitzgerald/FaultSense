@@ -51,6 +51,7 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/frontend/cli/evaluation/evaluation-interface.cpp
                            ../src/main/frontend/cli/training/training-interface.cpp
                            ../src/main/feature/feature-extraction.cpp
+                           ../src/main/objects/FeaturesCollection.cpp
                            ../src/main/pre-processing/object-detection.cpp
                            ../src/main/pre-processing/pre-processing.cpp
                            ../src/main/pre-processing/utils/pre-processing-utils.cpp

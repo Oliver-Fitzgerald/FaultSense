@@ -21,12 +21,13 @@ int main(int argc, char** argv) {
 
     // Generate synthetic data
     CLI::App* generateSubcommand = dataManagmentCLI.add_subcommand("generate", "Generates synthetic data for testing")->ignore_case()->require_option(1);
-    std::map<const char*, bool> generateFlags = {{"all", false}, {"removeNoise", false}, {"mergeOverlap", false}, {"features", false}};
+    std::map<const char*, bool> generateFlags = {{"all", false}, {"removeNoise", false}, {"mergeOverlap", false}, {"features", false}, {"masks", false}};
 
     generateSubcommand->add_flag("--all, -a", generateFlags["all"], "Generate synthetic testing data for the all test methods");
     generateSubcommand->add_flag("--removeNoise", generateFlags["removeNoise"], "Generate synthetic testing data for the removeNoise method");
     generateSubcommand->add_flag("--mergeOverlap, -m", generateFlags["mergeOverlap"], "Generate synthetic testing data for the removeNoise method");
     generateSubcommand->add_flag("--features, -f", generateFlags["features"], "Generate synthetic testing data for feature classes");
+    generateSubcommand->add_flag("--masks", generateFlags["masks"], "Generate image masks for anomaly data");
     generateSubcommand->final_callback([&generateFlags]() {
         generate(generateFlags);
     });
@@ -73,6 +74,10 @@ void generate(std::map<const char*, bool> flags) {
             std::cerr << exception.what();
         }
         
-    } else if ( flags["all"] )
+    } else if ( flags["all"] ) {
         std::cerr << "ERROR: ALL FLAG NOT IMPLMENTED YET!!!\n";
+
+     } else if (flags["features"]) {
+         generateMasks();
+     }
 }

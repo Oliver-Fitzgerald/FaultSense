@@ -78,12 +78,6 @@ namespace pre_processing_utils {
         // Add to any overlapping group
         for (int k = 0; k < std::size(pixelGroups); k++) {
 
-            //std::cout << "Memory usage before group " << k << ": " << getMemoryUsage() << "\n";
-            // std::cout << "pixelGrpup[" << k << "] bounds size: " <<  pixelGroups[k].bounds.size() << "\n";
-            // std::cout << "currentGroup[" << k << "] bounds size: " <<  currentGroup.bounds.size() << "\n";
-            //
-            // std::cout << "pixelGrpup[" << k << "] group size: " <<  pixelGroups[k].group.size() << "\n";
-            // for each sub-group (min, max)
             for (int index = 0; index < currentGroup.bounds.size(); index++) {
             for (int pixelGroupIndex = 0; pixelGroupIndex < pixelGroups[k].bounds.size(); pixelGroupIndex++) {
 
@@ -115,7 +109,6 @@ namespace pre_processing_utils {
 
             }
             }
-            // std::cout << "Memory usage after group " << k << ": " << getMemoryUsage() << "\n";
         }
         return existingGroup;
     }

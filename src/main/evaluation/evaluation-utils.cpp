@@ -44,7 +44,8 @@ namespace evaluate_utils {
 
                 // !!!!! LEFT OFF HERE !!!!!!!!!!!!!!!!!!!!!
                 cv::Mat cell = image(cv::Range(row, row + global::cellSize), cv::Range(col, col + global::cellSize));
-                bool normalClassification = model->classify(cell);
+                //bool normalClassification = model->classify(cell);
+                bool normalClassification = true; //model->classify();
 
                 if (normalClassification) {
                     normalCellCount++;

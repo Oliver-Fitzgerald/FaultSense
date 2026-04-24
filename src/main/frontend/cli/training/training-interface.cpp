@@ -18,19 +18,31 @@
  */
 void train(std::map<std::string, bool> flags, FeaturesCollection& features) {
 
-    std::cout << "ERROR: training is broken\n";
-    /*
-    std::cout << "Generate nomral norm matrix\n";
-    std::map<std::string, cv::Mat> normalNorm = {{"chewinggum", cv::Mat()}};
-    trainMatrix(normalNorm, features, true);
-    std::cout << "Write normal norm to file\n";
-    writeMatrixNorm(normalNorm); 
+    int skipped = 0;
+    for (const auto& [objectCategory, evaluate] : flags) {
 
-    std::cout << "Generate anomaly norm cell\n";
-    std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float,5>()}};
-    trainCellNorms(anomalyNorm, features, false);
-    std::cout << "Write anomaly norm to file\n";
-    writeCellDistributions(anomalyNorm);
-    */
+        if (!evaluate) { skipped++; continue;}
 
+        std::cout << "\033[32mINFO\033[0m: Generating nomral features\n";
+        std::map<std::string, cv::Mat> normalFeatures;
+        features.train(objectCategory, "Normal", true).extract(normalFeatures).reset();
+
+        std::cout << "\033[32mINFO\033[0m: Writng normal features to file\n";
+        writeObjectFeatures(normalFeatures, objectCategory, true);
+
+
+        std::cout << "\033[32mINFO\033[0m: Generating anomaly feature\n";
+        std::map<std::string, cv::Mat> anomalyFeatures;
+        features.train(objectCategory, "Anomaly", true).extract(anomalyFeatures).reset();
+
+        std::cout << "\033[32mINFO\033[0m: Writing anomaly feature to file ...\n";
+        writeObjectFeatures(anomalyFeatures, objectCategory, false);
+
+    }
+
+    if (skipped == flags.size()) {
+        std::cout << "WARNING: No object category was selected for training please choose one of the following object categories\n"
+                  << "--chewinggum\n"
+                  << "--cashew\n";
+    }
 }

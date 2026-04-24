@@ -70,10 +70,11 @@ void imageViewer(cv::Mat& image) {
  * view
  * Displays an image given it's path, applying any pre-processing
  * techniques specified
- * @param imagePath - The path to the image to be displayed
- * @param flags     - A list of flags to indicate which pre-processing techniques should be applied.
+ * @param imagePath         - The path to the image to be displayed
+ * @param flags             - A list of flags to indicate which pre-processing techniques should be applied.
+ * @param objectCategory    - A list of flags to indicate which pre-processing techniques should be applied.
  */
-void view(cv::Mat& image, std::map<std::string, bool>& viewFlags) {
+void view(cv::Mat& image, std::map<std::string, bool>& viewFlags, std::string& objectCategory, FeaturesCollection& features, std::string imageName) {
 
     PreProcessingPipeline preProcessingPipeline;
     readConfig(preProcessingPipeline);
@@ -81,19 +82,26 @@ void view(cv::Mat& image, std::map<std::string, bool>& viewFlags) {
 
     if (viewFlags["markFault"]) {
 
-        std::cout << "ERROR: image viewer mark fault function is broken\n";
-        /*
-        std::map<std::string, cv::Mat> normalMatrixNorm = {{"chewinggum", cv::Mat()}};
-        readMatrixNorm(normalMatrixNorm);
+        std::cout << "objectCategory: " << objectCategory << "\n";
+        std::vector<std::string> featureNames;
+        features.getFeatureNames(featureNames);
 
-        std::map<std::string, std::array<float, 5>> anomalyNorm = {{"chewinggum", std::array<float, 5>()}};
-        readCellDistributions(anomalyNorm);
+        std::cout << "Reading trained " << objectCategory << " normal features ...\n";
+        std::map<std::string, cv::Mat> normalFeatures;
+        for (const auto& feature : featureNames)
+            normalFeatures[feature] = cv::Mat();
+        readObjectFeatures(normalFeatures, objectCategory, true);
 
-        //markFaults(features, normalMatrixNorm["chewinggum"], anomalyNorm["chewinggum"], image);
-        FeaturesCollection normalFeatures;
-        FeaturesCollection anomalyFeatures;
-        markFaults(normalFeatures, anomalyFeatures, image);
-        */
+        std::cout << "Reading trained " << objectCategory << " anomaly features ...\n";
+        std::map<std::string, cv::Mat> anomalyFeatures;
+        for (const auto& feature : featureNames)
+            anomalyFeatures[feature] = cv::Mat();
+        readObjectFeatures(anomalyFeatures, objectCategory, false);
+
+        std::cout << "anomaly.size: " << anomalyFeatures.size() << "\n";
+        std::cout << "normal.size: " << normalFeatures.size() << "\n";
+
+        markFaults(normalFeatures, anomalyFeatures, image, features, imageName);
 
 
     } else if (viewFlags["getRegion"]) {

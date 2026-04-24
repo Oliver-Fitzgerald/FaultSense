@@ -11,6 +11,7 @@
 #include "utils/pre-processing-utils.h"
 #include "../objects/HSV.h"
 #include "../objects/CannyThreshold.h"
+#include "../objects/PixelCoordinates.h"
 
 /*
  * lbpValues
@@ -116,18 +117,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
                 }
             }
 
-
-           /* DEBUG INFO
-            std::cout << "\n(row, col) => (" << x << ", " << y << ")\n";
-            std::cout << "(image.rows, image.cols) => (" << image.rows << ", " << image.cols << ")\n";
-            std::cout << "currentGroup.group.size() => " << currentGroup.group.size() << "\n";
-            std::cout << "pixelGroups.size(): " << pixelGroups.size() << "\n";
-            std::cout << "grpUsed.size(): " << grpUsed.size() << "\n";
-            std::cout << "pixel: " <<  pixel << "\n";
-            */
-
-            //std::cout << "memory usage end row(" << x << "): " << getMemoryUsage() << "\n";
-        }
+       }
 
         for (int i = 0; i < pixelGroups.size(); i++) {
             grpUsed[i] = pixelGroups[i].newRow(x);

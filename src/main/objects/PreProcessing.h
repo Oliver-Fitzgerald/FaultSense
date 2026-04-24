@@ -11,8 +11,8 @@
 #include "../pre-processing/pre-processing.h"
 #include "../feature/feature-extraction.h"
 #include "CannyThreshold.h"
+#include "MODE.h"
 
-enum class Mode { NONE, LBP, HSV, EDGE };
 inline std::ostream& operator<<(std::ostream& os, const Mode& m) {
     switch (m) {
         case Mode::LBP:     os << "LBP";     break;
@@ -40,7 +40,7 @@ struct PreProcessing {
      *
      * @param image The image to which the specified pre-processing functions will be applied to
      */
-    void apply(cv::Mat& image, std::optional<ObjectCoordinates> objectBounds = std::nullopt) const {
+    void apply(cv::Mat& image, ObjectCoordinates* objectBounds = nullptr) const {
 
         cv::Mat originalImage = image.clone();
         if (applyObjectDetection && mode == Mode::LBP) 
@@ -68,13 +68,22 @@ struct PreProcessing {
             removeNoise(originalImage, noiseThreshold);
 
         if (applyObjectDetection) {
-            if (objectBounds.has_value()) {
+            if (objectBounds != nullptr)
                 *objectBounds = getObject(originalImage);
-            }
             objectDetection(originalImage, image);
         } else
             image = originalImage.clone();
 
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const PreProcessing& p) {
+
+        os << "Pre-Processing Object Configuration:\n\n";
+        os << "Mode:               " << p.mode << "\n";
+        os << "Noise Threshold:   " << p.noiseThreshold << "\n";
+        os << "Mode:               " << p.applyObjectDetection << "\n\n";
+
+        return os;
     }
 
 };
