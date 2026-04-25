@@ -44,7 +44,8 @@ void evaluateNormal(const char *objectCategory, cv::Mat &normalNormSample, std::
 
             // Object Detection
             cv::Mat object;
-            objectDetection(image, object);
+            std::string name = imageName;
+            objectDetection(image, object, name);
             
             // Compute LBP values for each pixel
             cv::Mat LBPValues;

@@ -17,18 +17,34 @@
 #include "utils/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 
-void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage);
+void getCategory(std::string& imageCategory, std::map<std::string, bool>& category);
 objectCoordinates getObject(cv::Mat &img);
+std::string getCategory(std::string& imagePath);
 
 /*
  * objectDetection
  */
-void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage) {
+void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, std::string& imagePath) {
 
+    std::string imageCategory = getCategory(imagePath);
+    std::map<std::string, bool> category = {
+        {"chewinggum", false},
+        {"cashew", false}
+    };
+    getCategory(imageCategory, category);
     cv::Mat image = inputImage.clone();
 
-    HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(image, HSVThreshold);
+    if (category["chewinggum"]) {
+        HSV HSVThreshold{0, 22, 0, 119, 88,255}; thresholdHSV(image, HSVThreshold);
+    } else if (category["cashew"]) {
+        HSV HSVThreshold{8, 179, 57, 255, 164,255}; thresholdHSV(image, HSVThreshold);
+    } else 
+        throw std::invalid_argument("object-detecton not configured for objectCategory: " + imageCategory);
+
+
+    while (cv::pollKey() != 113) cv::imshow("Image1", image);
     removeNoise(image, 200);
+    while (cv::pollKey() != 113) cv::imshow("Image", image);
 
     objectCoordinates objectBounds = getObject(image);
     crop(inputImage, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
@@ -65,3 +81,21 @@ objectCoordinates getObject(cv::Mat &img) {
 
     return coordinates;
 }
+
+    
+void getCategory(std::string& imageCategory, std::map<std::string, bool>& category) {
+
+    for (auto& [objectCategory, apply] :  category ) {
+        if (imageCategory == objectCategory)
+            apply = true;
+    }
+}
+
+std::string getCategory(std::string& imagePath) {
+
+    size_t firstSlash  = imagePath.find('/');
+    size_t secondSlash = imagePath.find('/', firstSlash + 1);
+    size_t thirdSlash  = imagePath.find('/', secondSlash + 1);
+    
+    return imagePath.substr(secondSlash + 1, thirdSlash - secondSlash - 1);
+ }

@@ -59,6 +59,14 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
  */
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage) {
 
+    std::cout << "Cropping\n";
+    std::cout << "Object Detection.minX : " << minX << "\n";
+    std::cout << "Object Detection.maxX : " << maxX << "\n";
+    std::cout << "Object Detection.minY : " << minY << "\n";
+    std::cout << "Object Detection.maxY : " << maxY << "\n";
+    std::cout << "Image Dimensions\n";
+    std::cout << "Image.rows: " << image.rows << "\n";
+    std::cout << "Image.cols: " << image.cols << "\n";
     if (maxX <= minX) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be less than maxX [" + std::to_string(maxX) + "]");
     if (maxY <= minY) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be less than maxY [" + std::to_string(maxY) + "]");
     if (minX < 0) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be greater than 0");

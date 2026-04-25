@@ -23,7 +23,7 @@
 #include "../../general/file-operations/generic-read-write.h"
 
 void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
-void view(cv::Mat image, std::map<std::string, bool> flags, unsigned int &noiseThreshold);
+void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold, std::unique_ptr<cv::Mat> inputImage);
 void evaluation(std::map<std::string, bool> flags);
 void train(std::map<std::string, bool> flags);
 
@@ -55,11 +55,12 @@ int main(int argc, char** argv) {
             std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath);
 
             // new implmentation of view & readImageFromDirectory
-            for (auto& [imageName, image] : images)
-                view(image, viewFlags, noiseThreshold);
+            for (auto& [imageName, image] : images) {
+                std::cout << "imagePath: " << imagePath << imageName << "\n";
+                view(imagePath + imageName, viewFlags, noiseThreshold, std::make_unique<cv::Mat>(image));
+            }
 
         } else {
-            cv::Mat image = cv::imread(imagePath);
             view(imagePath, viewFlags, noiseThreshold);
         }
     });
@@ -93,14 +94,23 @@ int main(int argc, char** argv) {
  * @param imagePath The path to the image to be displayed
  * @param flags A list of flags to indicate which pre-processing techniques should be applied.
  */
-void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
+void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold, std::unique_ptr<cv::Mat> inputImage) {
 
-    cv::Mat temp = cv::imread(imagePath);
-    cv::Mat original = cv::imread(imagePath);
+    cv::Mat temp;
+    cv::Mat original;
+
+    if (inputImage == nullptr) {
+        cv::Mat temp = cv::imread(imagePath);
+        cv::Mat original = cv::imread(imagePath);
+    } else {
+        temp = inputImage->clone();
+        original = inputImage->clone();
+    }
+
     cv::Mat image;
 
     if (flags["objectDetection"])
-        objectDetection(temp, image);
+        objectDetection(temp, image, imagePath);
     else 
         image = temp.clone();
 
@@ -197,50 +207,6 @@ void train(std::map<std::string, bool> flags) {
 }
 
 
-void view(cv::Mat theImage, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
-
-    cv::Mat temp = theImage.clone();
-    cv::Mat original = theImage.clone();
-    cv::Mat image;
-
-    if (flags["objectDetection"])
-        objectDetection(temp, image);
-    else 
-        image = temp.clone();
-
-    if (flags["lbp"]) {
-        lbpValues(temp, image);
-
-    } else if (flags["edge"]) {
-
-        CannyThreshold threshold{57, 29};
-        cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-        edgeDetection(image, kernal, threshold);
-
-    } else if (flags["hsv"]) {
-        HSV HSVThreshold{0, 22, 0, 119, 88,255};
-        thresholdHSV(image, HSVThreshold);
-    } 
-
-    if (noiseThreshold > 0) {
-        removeNoise(image, noiseThreshold);
-    }
-
-
-    if (flags["markFault"]) {
-        std::cout << "Generate normal norm cell\n";
-        std::map<std::string, std::array<float, 5>> normalNorm;
-        trainCell(normalNorm, true, "chewinggum");
-
-        std::cout << "Generate anomaly norm cell\n";
-        std::map<std::string, std::array<float, 5>> anomalyNorm;
-        trainCell(anomalyNorm, false, "chewinggum");
-
-        markFaultLBP(normalNorm["chewinggum"], anomalyNorm["chewinggum"], image);
-        cv::imshow("Image", image);
-    } else
-        cv::imshow("Image", image);
-
-    while (cv::pollKey() != 113);
-
+void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold) {
+    view(imagePath, flags, noiseThreshold, nullptr);
 }
