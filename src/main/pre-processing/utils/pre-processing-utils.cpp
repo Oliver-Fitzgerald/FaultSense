@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 // Fault Sense
 #include "pre-processing-utils.h"
+#include "../../general/generic-utils.h"
 
 
 /*
@@ -78,10 +79,16 @@ namespace pre_processing_utils {
         // Add to any overlapping group
         for (int k = 0; k < std::size(pixelGroups); k++) {
 
+            // std::cout << "memory usage before mergeOverlap[" << k << "]: " << getMemoryUsage() << "\n";
             for (int index = 0; index < currentGroup.bounds.size(); index++) {
             for (int pixelGroupIndex = 0; pixelGroupIndex < pixelGroups[k].bounds.size(); pixelGroupIndex++) {
 
+                if (currentGroup.bounds.size() == 0)
+                    break;
+
                 int currentGroupLength = currentGroup.bounds[index].max - currentGroup.bounds[index].min;
+
+                // std::cout << "memory usage before check overlap currentGroup[" << index << "] && pixelGroup[" << pixelGroupIndex << "]: " << getMemoryUsage() << "\n";
 
                 if ( // Check if the current group overlaps with an existing group
                     (currentGroup.bounds[index].min - 1 >= pixelGroups[k].bounds[pixelGroupIndex].min - 1 && currentGroup.bounds[index].min - 1 <= pixelGroups[k].bounds[pixelGroupIndex].max + 1) || 
@@ -97,18 +104,23 @@ namespace pre_processing_utils {
                         pixelGroups[k].append(pixelGroups[prevOveralapIndex], row);
                         grpUsed[prevOveralapIndex] = false;
                         prevOveralapIndex = k;
+                        currentGroup.bounds.erase(currentGroup.bounds.begin() + index);
 
                     } else {
 
                         pixelGroups[k].append(currentGroup, row);
-                        grpUsed[k] = true;
+                        grpUsed[k] = true; // I think this line is redundant
                         prevOveralapIndex = k;
+                        currentGroup.bounds.erase(currentGroup.bounds.begin() + index);
 
                     }
                 } 
 
+                // std::cout << "memory usage after check overlap currentGroup[" << index << "] && pixelGroup[" << pixelGroupIndex << "]: " << getMemoryUsage() << "\n";
+
             }
             }
+            // std::cout << "memory usage after mergeOverlap[" << k << "]: " << getMemoryUsage() << "\n";
         }
         return existingGroup;
     }

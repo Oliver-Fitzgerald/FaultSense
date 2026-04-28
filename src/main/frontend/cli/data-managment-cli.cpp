@@ -41,7 +41,7 @@ void generate(std::map<const char*, bool> flags) {
     if (flags["removeNoise"]) {
 
         try {
-            std::array<cv::Mat, 4> images;
+            std::array<cv::Mat, 5> images;
             generateRemoveNoiseTestData(images);
 
             for (int index = 0; index < images.size(); index++)

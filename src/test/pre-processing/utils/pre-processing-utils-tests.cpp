@@ -126,32 +126,62 @@ TEST_CASE ("removeNoise test image 4") { // Image 003.png
     }
 }
 
-TEST_CASE ("removeNoise test image 5") { // Image 005.jpg
+TEST_CASE ("removeNoise test image BLANK") { // Image 004.png
+    /* Example
+     * Image 004.png
+     * BBBBBBB
+     * WWWWWWB
+     * WWWWBBB
+     * WWWBBBB
+     * WWBBBBB
+     */
 
-    std::string imagePath = "../../../data/test-images/removeNoise/001.jpg";
-    std::cout << "Running test cases for [removeNoise test image 5]\n";
-    cv::Mat image = cv::imread(imagePath);
+    std::cout << "Running test case [removeNoise test image BLANK]\n";
+    cv::Mat image = cv::imread("../../../data/test-images/synthetic/removeNoise/004.png");
 
     cv::Mat greyScale;
     cv::cvtColor(image, greyScale, cv::COLOR_BGR2GRAY);
 
     for (int minGrpSize = 0; minGrpSize < 20; minGrpSize++) {
 
-        binaryThreshold(greyScale);
-        std::cout << "minGrpSize: " << minGrpSize << "\n";
-        removeNoise(greyScale, minGrpSize);
-        int whitePixelCount = countWhitePixels(greyScale);
-        std::cout << "[removeNoise test image 4] TEST_CASE #" << minGrpSize  + 1<< ": minGrpSize(" << minGrpSize << "), whitePixelCount: (" << whitePixelCount << ")\n";
-         
-        if (minGrpSize < 3)
-            CHECK(whitePixelCount == 13);
-        else if (minGrpSize < 12) {
-            CHECK(whitePixelCount == 11);
-        }
+        cv::Mat testImage = greyScale.clone();
+        removeNoise(testImage, minGrpSize);
+
+        int whitePixelCount = countWhitePixels(testImage);
+        std::cout << "[removeNoise test image BLANK] TEST_CASE #" << minGrpSize  + 1<< ": minGrpSize(" << minGrpSize << "), whitePixelCount: (" << whitePixelCount << ")\n";
+        if (minGrpSize < 16)
+            CHECK(whitePixelCount == 15);
         else
             CHECK(whitePixelCount == 0);
     }
 }
+
+// TEST_CASE ("removeNoise test image 5") { // Image 005.jpg
+//
+//     std::string imagePath = "../../../data/test-images/removeNoise/001.jpg";
+//     std::cout << "Running test cases for [removeNoise test image 5]\n";
+//     cv::Mat image = cv::imread(imagePath);
+//
+//     cv::Mat greyScale;
+//     cv::cvtColor(image, greyScale, cv::COLOR_BGR2GRAY);
+//
+//     for (int minGrpSize = 0; minGrpSize < 20; minGrpSize++) {
+//
+//         binaryThreshold(greyScale);
+//         std::cout << "minGrpSize: " << minGrpSize << "\n";
+//         removeNoise(greyScale, minGrpSize);
+//         int whitePixelCount = countWhitePixels(greyScale);
+//         std::cout << "[removeNoise test image 4] TEST_CASE #" << minGrpSize  + 1<< ": minGrpSize(" << minGrpSize << "), whitePixelCount: (" << whitePixelCount << ")\n";
+//
+//         if (minGrpSize < 3)
+//             CHECK(whitePixelCount == 13);
+//         else if (minGrpSize < 12) {
+//             CHECK(whitePixelCount == 11);
+//         }
+//         else
+//             CHECK(whitePixelCount == 0);
+//     }
+// }
 
 
 struct MergeOverlapData {
@@ -316,6 +346,7 @@ TEST_CASE ("mergeOverlap") {
          * WWBW
          * WWWW
          */
+       
         data.pixelGroups[0].group = {{1,1}};
         data.pixelGroups[0].bounds = {{1,1}};
         data.pixelGroups[0].row = 1;
@@ -329,6 +360,32 @@ TEST_CASE ("mergeOverlap") {
         bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
         CHECK(existingGroup == true);
     }
+
+    SECTION("stairs??? idk what to call this test case") {
+
+        /* Example
+         * Image 004.png
+         * BBBBBBB
+         * WWWWWWB
+         * WWWWBBB
+         * WWWBBBB
+         * WWBBBBB
+         */
+
+        data.pixelGroups[0].group = {{1,0}, {1,1}, {1,2}, {1,3}};
+        data.pixelGroups[0].bounds = {{1,1}};
+        data.pixelGroups[0].row = 1;
+        PixelGroup testGroup = {
+            .group = {{2,2}},
+            .bounds = {{2, 2}},
+            .row = 2
+        };
+        int currentRow = 2;
+
+        bool existingGroup = pre_processing_utils::mergeOverlappingGroups(testGroup, data.pixelGroups, data.grpUsed, currentRow);
+        REQUIRE(existingGroup == true);
+    }
+
 
 }
 

@@ -6,7 +6,7 @@
 // Standard
 #include <iostream>
 // Fault Sense
-#include "../../objects/HSV.h"
+#include "../objects/HSV.h"
 
 
 int hueMin = 0, hueMax = 179;
@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
     argv++;
     std::string imagePath = *argv;
     cv::Mat image = cv::imread(imagePath);
+    cv::Mat originalImage = cv::imread(imagePath);
 
     if (image.empty()) {
         std::cerr << "Error: Invalid image path: " << imagePath << std::endl;
@@ -50,6 +51,7 @@ int main(int argc, char** argv) {
         cv::inRange(imageHSV, lower, upper, mask);
 
         cv::imshow("HSV Image", mask);
+        cv::imshow("Original Image", originalImage);
         cv::waitKey(1);
     }
 }

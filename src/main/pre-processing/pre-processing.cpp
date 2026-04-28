@@ -12,6 +12,7 @@
 #include "../objects/HSV.h"
 #include "../objects/CannyThreshold.h"
 #include "../objects/PixelCoordinates.h"
+#include "../general/generic-utils.h"
 
 /*
  * lbpValues
@@ -78,7 +79,10 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
     std::vector<PixelGroup> pixelGroups;
     std::vector<bool> grpUsed;
     PixelGroup currentGroup = PixelGroup{.group = {},
-                                          .bounds = {{-1, -1, -1}}};
+                                          .bounds = {{-1, -1, -1}},
+                                          .tempBounds = {{-1, -1, -1}}};
+
+    // std::cout << "memory usage before removeNoise: " << getMemoryUsage() << "\n";
     for (int x = 0; x < image.rows; x++) {
 
 
@@ -86,11 +90,14 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
 
             int pixel = image.at<uchar>(x, y);
 
-            // Continue Current group
+            // End current group
             if (pixel == 0 && lastPixel) {
 
-                currentGroup.bounds[0].max = y - 1;
+                currentGroup.tempBounds[0].max = y - 1;
+                currentGroup.bounds = currentGroup.tempBounds;
+                // std::cout << "memory usage before mergeOverlap: " << getMemoryUsage() << "\n";
                 bool existingGroup = pre_processing_utils::mergeOverlappingGroups(currentGroup, pixelGroups, grpUsed, x); // Move to function return bool (&grpUsed)
+                // std::cout << "memory usage after mergeOverlap: " << getMemoryUsage() << "\n";
 
                 // If it does not overlap with an existing group add as a new group
                 if (!existingGroup) {
@@ -100,7 +107,8 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
                 }
 
                 currentGroup = PixelGroup{.group = {},
-                                          .bounds = {{-1, -1, -1}}};
+                                          .bounds = {{-1, -1, -1}},
+                                          .tempBounds = {{-1, -1, -1}}};
                 lastPixel = false;
 
 
@@ -112,7 +120,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
 
                 if (!lastPixel) {
                     lastPixel = true;
-                    currentGroup.bounds[0].min = y;
+                    currentGroup.tempBounds[0].min = y;
                     currentGroup.row = x;
                 }
             }
@@ -123,6 +131,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
             grpUsed[i] = pixelGroups[i].newRow(x);
         }
 
+        // std::cout << "memory usage before cleaning row: " << getMemoryUsage() << "\n";
         // Remove any complete groups of size < minGrpSize
         for (int i = pixelGroups.size() - 1; i >= 0; i--) {
 
@@ -133,6 +142,7 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
                 pixelGroups.erase(pixelGroups.begin() + i);
             }
         }
+        // std::cout << "memory usage after cleaning row: " << getMemoryUsage() << "\n";
     }
 
     for (int i = pixelGroups.size() - 1; i >= 0; i--) {
@@ -148,4 +158,5 @@ void removeNoise(cv::Mat& image, int minGrpSize) {
     pixelGroups.shrink_to_fit();
     grpUsed.clear();
     grpUsed.shrink_to_fit();
+    // std::cout << "memory usage after removeNoise: " << getMemoryUsage() << "\n";
 }

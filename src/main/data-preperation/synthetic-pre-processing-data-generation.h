@@ -6,7 +6,7 @@
 // Standard
 #include <array>
 
-void generateRemoveNoiseTestData(std::array<cv::Mat, 4> &testImages);
+void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages);
 void generateMergeOverlapTestData(std::array<cv::Mat, 6> &testImages);
 
 #endif

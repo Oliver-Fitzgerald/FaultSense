@@ -15,7 +15,7 @@
  * generateRemoveNoiseTestData
  * Genereates synthetic images used for the testing of removeNoise function
  */
-void generateRemoveNoiseTestData(std::array<cv::Mat, 4> &testImages) {
+void generateRemoveNoiseTestData(std::array<cv::Mat, 5> &testImages) {
 
     cv::Mat testImage;
 
@@ -132,6 +132,43 @@ void generateRemoveNoiseTestData(std::array<cv::Mat, 4> &testImages) {
                     testImage.at<uchar>(row, col) = 0;
 
             }
+
+        }
+    }
+
+    // Image 004.JPG 
+    // BBBBBBB
+    // WWWWWWB
+    // WWWWBBB
+    // WWWBBBB
+    // WWBBBBB
+    testImages[4] = cv::Mat(5,7, CV_8UC1);
+    testImage = testImages[4];
+    for (int row = 0; row < testImage.rows; row++) {
+        for (int col = 0; col < testImage.cols; col++) {
+
+            // Edges Black
+            if (row == 0 || col == 6)
+                testImage.at<uchar>(row, col) = 0;
+            else if (col == 0 || col == 1)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 2 && row == 4)
+                testImage.at<uchar>(row, col) = 0;
+            else if (col == 2)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 3 && row >= 3)
+                testImage.at<uchar>(row, col) = 0;
+            else if (col == 3)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 4 && row == 1)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 4)
+                testImage.at<uchar>(row, col) = 0;
+            else if (col == 5 && row == 1)
+                testImage.at<uchar>(row, col) = 255;
+            else if (col == 5)
+                testImage.at<uchar>(row, col) = 0;
+
 
         }
     }
