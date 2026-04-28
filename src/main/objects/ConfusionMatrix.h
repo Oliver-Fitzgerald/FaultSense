@@ -19,10 +19,10 @@ struct ConfusionMatrix {
     }
 
     friend std::ostream& operator<<(std::ostream& os, const ConfusionMatrix& c) {
-        os << "TP: " << c.truePositiveCount
-           << " FP: " << c.falsePositiveCount
-           << " TN: " << c.trueNegativeCount
-           << " FN: " << c.falseNegativeCount;
+        os << "\033[32mTP\033[0m: " << c.truePositiveCount
+           << " \033[91mFP\033[0m: " << c.falsePositiveCount
+           << " \033[32mTN\033[0m: " << c.trueNegativeCount
+           << " \033[91mFN\033[0m: " << c.falseNegativeCount;
         return os;
     }
 };

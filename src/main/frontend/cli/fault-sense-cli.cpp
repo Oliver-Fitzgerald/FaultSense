@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
             // new implmentation of view & readImageFromDirectory
             for (auto& [imageName, image] : images) {
-                std::cout << "imagePath: " << imagePath << imageName << "\n";
+                std::cout << "\033[34mINFO\033[0m: imagePath = " << imagePath << imageName << "\n";
                 view(imagePath + imageName, viewFlags, noiseThreshold, std::make_unique<cv::Mat>(image));
             }
 
@@ -130,7 +130,7 @@ auto start = std::chrono::high_resolution_clock::now();
 
     cv::Mat image;
     std::string imageCategory = getImageCategory(imagePath);
-    std::cout << "imageCategory: " << imageCategory << "\n";
+    std::cout << "\033]34mINFO\033]0mimageCategory: " << imageCategory << "\n";
     ObjectCoordinates objectBounds;
 
 
@@ -179,11 +179,11 @@ auto start = std::chrono::high_resolution_clock::now();
 
 
 
-            std::cout << "INFO: Generating normal norm cell ...\n";
+            std::cout << "\033[34mINFO\033[0m: Generating normal cell norm ...\n";
             normalNorm.resize(categoryFeatureCount[category]);
             trainCell(normalNorm, true, imageCategory);
 
-            std::cout << "INFO: Generating anomaly norm cell ...\n";
+            std::cout << "\033[34mINFO\033[0m: Generating anomaly cell norm ...\n";
             anomalyNorm.resize(categoryFeatureCount[category]);
             trainCell(anomalyNorm, false, imageCategory);
             trained = true;
@@ -243,11 +243,11 @@ void evaluation(std::map<std::string, bool> flags) {
         throw std::invalid_argument("You must select an object category to be evaluated");
 
     if (!trained) {
-        std::cout << "INFO: Generating normal norm cell ...\n";
+        std::cout << "\033[34mINFO\033[0m: Generating normal cell norm...\n";
         normalNorm.resize(categoryFeatureCount[category]);
         trainCell(normalNorm, true, category);
 
-        std::cout << "INFO: Generating anomaly norm cell ...\n";
+        std::cout << "\033[34mINFO\033[0m: Generating anomaly cell norm ...\n";
         anomalyNorm.resize(categoryFeatureCount[category]);
         trainCell(anomalyNorm, false, category);
         trained = true;
@@ -259,14 +259,14 @@ void evaluation(std::map<std::string, bool> flags) {
     ConfusionMatrix confusionMatrix = ConfusionMatrix{0,0,0,0};
     ConfusionMatrix localizationConfusionMatrix = ConfusionMatrix{0,0,0,0};
 
-    std::cout << "INFO: Evaluating normal images ... \n";
+    std::cout << "\033[34mINFO\033[m: Evaluating normal images ... \n";
     images = readImagesFromDirectory(imagePath + "/Normal/");
     for (auto& [imageName, image] : images) {
         bool result = evaluate(localizationConfusionMatrix, category, normalNorm, anomalyNorm, image);
         confusionMatrix.update(result, true);
     }
 
-    std::cout << "INFO: Evaluating anomaly images ... \n";
+    std::cout << "\033[34mINFO\033[0m: Evaluating anomaly images ... \n";
     images = readImagesFromDirectory(imagePath + "/Anomaly/");
 
     std::map<std::string, std::array<std::string, 5>> objectLabels;
@@ -288,9 +288,9 @@ void evaluation(std::map<std::string, bool> flags) {
         confusionMatrix.update(result, false);
     }
 
-    std::cout << "Localization Confusion Matrix\n";
+    std::cout << "\033[100mLocalization Confusion Matrix\033[0m\n";
     std::cout << localizationConfusionMatrix << std::endl;
-    std::cout << "Confusion Matrix\n";
+    std::cout << "\033[100mConfusion Matrix\033[0m\n";
     std::cout << confusionMatrix << std::endl;
 }
 

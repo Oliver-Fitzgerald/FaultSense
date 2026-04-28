@@ -208,7 +208,7 @@ void trainCell(std::vector<std::array<float, 5>> &cellNorm, const bool normal,co
             }
 
             if (anomalyCells == 0) {
-                std::cerr << "WARNING: anomallyCells == 0\n";
+                std::cerr << "\033[33mWARNING\033[0m: anomallyCells == 0\n";
                 continue; // Need to investigate why this is happening
             }
             // DEBUGING: if (anomalyCells == 0) for (int f = 0; f < 5; f++) std::cout << "cellNorm[index][" << f << "]: " << cellNorm[index][f] << "\n";

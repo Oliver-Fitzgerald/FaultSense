@@ -88,10 +88,10 @@ void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<s
 
             }
         }
-        std::cout << "markfaultlbp complete index: " << index << "\n";
-        std::cout << "totalNormalDistance: " << totalNormalDistance << "\n";
-        std::cout << "totalanomalyDistance: " << totalAnomalyDistance << "\n";
-        std::cout << "averageNormalDistance: " << totalNormalDistance / normalCells << "\n";
-        std::cout << "averageAnomalyDistance: " << totalAnomalyDistance / anomalyCells << "\n";
+        std::cout << "\033[34mINFO\033[0m: markfaultlbp complete index: " << index << "\n";
+        std::cout << "\033[34mINFO\033[0m: totalNormalDistance: " << totalNormalDistance << "\n";
+        std::cout << "\033[34mINFO\033[0m: totalanomalyDistance: " << totalAnomalyDistance << "\n";
+        std::cout << "\033[34mINFO\033[0m: averageNormalDistance: " << totalNormalDistance / normalCells << "\n";
+        std::cout << "\033[34mINFO\033[0m: averageAnomalyDistance: " << totalAnomalyDistance / anomalyCells << "\n";
     }
 }
