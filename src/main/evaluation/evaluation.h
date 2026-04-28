@@ -6,7 +6,12 @@
 // Standard
 #include <array>
 #include <string>
+// Fault Sense
+#include "../objects/ConfusionMatrix.h"
 
 void evaluateNormal(const char *objectCategory, cv::Mat &normalNormSample, std::array<float, 5> &anomalyDistribution);
+
+bool evaluate(ConfusionMatrix& confusionMatrix, std::string& category, std::vector<std::array<float,5>>& normalSample, std::vector<std::array<float,5>>& anomalySample, cv::Mat& image, cv::Mat& imageMask);
+bool evaluate(ConfusionMatrix& confusionMatrix, std::string& category, std::vector<std::array<float,5>>& normalSample, std::vector<std::array<float,5>>& anomalySample, cv::Mat& image);
 
 #endif

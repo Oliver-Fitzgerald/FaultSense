@@ -3,7 +3,6 @@
 
 #include "../objects/PixelCoordinates.h"
 
-void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, std::string& imagePath);
-objectCoordinates getObject(cv::Mat &img);
+cv::Mat objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, const std::string& imageCategory, ObjectCoordinates& objectBounds);
 
 #endif

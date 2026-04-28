@@ -59,14 +59,8 @@ void markFault(cv::Mat& image, int minX, int maxX, int minY, int maxY, const cha
  */
 void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& returnImage) {
 
-    std::cout << "Cropping\n";
-    std::cout << "Object Detection.minX : " << minX << "\n";
-    std::cout << "Object Detection.maxX : " << maxX << "\n";
-    std::cout << "Object Detection.minY : " << minY << "\n";
-    std::cout << "Object Detection.maxY : " << maxY << "\n";
-    std::cout << "Image Dimensions\n";
-    std::cout << "Image.rows: " << image.rows << "\n";
-    std::cout << "Image.cols: " << image.cols << "\n";
+    // DEGUGING: std::cout << "Cropping\n"; std::cout << "Object Detection.minX : " << minX << "\n"; std::cout << "Object Detection.maxX : " << maxX << "\n"; std::cout << "Object Detection.minY : " << minY << "\n"; std::cout << "Object Detection.maxY : " << maxY << "\n"; std::cout << "Image Dimensions\n"; std::cout << "Image.rows: " << image.rows << "\n"; std::cout << "Image.cols: " << image.cols << "\n";
+
     if (maxX <= minX) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be less than maxX [" + std::to_string(maxX) + "]");
     if (maxY <= minY) throw std::out_of_range("minY [" + std::to_string(minY) + "] must be less than maxY [" + std::to_string(maxY) + "]");
     if (minX < 0) throw std::out_of_range("minX [" + std::to_string(minX) + "] must be greater than 0");
@@ -74,18 +68,7 @@ void crop(cv::Mat& image, int minX, int maxX, int minY, int maxY, cv::Mat& retur
     if (minX + (maxX - minX) > image.rows) throw std::out_of_range("maxX [" + std::to_string(maxX) + "] must be less than image.rows: " + std::to_string(image.rows));
     if (minY + (maxY - minY) > image.cols) throw std::out_of_range("maxY [" + std::to_string(maxY) + "] must be less than image.cols: " + std::to_string(image.cols));
 
-    /* DEBUG INFO
-    std::cout << "\n\nimage.rows: " << image.rows << "\n";
-    std::cout << "image.cols: " << image.cols << "\n";
-    std::cout << "maxX: " << maxX << "\n";
-    std::cout << "maxY: " << maxY << "\n\n";
-
-    std::cout << "minX: " << minX << "\n";
-    std::cout << "maxX - minX: " << maxX - minX << "\n";
-    std::cout << "minY: " << minY << "\n";
-    std::cout << "maxY - minY: " << maxY - minY << "\n";
-    */
-
+    /* DEBUGING: std::cout << "\n\nimage.rows: " << image.rows << "\n"; std::cout << "image.cols: " << image.cols << "\n"; std::cout << "maxX: " << maxX << "\n"; std::cout << "maxY: " << maxY << "\n\n"; std::cout << "minX: " << minX << "\n"; std::cout << "maxX - minX: " << maxX - minX << "\n"; std::cout << "minY: " << minY << "\n"; std::cout << "maxY - minY: " << maxY - minY << "\n"; */
 
     cv::Rect roi(minY, minX, (maxY - minY), (maxX - minX));
     returnImage = image(roi);

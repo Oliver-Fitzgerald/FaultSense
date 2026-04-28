@@ -17,16 +17,14 @@
 #include "utils/generic-utils.h"
 #include "utils/pre-processing-utils.h"
 
-void getCategory(std::string& imageCategory, std::map<std::string, bool>& category);
-objectCoordinates getObject(cv::Mat &img);
-std::string getCategory(std::string& imagePath);
+void getCategory(const std::string& imageCategory, std::map<std::string, bool>& category);
+void getObject(cv::Mat &img, ObjectCoordinates& objectBounds);
 
 /*
  * objectDetection
  */
-void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, std::string& imagePath) {
+cv::Mat objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, const std::string& imageCategory, ObjectCoordinates& objectBounds) {
 
-    std::string imageCategory = getCategory(imagePath);
     std::map<std::string, bool> category = {
         {"chewinggum", false},
         {"cashew", false}
@@ -42,21 +40,21 @@ void objectDetection(cv::Mat &inputImage, cv::Mat &returnImage, std::string& ima
         throw std::invalid_argument("object-detecton not configured for objectCategory: " + imageCategory);
 
 
-    while (cv::pollKey() != 113) cv::imshow("Image1", image);
-    removeNoise(image, 200);
-    while (cv::pollKey() != 113) cv::imshow("Image", image);
+    //while (cv::pollKey() != 113) cv::imshow("Image1", image);
+    removeNoise(image, 1000);
 
-    objectCoordinates objectBounds = getObject(image);
+    getObject(image, objectBounds);
     crop(inputImage, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, returnImage);
+    return image;
 }
 
 /*
  * getObject
  */
-objectCoordinates getObject(cv::Mat &img) {
+void getObject(cv::Mat &img, ObjectCoordinates& objectBounds) {
 
     // Initalize with all set to max i.e image boundaries
-    objectCoordinates coordinates{.xMin=img.rows,
+    objectBounds = ObjectCoordinates{.xMin=img.rows,
                                   .xMax=0,
                                   .yMin=img.cols,
                                   .yMax=0};
@@ -66,24 +64,22 @@ objectCoordinates getObject(cv::Mat &img) {
             int pixel = img.at<uchar>(x, y);
 
             if (pixel == 255) {
-                if (x < coordinates.xMin)
-                    coordinates.xMin = x;
-                else if (x > coordinates.xMax)
-                    coordinates.xMax = x;
+                if (x < objectBounds.xMin)
+                    objectBounds.xMin = x;
+                else if (x > objectBounds.xMax)
+                    objectBounds.xMax = x;
 
-                if (y < coordinates.yMin)
-                    coordinates.yMin = y;
-                else if (y > coordinates.yMax)
-                    coordinates.yMax = y;
+                if (y < objectBounds.yMin)
+                    objectBounds.yMin = y;
+                else if (y > objectBounds.yMax)
+                    objectBounds.yMax = y;
             }
         }
     }
-
-    return coordinates;
 }
 
     
-void getCategory(std::string& imageCategory, std::map<std::string, bool>& category) {
+void getCategory(const std::string& imageCategory, std::map<std::string, bool>& category) {
 
     for (auto& [objectCategory, apply] :  category ) {
         if (imageCategory == objectCategory)
@@ -91,11 +87,3 @@ void getCategory(std::string& imageCategory, std::map<std::string, bool>& catego
     }
 }
 
-std::string getCategory(std::string& imagePath) {
-
-    size_t firstSlash  = imagePath.find('/');
-    size_t secondSlash = imagePath.find('/', firstSlash + 1);
-    size_t thirdSlash  = imagePath.find('/', secondSlash + 1);
-    
-    return imagePath.substr(secondSlash + 1, thirdSlash - secondSlash - 1);
- }

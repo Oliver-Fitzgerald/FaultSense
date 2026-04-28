@@ -4,7 +4,7 @@
 // Standard
 #include <vector>
 
-struct pixelCoordinate {
+struct PixelCoordinate {
     int x;
     int y;
 };
@@ -14,25 +14,28 @@ struct Bounds {
     int row;
 };
 
-struct pixelGroup {
-    std::vector<pixelCoordinate> group;
-    std::vector<Bounds> bounds;
-    std::vector<Bounds> tempBounds;
+struct PixelGroup {
+    std::vector<PixelCoordinate> group;
+    std::vector<Bounds> bounds = {};
+    std::vector<Bounds> tempBounds = {};
     int row = -1;
 
-    void append(pixelGroup& theOtherGroup, int currentRow) {
+    void append(PixelGroup& theOtherGroup, int currentRow) {
 
-        if (currentRow - 1 > row) {
-            row == currentRow;
-            bounds = tempBounds;
-            tempBounds = {};
+        if (currentRow == row) {
+            tempBounds.insert(tempBounds.end(), 
+                 theOtherGroup.bounds.begin(), 
+                 theOtherGroup.bounds.begin() + std::size(theOtherGroup.bounds));
 
-        } else {
+        } else if (currentRow - 1 == row) {
 
             tempBounds.insert(tempBounds.end(), 
                  theOtherGroup.bounds.begin(), 
                  theOtherGroup.bounds.begin() + std::size(theOtherGroup.bounds));
-        }
+
+            row = currentRow;
+
+        } else return;// throw std::runtime_error("Attempting to merge rows that are not connected");
 
         group.insert(group.end(), 
              theOtherGroup.group.begin(), 
@@ -41,23 +44,22 @@ struct pixelGroup {
 
     bool newRow(int currentRow) {
 
+        bounds = tempBounds;
+        tempBounds = {};
         if (row == currentRow) {
             return true;
 
         } else if (row == currentRow - 1) {
-            bounds = tempBounds;
-            tempBounds = {};
-            return true;
-
-        } else if (row <= currentRow - 2) {
             return false;
+
         }
 
-        throw std::runtime_error("row has decremented\n");
+        return false;
+        //throw std::runtime_error("row has decremented: " + std::to_string(row));
     }
 };
 
-struct objectCoordinates {
+struct ObjectCoordinates {
     int xMin;
     int xMax;
     int yMin;

@@ -1,6 +1,5 @@
 /*
- * pre-processing
- * Manages the pre-processing flows for object and feature extraction 
+ * pre-processing Manages the pre-processing flows for object and feature extraction 
  * steps
  */
 
@@ -17,69 +16,82 @@
 #include "object-detection.h"
 #include "feature-extraction.h"
 #include "pre-processing.h"
+#include "../common.h"
 #include "../evaluation/evaluation.h"
 #include "../training/train.h"
 #include "../general/file-operations/training-data.h"
 // Standard
 #include <array>
-
-
-void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image);
+#include <vector>
 
 /*
- * markFaultLBP */
-void markFaultLBP(const std::array<float, 5>& normalSample, const std::array<float, 5>& anomolySample, cv::Mat &image) {
-    cv::Mat LBPValues;// IGNORRE THIS, to be deleted
-    int cellSize = 60;
+ * markFaultLBP 
+ */
+void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<std::array<float, 5>>& anomalySample, cv::Mat &image, std::string& imageCategory, const cv::Mat& imageMask) {
 
-    if (std::size(normalSample) != std::size(anomolySample)) throw std::invalid_argument("normalSample and anomolySample size must be equal");
-    if (cellSize % 2 != 0) throw std::invalid_argument("cellSize must be a multiple of 2");
+    int cellSize = 30;
+    int rowMargin = image.rows % cellSize;
+    int colMargin = image.cols % cellSize;
 
-    // Group Cells to from histogram
-    for (int row = cellSize / 2; row < image.rows - cellSize; row += cellSize) {
-        for (int col = cellSize / 2; col < image.cols - cellSize; col += cellSize) {
+    if (std::size(normalSample) != std::size(anomalySample)) throw std::invalid_argument("normalSample and anomalySample size must be equal");
 
-            /*
-            // Get cell
-            cv::Rect cellDimensions = cv::Rect(col,row, cellSize, cellSize);
-            cv::Mat cell; cv::Mat cellRaw = image(cellDimensions);
-            illuminationInvariance(cellRaw, cell);
 
-            // Compute LBP histogram for cell
-            std::array<float, 5> cellLBPHistogram = {0};
-            lbpValues(cellRaw, LBPValues);
-            lbpValueDistribution(LBPValues, cellLBPHistogram);
-            */
+    for (int index = 0; index < normalSample.size(); index++) {
 
-            cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
-            std::array<float, 5> cellLBPHistogram = {};
+        int normalCells = 0;
+        int anomalyCells = 0;
+        float totalNormalDistance = 0, totalAnomalyDistance = 0;
+        bool result = false;
+        bool lastResult;
+        // Group cells to from histogram
+        for (int row = rowMargin / 2; row < image.rows - rowMargin / 2 - cellSize / 2; row += cellSize) {
+            for (int col = colMargin / 2; col < image.cols - colMargin / 2 - cellSize / 2; col += cellSize) {
+                lastResult = result;
 
-            CannyThreshold threshold{57, 29};
-            cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-            edgeDetection(cell, kernal, threshold);
+                // skip edges (in cases where there is to much noise at edge)
+                if (imageCategory == "chewinggum")
+                    if (row < cellSize * 2 || col < cellSize * 2 || row > ((image.rows - rowMargin / 2 - cellSize / 2) - cellSize) || col > ((image.cols - colMargin / 2 - cellSize / 2) - cellSize))
+                        continue;
 
-            lbpValueDistribution(cell, cellLBPHistogram);
 
-            // Compare with normal and anomoly samples
-            float normalDistance = 0; float anomolyDistance = 0;
-            for (int i = 0; i < std::size(normalSample); i++) {
-                normalDistance += std::abs(cellLBPHistogram[i] - normalSample[i]);
-                anomolyDistance += std::abs(cellLBPHistogram[i] - anomolySample[i]);
+                cv::Mat maskCell = imageMask(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+                cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+                applyPreProcessing(cell, imageCategory, index);
+
+                std::array<float, 5> cellLBPHistogram = {};
+                lbpValueDistribution(cell, cellLBPHistogram);
+
+                // Compare with normal and anomaly samples
+                float normalDistance = 0; float anomalyDistance = 0;
+                for (int i = 0; i < 5; i++) {
+                    normalDistance += std::abs(cellLBPHistogram[i] - normalSample[index][i]);
+                    anomalyDistance += std::abs(cellLBPHistogram[i] - anomalySample[index][i]);
+                }
+
+                if (isNormal(maskCell)) {
+                    totalNormalDistance += normalDistance;
+                    normalCells++;
+
+                } else {
+                    totalAnomalyDistance += anomalyDistance;
+                    anomalyCells++;
+                }
+
+                // Evaluate cell
+                bool result = classify(normalDistance, anomalyDistance, imageCategory, index);
+
+                // Mark anomaly
+                if (!result) {
+                    RGB colour = RGB{0,0,255};
+                    markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
+                }
+
             }
-
-            // Mark anomoly
-            //if (anomolyDistance < normalDistance) {
-            if (anomolyDistance < normalDistance) {
-                std::cout << "hit\n";
-                RGB colour = RGB{0,0,255};
-                markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
-            } else
-                std::cout << "\nanomalyDistance : " << anomolyDistance << "\nnormalDistance: " << normalDistance << "\n";
         }
+        std::cout << "markfaultlbp complete index: " << index << "\n";
+        std::cout << "totalNormalDistance: " << totalNormalDistance << "\n";
+        std::cout << "totalanomalyDistance: " << totalAnomalyDistance << "\n";
+        std::cout << "averageNormalDistance: " << totalNormalDistance / normalCells << "\n";
+        std::cout << "averageAnomalyDistance: " << totalAnomalyDistance / anomalyCells << "\n";
     }
-
-    /* Testing
-    cv::imshow("Image", image);
-    while (cv::pollKey() != 113);
-    */
 }

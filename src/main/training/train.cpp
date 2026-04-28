@@ -11,9 +11,12 @@
 #include <opencv2/imgproc.hpp>
 // Fault Sense
 #include "../feature/feature-extraction.h"
+#include "../feature/object-detection.h"
 #include "../feature/utils/pre-processing-utils.h"
 #include "../feature/utils/generic-utils.h"
 #include "../feature/objects/CannyThreshold.h"
+#include "../feature/objects/CannyThreshold.h"
+#include "../common.h"
 // Standard
 #include <map>
 #include <array>
@@ -134,184 +137,137 @@ void updateCategoryNorm(cv::Mat norm, cv::Mat values, int cellSize, int numberOf
  *
  * @param cellNorm A mapping of object type (string) to it's average anomaly distribution
  */
-void trainCell(std::map<std::string, std::array<float, 5>> &cellNorm, const bool normal, const char* category = "") {
+int number = 0;
+void trainCell(std::vector<std::array<float, 5>> &cellNorm, const bool normal,const std::string& category = "") {
 
-    int cellSize = 60; // shoulde be divisible by 2
+    int cellSize = 60; // should be divisible by 2
 
-    if (category[0] != '\0') {
-
-        std::string imagePath;
+    for (int index = 0; index < cellNorm.size(); index++) {
+        std::map<std::string, cv::Mat> images;
         if (normal)
-            imagePath = dataRoot + category + "/" + normalPath;
+            images = readImagesFromDirectory(dataRoot + category + "/" + normalPath + "/"); 
         else
-            imagePath = dataRoot + category + "/" + anomalyPath;
+            images = readImagesFromDirectory(dataRoot + category + "/" + anomalyPath + "/"); 
 
-        std::map<std::string, cv::Mat> images = readImagesFromDirectory(imagePath); 
-
-        std::array<float, 5> averageLBPDistribution = {0};
         for (auto& [imageName, image] : images) {
 
+            // Object Detection
+            ObjectCoordinates objectBounds;
+            cv::Mat output, input = image.clone();
+            objectDetection(input, output, category, objectBounds);
+            cv::Mat inputTemp = image.clone();
+            crop(inputTemp, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, image);
+
             // Get image mask
-            std::string maskName = imageName;
-            maskName.replace(imageName.size() - 3, static_cast<std::string::size_type>(3), std::basic_string("png"));
-            cv::Mat imageMask = cv::imread(dataRoot + "masks/" + category + "/" + maskName);
+            cv::Mat imageMask;
+            if (!normal) {
 
-            // Get LBP values for anomaly cells
-            cv::Mat LBPValues; 
-            //lbpValues(image, LBPValues);
+                std::string maskName = imageName;
+                maskName.replace(imageName.size() - 3, static_cast<std::string::size_type>(3), std::basic_string("png"));
+                cv::Mat mask = cv::imread(dataRoot + "masks/" + category + "/" + maskName);
+                crop(mask, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, imageMask);
+            }
 
-            CannyThreshold threshold{57, 29};
-            cv::Mat kernal = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-            edgeDetection(image, kernal, threshold);
-            LBPValues = image.clone();
+            number++;
+            // Apply pre-processing to image
+            applyPreProcessing(image, category, index);
+            if (index == 1 &&  number > 500) {
+
+                while (cv::pollKey() != 113)
+                    cv::imshow("img", image);
+            }
 
             int anomalyCells = 0;
-            for (int row = cellSize / 2; row + cellSize < LBPValues.rows; row += cellSize) {
-                for (int col = cellSize / 2; col + cellSize < LBPValues.cols; col += cellSize) {
+            for (int row = cellSize / 2; row + cellSize < image.rows; row += cellSize) {
+                for (int col = cellSize / 2; col + cellSize < image.cols; col += cellSize) {
 
-                    if (checkIfCellIsNormal(imageMask(cv::Range(row + 1, row + cellSize), cv::Range(col + 1, col + cellSize)))) // Note we (+ 1) as LBPValues loses a pixel on each edge as part of it's construction
+                    if (!normal && checkIfCellIsNormal(imageMask(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize))))
                         continue; // skip normal cells
                     anomalyCells++;
 
                     // Get LBP distribution of anomaly cells only
-                    std::array<float, 5> LBPHistogram = {0};
-                    cv::Mat cell = LBPValues(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
-                    lbpValueDistribution(cell, LBPHistogram);
+                    std::array<float, 5> featureHistogram = {0};
+                    cv::Mat cell = image(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
+                    lbpValueDistribution(cell, featureHistogram);
 
                     // Add to cummulitive result of all samples
-                    for (int j = 0; j < 5; j++)
-                        averageLBPDistribution[j] += LBPHistogram[j]; // Should this not be +=
-                }
-            }
-
-            // Average across all cells in the image
-            for (int k = 0; k < averageLBPDistribution.size(); k++)
-                averageLBPDistribution[k] = (averageLBPDistribution[k] / anomalyCells);
-
-
-            std::string objectCategory = category;
-            cellNorm.insert({objectCategory, averageLBPDistribution});
-            break;
-        }
-
-    } else {
-        for (int i = 0; i < 12; i++) {
-
-            std::map<std::string, cv::Mat> images;
-            if (normal)
-                images = readImagesFromDirectory(dataRoot + objectCategories[i] + normalPath); 
-            else
-                images = readImagesFromDirectory(dataRoot + objectCategories[i] + anomalyPath); 
-
-            std::array<float, 5> averageLBPDistribution = {0};
-            for (const auto& [imageName, image] : images) {
-
-                // Get image mask
-                std::string maskName = imageName;
-                maskName.replace(imageName.size() - 3, static_cast<std::string::size_type>(3), std::basic_string("png"));
-                cv::Mat imageMask = cv::imread(dataRoot + "masks/" + objectCategories[i] + maskName);
-
-                // Get LBP values for anomaly cells
-                cv::Mat LBPValues;
-                lbpValues(image, LBPValues);
-
-                int anomalyCells = 0;
-                //std::cout << "new\n";
-                for (int row = cellSize / 2; row + cellSize < LBPValues.rows; row += cellSize) {
-                    for (int col = cellSize / 2; col + cellSize < LBPValues.cols; col += cellSize) {
-
-                        if (checkIfCellIsNormal(imageMask(cv::Range(row + 1, row + cellSize), cv::Range(col + 1, col + cellSize)))) // Note we (+ 1) as LBPValues loses a pixel on each edge as part of it's construction
-                            continue; // skip normal cells
-                        anomalyCells++;
-                        //std::cout << "anomalyCells update: "  << anomalyCells << "\n";
-
-                        // Get LBP distribution of anomaly cells only
-                        std::array<float, 5> LBPHistogram = {0};
-                        cv::Mat cell = LBPValues(cv::Range(row, row + cellSize), cv::Range(col, col + cellSize));
-                        lbpValueDistribution(cell, LBPHistogram);
-
-                        // Add to cummulitive result of all samples
-                        float total = 0;
-                        std::array<float, 5> temp = {0};
-                        for (int j = 0; j < 5; j++) {
-                            total +=LBPHistogram[j];
-                            temp[j] = LBPHistogram[j];
-                            averageLBPDistribution[j] += LBPHistogram[j];
-                        }
-                        if (std::isnan(total) || std::isinf(total)) {
-                            std::cout << "nan error LBPHistogram\n";
-                            for (int f = 0; f < 5; f++)
-                                std::cout << "temp[ " << f << "]: " << temp[f] << "\n";
-                            std::cout << "nan error\n";
-                            std::cout << "objectCategory: " << objectCategories[i] << "\n";
-                            return;
-                        }
+                    float total = 0;
+                    std::array<float, 5> temp = {0};
+                    for (int j = 0; j < 5; j++) {
+                        total += featureHistogram[j];
+                        temp[j] = featureHistogram[j];
+                        cellNorm[index][j] += featureHistogram[j];
+                    }
+                    if (std::isnan(total) || std::isinf(total)) {
+                        std::cerr << "nan error\n";
+                        for (int f = 0; f < 5; f++)
+                            std::cerr << "temp[ " << f << "]: " << temp[f] << "\n";
+                        throw std::runtime_error("nan error featureHistogram");
                     }
                 }
-
-                if (anomalyCells == 0) continue; // Need to investigate why this is happening
-                if (anomalyCells == 0)
-                    for (int f = 0; f < 5; f++)
-                        std::cout << "averageLBPDistribution[" << f << "]: " << averageLBPDistribution[f] << "\n";
-                float total = 0;
-                // Average across all cells in the image
-                std::array<float, 5> temp = {0};
-                std::array<float, 5> before = {0};
-                for (int k = 0; k < 5; k++) {
-                    before[k] = averageLBPDistribution[k];
-                    averageLBPDistribution[k] = averageLBPDistribution[k] / (anomalyCells);
-                    total += averageLBPDistribution[k];
-                    temp[k] = averageLBPDistribution[k];
-                }
-                if (std::isnan(total) || std::isinf(total)) {
-                    std::cout << "nan error total\n"; 
-                    std::cout << "anomalyCells: " << anomalyCells << "\n"; 
-                    for (int f = 0; f < 5; f++)
-                        std::cout << "temp[" << f << "]: " << temp[f] << "\n";
-                    for (int f = 0; f < 5; f++)
-                        std::cout << "before[" << f << "]: " << before[f] << "\n";
-                    std::cout << "nan error\n";
-                    std::cout << "objectCategory: " << objectCategories[i] << "\n";
-                    return;
-                }
-
-                float sum = total;
-                float total2 = 0;
-                std::array<float, 5> temp2 = {0};
-                for (int k = 0; k < 5; k++) {
-                    averageLBPDistribution[k] = (averageLBPDistribution[k] / sum) * 100.0f;
-                    total2 += averageLBPDistribution[k];
-                    temp2[k] = averageLBPDistribution[k];
-                }
-                if (std::isnan(total2) || std::isinf(total2)) {
-                    std::cout << "nan error total2\n"; 
-                    std::cout << "sum: " << sum << "\n";
-                    std::cout << "total: " << total << "\n";
-                    for (int f = 0; f < 5; f++)
-                        std::cout << "temp[" << f << "]: " << temp[f] << "\n";
-                    for (int f = 0; f < 5; f++)
-                        std::cout << "temp2[" << f << "]: " << temp2[f] << "\n";
-                    std::cout << "nan error\n";
-                    std::cout << "objectCategory: " << objectCategories[i] << "\n";
-                    return;
-                }
             }
 
-            // Average across all images and record result
+            if (anomalyCells == 0) {
+                std::cerr << "WARNING: anomallyCells == 0\n";
+                continue; // Need to investigate why this is happening
+            }
+            // DEBUGING: if (anomalyCells == 0) for (int f = 0; f < 5; f++) std::cout << "cellNorm[index][" << f << "]: " << cellNorm[index][f] << "\n";
+
+            // Average across all cells in the image
             float total = 0;
-            for (int l = 0; l < averageLBPDistribution.size(); l++) {
-                averageLBPDistribution[l] = (averageLBPDistribution[l] / images.size()) * 100;
-                total += averageLBPDistribution[l];
+            std::array<float, 5> temp = {0};
+            std::array<float, 5> before = {0};
+            for (int k = 0; k < 5; k++) {
+                before[k] = cellNorm[index][k];
+                cellNorm[index][k] = cellNorm[index][k] / (anomalyCells);
+                total += cellNorm[index][k];
+                temp[k] = cellNorm[index][k];
             }
-            if (total > 101 || total < 99) {
-                std::cerr << "total not == 100: " << total << "\n";
-                return;
+            if (std::isnan(total) || std::isinf(total)) {
+                std::cerr << "nan error\n";
+                std::cerr << "anomalyCells: " << anomalyCells << "\n"; 
+                for (int f = 0; f < 5; f++)
+                    std::cerr << "temp[" << f << "]: " << temp[f] << "\n";
+                for (int f = 0; f < 5; f++)
+                    std::cerr << "before[" << f << "]: " << before[f] << "\n";
+
+                throw std::runtime_error("nan error cellNorm[index]");
             }
 
+            // Nomralize distribution values to 0 - 100
+            float sum = total;
+            float total2 = 0;
+            std::array<float, 5> temp2 = {0};
+            for (int k = 0; k < 5; k++) {
+                cellNorm[index][k] = (cellNorm[index][k] / sum) * 100.0f;
+                total2 += cellNorm[index][k];
+                temp2[k] = cellNorm[index][k];
+            }
+            if (std::isnan(total2) || std::isinf(total2)) {
+                std::cerr << "nan error normalizeing distribution\n"; 
 
-            std::string objectCategory = objectCategories[i];
-            objectCategory.pop_back();
-            cellNorm.insert({objectCategory, averageLBPDistribution});
+                std::cerr << "sum: " << sum << "\n";
+                std::cerr << "total: " << total << "\n";
+                for (int f = 0; f < 5; f++)
+                    std::cerr << "temp[" << f << "]: " << temp[f] << "\n";
+                for (int f = 0; f < 5; f++)
+                    std::cerr << "temp2[" << f << "]: " << temp2[f] << "\n";
+
+                throw std::runtime_error("nan error");
+            }
+        }
+
+        // Average across all images and record result
+        float total = 100; /* for (int index = 0; index < cellNorm[index].size(); index++) { cellNorm[index][index] = (cellNorm[index][index] / images.size()) * 100; total += cellNorm[index][index]; } */
+
+        if (total > 101 || total < 99) {
+            std::cerr << "cellNorm[index].size(): " << cellNorm[index].size() << "\n";
+            std::cerr << "cellNorm[index][0]: " <<cellNorm[index][0] << "\n"; 
+            std::cerr << "cellNorm[index][1]: " <<cellNorm[index][1] << "\n"; 
+            std::cerr << "cellNorm[index][2]: " <<cellNorm[index][2] << "\n"; 
+            std::cerr << "cellNorm[index][3]: " <<cellNorm[index][3] << "\n"; 
+            std::cerr << "cellNorm[index][4]: " <<cellNorm[index][4] << "\n"; 
+            throw std::runtime_error("Distribution accross images not normalized to 100: " + std::to_string(total));
         }
     }
 }

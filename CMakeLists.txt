@@ -8,6 +8,9 @@ cmake_policy(SET CMP0072 NEW)
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 include(FetchContent)
 
 # Packages
@@ -24,6 +27,7 @@ FetchContent_MakeAvailable(cli11_proj)
 
 # Compilation
 add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
+                           ../src/main/common.cpp
                            ../src/main/feature/pre-processing.cpp
                            ../src/main/feature/object-detection.cpp
                            ../src/main/feature/pre-processing.cpp
@@ -32,6 +36,7 @@ add_executable(fault-sense-cli ../src/main/frontend/cli/fault-sense-cli.cpp
                            ../src/main/feature/utils/pre-processing-utils.cpp
                            ../src/main/training/train.cpp
                            ../src/main/general/file-operations/training-data.cpp
+                           ../src/main/general/file-operations/ground-truth.cpp
                            ../src/main/evaluation/evaluation.cpp)
 target_link_libraries(fault-sense-cli PRIVATE  ${OpenCV_LIBS} CLI11::CLI11)
 

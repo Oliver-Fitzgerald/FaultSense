@@ -5,8 +5,10 @@
 #include <map>
 #include <string> 
 #include <array>
+#include <vector>
 
-void trainCell(std::map<std::string, std::array<float, 5>> &cellNorm, const bool normal, const char* category = "");
+// void trainCell(std::map<std::string, std::array<float, 5>> &cellNorm, const bool normal, const char* category = "");
+void trainCell(std::vector<std::array<float, 5>> &cellNorm, const bool normal, const std::string& category = "");
 void trainMatrix(std::map<std::string, cv::Mat> &matrixNorm);
 
 #endif
