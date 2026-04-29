@@ -131,12 +131,14 @@ auto start = std::chrono::high_resolution_clock::now();
     cv::Mat image;
     std::string imageCategory = getImageCategory(imagePath);
     std::cout << "\033]34mINFO\033]0mimageCategory: " << imageCategory << "\n";
+
+
     ObjectCoordinates objectBounds;
-
-
     cv::Mat objectPreProcessing;
     if (flags["objectDetection"]) {
-        objectPreProcessing = objectDetection(temp, image, imageCategory, objectBounds);
+        cv::Mat dummy;
+        image = temp.clone();
+        objectPreProcessing = objectDetection(temp, dummy, imageCategory, objectBounds);
     }  else 
         image = temp.clone();
 
@@ -188,9 +190,10 @@ auto start = std::chrono::high_resolution_clock::now();
             trainCell(anomalyNorm, false, imageCategory);
             trained = true;
         }
+        imageMask = cv::imread(maskPath);
 
-        cv::Mat mask = cv::imread(maskPath);
-        crop(mask, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, imageMask);
+        // cv::Mat mask = cv::imread(maskPath);
+        // crop(mask, objectBounds.xMin, objectBounds.xMax, objectBounds.yMin, objectBounds.yMax, imageMask);
 
         // while (cv::pollKey() != 113) {
         //     cv::imshow("blank", image);
@@ -210,15 +213,22 @@ auto start = std::chrono::high_resolution_clock::now();
         //     cv::imshow("blank", atemp);
         // }
 
-        markFaultLBP(normalNorm, anomalyNorm, image, imageCategory, imageMask);
+        while (cv::pollKey() != 113) cv::imshow("blank", image);
+
+        markFaultLBP(normalNorm, anomalyNorm, image, imageCategory, imageMask, objectBounds);
     }
 
     cv::Mat preProcessing = image.clone();
 auto end = std::chrono::high_resolution_clock::now();
 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 std::cout << "Time: " << duration.count() << " ms\n";
-    applyPreProcessing(preProcessing, "cashew", 1); while (cv::pollKey() != 113) {
+
+    applyPreProcessing(preProcessing, "cashew", 1);
+
+    while (cv::pollKey() != 113) {
+
         cv::imshow("Showing an image", image);
+
         if (flags["markFault"])
             cv::imshow("Showing an image1", imageMask);
         if (flags["objectDetection"])

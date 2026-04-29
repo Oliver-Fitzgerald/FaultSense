@@ -27,7 +27,7 @@
 /*
  * markFaultLBP 
  */
-void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<std::array<float, 5>>& anomalySample, cv::Mat &image, std::string& imageCategory, const cv::Mat& imageMask) {
+void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<std::array<float, 5>>& anomalySample, cv::Mat &image, std::string& imageCategory, const cv::Mat& imageMask, ObjectCoordinates& objectBounds) {
 
     int cellSize = 30;
     int rowMargin = image.rows % cellSize;
@@ -44,8 +44,9 @@ void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<s
         bool result = false;
         bool lastResult;
         // Group cells to from histogram
-        for (int row = rowMargin / 2; row < image.rows - rowMargin / 2 - cellSize / 2; row += cellSize) {
-            for (int col = colMargin / 2; col < image.cols - colMargin / 2 - cellSize / 2; col += cellSize) {
+        for (int row = (rowMargin * 2) + cellSize + objectBounds.xMin; row < image.rows - cellSize - (rowMargin * 2) - (cellSize / 2) - (image.rows - objectBounds.xMax); row += cellSize) {
+
+            for (int col = (colMargin * 2) + cellSize + objectBounds.yMin; col < image.cols - cellSize - (colMargin * 2) - (cellSize / 2) - (image.cols - objectBounds.yMax); col += cellSize) {
                 lastResult = result;
 
                 // skip edges (in cases where there is to much noise at edge)
