@@ -35,8 +35,8 @@ struct PixelGroup {
 
             row = currentRow;
 
-        } else
-            throw std::runtime_error("Attempting to merge rows that are not connected");
+        }
+        // else throw std::runtime_error("Attempting to merge rows that are not connected");
 
         group.insert(group.end(), 
              theOtherGroup.group.begin(), 
@@ -51,11 +51,12 @@ struct PixelGroup {
             return true;
 
         } else if (row == currentRow - 1) {
+
             return false;
-
         }
+        return false;
 
-        throw std::runtime_error("row has decremented\n");
+        //throw std::runtime_error("row has decremented\n");
     }
 };
 

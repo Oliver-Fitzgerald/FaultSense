@@ -7,11 +7,13 @@
 #include <iostream>
 // Fault Sense
 #include "../objects/HSV.h"
+#include "../pre-processing/pre-processing.h"
 
 
 int hueMin = 0, hueMax = 179;
 int saturationMin = 0, saturationMax = 255;
 int valueMin = 0, valueMax = 255;
+int noiseThreshold = 0;
 
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
@@ -41,6 +43,7 @@ int main(int argc, char** argv) {
     cv::createTrackbar("Saturation Max", "Trackbars", &saturationMax, 255);
     cv::createTrackbar("Value Min", "Trackbars", &valueMin, 255);
     cv::createTrackbar("Value Max", "Trackbars", &valueMax, 255);
+    cv::createTrackbar("Remove Noise", "Trackbars", &noiseThreshold, 1000);
 
     bool next = true;
     while (next) {
@@ -49,6 +52,7 @@ int main(int argc, char** argv) {
         cv::Scalar upper(hueMax, saturationMax, valueMax);
 
         cv::inRange(imageHSV, lower, upper, mask);
+        removeNoise(mask, noiseThreshold);
 
         cv::imshow("HSV Image", mask);
         cv::imshow("Original Image", originalImage);
