@@ -171,11 +171,11 @@ void trainCell(std::vector<std::array<float, 5>> &cellNorm, const bool normal,co
             number++;
             // Apply pre-processing to image
             applyPreProcessing(image, category, index);
-            if (index == 1 &&  number > 500) {
-
-                while (cv::pollKey() != 113)
-                    cv::imshow("img", image);
-            }
+            // if (index == 1 &&  number > 500) {
+            //
+            //     while (cv::pollKey() != 113)
+            //         cv::imshow("img", image);
+            // }
 
             int anomalyCells = 0;
             for (int row = cellSize / 2; row + cellSize < image.rows; row += cellSize) {

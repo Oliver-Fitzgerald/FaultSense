@@ -27,7 +27,7 @@
 /*
  * markFaultLBP 
  */
-void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<std::array<float, 5>>& anomalySample, cv::Mat &image, std::string& imageCategory, const cv::Mat& imageMask, ObjectCoordinates& objectBounds) {
+bool markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<std::array<float, 5>>& anomalySample, cv::Mat &image, std::string& imageCategory, const cv::Mat& imageMask, ObjectCoordinates& objectBounds) {
 
     int cellSize = 30;
     int rowMargin = image.rows % cellSize;
@@ -40,6 +40,9 @@ void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<s
 
         int normalCells = 0;
         int anomalyCells = 0;
+        float normalCellsCount = 0;
+        float anomalyCellsCount = 0;
+        float cells = 0;
         float totalNormalDistance = 0, totalAnomalyDistance = 0;
         bool result = false;
         bool lastResult;
@@ -81,12 +84,18 @@ void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<s
                 // Evaluate cell
                 bool result = classify(normalDistance, anomalyDistance, imageCategory, index);
 
+                if (result)
+                    normalCellsCount++;
+                else
+                    anomalyCellsCount++;
+
                 // Mark anomaly
                 if (!result) {
                     RGB colour = RGB{0,0,255};
                     markFault(image, col, col + cellSize, row , row + cellSize, nullptr, colour);
                 }
 
+                cells++;
             }
         }
         std::cout << "\033[34mINFO\033[0m: markfaultlbp complete index: " << index << "\n";
@@ -94,5 +103,17 @@ void markFaultLBP(std::vector<std::array<float, 5>>& normalSample, std::vector<s
         std::cout << "\033[34mINFO\033[0m: totalanomalyDistance: " << totalAnomalyDistance << "\n";
         std::cout << "\033[34mINFO\033[0m: averageNormalDistance: " << totalNormalDistance / normalCells << "\n";
         std::cout << "\033[34mINFO\033[0m: averageAnomalyDistance: " << totalAnomalyDistance / anomalyCells << "\n";
+
+        bool finalResult = true;
+        if (imageCategory == "chewinggum") {
+            if (((anomalyCellsCount / cells) * 100.0) > 0.5) finalResult = false;
+            else finalResult = true;
+
+        } else if (imageCategory == "cashew") {
+            if (((anomalyCellsCount / cells) * 100.0) > 0.3) finalResult = false;
+            else finalResult = true;
+        }
+        return finalResult;
+
     }
 }

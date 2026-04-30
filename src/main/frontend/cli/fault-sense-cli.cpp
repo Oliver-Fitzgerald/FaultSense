@@ -113,8 +113,8 @@ std::map<std::string, int> categoryFeatureCount = {{"chewinggum", 1}, {"cashew",
 std::vector<std::array<float, 5>> normalNorm;
 std::vector<std::array<float, 5>> anomalyNorm;
 void view(std::string imagePath, std::map<std::string, bool> flags, unsigned int &noiseThreshold, std::unique_ptr<cv::Mat> inputImage) {
+    auto start = std::chrono::high_resolution_clock::now();
 
-auto start = std::chrono::high_resolution_clock::now();
     namespace fs = std::filesystem;
 
     cv::Mat temp;
@@ -180,6 +180,7 @@ auto start = std::chrono::high_resolution_clock::now();
         if (!trained) {
 
 
+            auto trainingStart = std::chrono::high_resolution_clock::now();
 
             std::cout << "\033[34mINFO\033[0m: Generating normal cell norm ...\n";
             normalNorm.resize(categoryFeatureCount[category]);
@@ -189,6 +190,10 @@ auto start = std::chrono::high_resolution_clock::now();
             anomalyNorm.resize(categoryFeatureCount[category]);
             trainCell(anomalyNorm, false, imageCategory);
             trained = true;
+
+            auto trainingEnd = std::chrono::high_resolution_clock::now();
+            auto trainingDuration = std::chrono::duration_cast<std::chrono::seconds>(trainingEnd - trainingStart);
+            std::cout << "\033[32mINFO\033[0m: Training Time: " << trainingDuration.count() << " ms\n";
         }
         imageMask = cv::imread(maskPath);
 
@@ -215,13 +220,21 @@ auto start = std::chrono::high_resolution_clock::now();
 
         while (cv::pollKey() != 113) cv::imshow("blank", image);
 
-        markFaultLBP(normalNorm, anomalyNorm, image, imageCategory, imageMask, objectBounds);
+        bool result = markFaultLBP(normalNorm, anomalyNorm, image, imageCategory, imageMask, objectBounds);
+        RGB colour;
+        if (!result) {
+            colour = RGB{0,0,255};
+        } else {
+            colour = RGB{0,255,0};
+        }
+        markFault(image, objectBounds.yMin, objectBounds.yMax,  objectBounds.xMin, objectBounds.xMax, nullptr, colour);
     }
 
     cv::Mat preProcessing = image.clone();
-auto end = std::chrono::high_resolution_clock::now();
-auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-std::cout << "Time: " << duration.count() << " ms\n";
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "\033[32mINFO\033[0m: Instance Classification Time: " << duration.count() << " ms\n";
 
     applyPreProcessing(preProcessing, "cashew", 1);
 

@@ -236,7 +236,7 @@ bool evaluate(ConfusionMatrix& confusionMatrix, std::string& category, std::vect
 
     bool result;
     if (category == "chewinggum") {
-        if (((anomalyCells / cells) * 100) > 0) result = false;
+        if (((anomalyCells / cells) * 100) > 0.5) result = false;
         else result = true;
     } else if (category == "cashew") {
         if (((anomalyCells / cells) * 100) > 0.3) result = false;
